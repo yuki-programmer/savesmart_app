@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
-import '../services/database_service.dart';
+import '../services/app_state.dart';
 import '../models/expense.dart';
 import '../widgets/split_modal.dart';
 import '../widgets/edit_amount_modal.dart';
@@ -15,16 +16,8 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  List<Expense> _expenses = [];
-  bool _isLoading = true;
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadExpenses();
-  }
 
   @override
   void dispose() {
@@ -32,22 +25,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.dispose();
   }
 
-  Future<void> _loadExpenses() async {
-    final expenses = await DatabaseService().getExpenses();
-    if (!mounted) return;
-    setState(() {
-      _expenses = expenses;
-      _isLoading = false;
-    });
-  }
-
-  Map<String, List<Expense>> _groupExpensesByDate() {
+  Map<String, List<Expense>> _groupExpensesByDate(List<Expense> expenses) {
     final Map<String, List<Expense>> grouped = {};
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    for (final expense in _expenses) {
+    for (final expense in expenses) {
       final expenseDate = DateTime(
         expense.createdAt.year,
         expense.createdAt.month,
@@ -70,12 +54,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return grouped;
   }
 
-  List<Expense> _filterExpenses() {
+  List<Expense> _filterExpenses(List<Expense> expenses) {
     if (_searchController.text.isEmpty) {
-      return _expenses;
+      return expenses;
     }
     final query = _searchController.text.toLowerCase();
-    return _expenses.where((expense) {
+    return expenses.where((expense) {
       return expense.category.toLowerCase().contains(query) ||
           (expense.memo?.toLowerCase().contains(query) ?? false);
     }).toList();
@@ -83,21 +67,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            if (_isSearching) _buildSearchBar(),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildExpenseList(),
+    return Consumer<AppState>(
+      builder: (context, appState, child) {
+        return Scaffold(
+          backgroundColor: AppColors.bgPrimary,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                if (_isSearching) _buildSearchBar(),
+                Expanded(
+                  child: appState.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _buildExpenseList(appState.expenses),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -225,8 +213,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildExpenseList() {
-    final filteredExpenses = _filterExpenses();
+  Widget _buildExpenseList(List<Expense> expenses) {
+    final filteredExpenses = _filterExpenses(expenses);
 
     if (filteredExpenses.isEmpty) {
       return Center(
@@ -265,7 +253,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     // 日付でグループ化
-    final grouped = _groupExpensesByDate();
+    final grouped = _groupExpensesByDate(filteredExpenses);
     final dateLabels = grouped.keys.toList();
 
     return ListView.builder(
@@ -485,11 +473,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showSplitModal(Expense expense) {
-    showSplitModal(context, expense, _loadExpenses);
+    showSplitModal(context, expense, () {
+      context.read<AppState>().loadData();
+    });
   }
 
   void _showEditAmountModal(Expense expense) {
-    showEditAmountModal(context, expense, _loadExpenses);
+    showEditAmountModal(context, expense, () {
+      context.read<AppState>().loadData();
+    });
   }
 
   void _showDeleteConfirmation(Expense expense) {
@@ -521,10 +513,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
           TextButton(
             onPressed: () async {
-              await DatabaseService().deleteExpense(expense.id!);
+              await context.read<AppState>().deleteExpense(expense.id!);
               if (!context.mounted) return;
               Navigator.pop(context);
-              _loadExpenses();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(

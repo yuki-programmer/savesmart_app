@@ -1,14 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'config/theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'widgets/bottom_nav.dart';
+import 'services/app_state.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   // Windows/Linux/macOSデスクトップではFFI初期化が必要
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
@@ -22,17 +26,20 @@ class SaveSmartApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SaveSmart',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: AppColors.bgPrimary,
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.accentGreen,
+    return ChangeNotifierProvider(
+      create: (_) => AppState()..loadData(),
+      child: MaterialApp(
+        title: 'SaveSmart',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          scaffoldBackgroundColor: AppColors.bgPrimary,
+          textTheme: GoogleFonts.plusJakartaSansTextTheme(),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.accentGreen,
+          ),
         ),
+        home: const MainScreen(),
       ),
-      home: const MainScreen(),
     );
   }
 }
