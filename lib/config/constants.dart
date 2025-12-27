@@ -12,15 +12,15 @@ class AppConstants {
     'その他',
   ];
 
-  static const List<String> grades = [
-    'economy',
+  static const List<String> types = [
+    'saving',
     'standard',
-    'premium',
+    'reward',
   ];
 
-  static const Map<String, String> gradeLabels = {
-    'economy': 'エコノミー',
-    'standard': 'スタンダード',
-    'premium': 'プレミアム',
+  static const Map<String, String> typeLabels = {
+    'saving': '💰 節約',
+    'standard': '🎯 標準',
+    'reward': '⭐ ご褒美',
   };
 }

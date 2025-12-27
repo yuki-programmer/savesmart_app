@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
+import '../services/database_service.dart';
+import '../models/expense.dart';
+import 'history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +21,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _flipAnimation;
 
+  // DBデータ
+  int _totalExpense = 0;
+  int _budgetAmount = 0;
+  List<Expense> _recentExpenses = [];
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +40,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
       vsync: this,
     )..forward();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final db = DatabaseService();
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    final expenses = await db.getExpenses(from: startOfMonth, to: endOfMonth);
+    final budget = await db.getCurrentBudget();
+
+    if (!mounted) return;
+    setState(() {
+      _recentExpenses = expenses;
+      _totalExpense = expenses.fold(0, (sum, e) => sum + e.amount);
+      _budgetAmount = budget?.amount ?? 0;
+    });
   }
 
   @override
@@ -299,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 16),
           Text(
-            '¥54,230',
+            '¥${_formatNumber(_totalExpense)}',
             style: GoogleFonts.outfit(
               fontSize: 44,
               fontWeight: FontWeight.bold,
@@ -308,7 +334,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 8),
           Text(
-            '予算残り ¥45,770',
+            _budgetAmount > 0
+                ? '予算残り ¥${_formatNumber(_budgetAmount - _totalExpense)}'
+                : '予算未設定',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               color: Colors.white.withOpacity(0.9),
@@ -318,6 +346,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _buildPeriodSelector(isLight: true),
         ],
       ),
+    );
+  }
+
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
     );
   }
 
@@ -542,7 +577,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                );
+              },
               child: Text(
                 '履歴',
                 style: GoogleFonts.plusJakartaSans(
@@ -555,17 +595,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
         const SizedBox(height: 12),
-        ...List.generate(3, (index) => _buildAnimatedExpenseItem(index)),
+        if (_recentExpenses.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(
+                '支出データがありません',
+                style: GoogleFonts.plusJakartaSans(
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+          )
+        else
+          ...List.generate(
+            _recentExpenses.length > 3 ? 3 : _recentExpenses.length,
+            (index) => _buildAnimatedExpenseItem(index),
+          ),
       ],
     );
   }
 
   Widget _buildAnimatedExpenseItem(int index) {
-    final categories = ['コーヒー', 'ランチ', '食料品'];
-    final memos = ['スタバ 新作', '社食 定食A', 'スーパー まとめ買い'];
-    final times = ['10:30', '12:45', '18:20'];
-    final amounts = [580, 850, 2340];
-    final grades = ['economy', 'standard', 'economy'];
+    final expense = _recentExpenses[index];
+    final time = '${expense.createdAt.hour.toString().padLeft(2, '0')}:${expense.createdAt.minute.toString().padLeft(2, '0')}';
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -601,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    categories[index],
+                    expense.category,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -610,7 +667,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${memos[index]} • ${times[index]}',
+                    '${expense.memo ?? ''} • $time',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       color: AppColors.textMuted,
@@ -623,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '¥${amounts[index]}',
+                  '¥${_formatNumber(expense.amount)}',
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -631,7 +688,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(height: 4),
-                _buildGradeBadge(grades[index]),
+                _buildTypeBadge(expense.grade),
               ],
             ),
           ],
@@ -640,13 +697,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildGradeBadge(String grade) {
+  Widget _buildTypeBadge(String type) {
     Color bgColor;
     Color textColor;
-    String label = AppConstants.gradeLabels[grade] ?? grade;
+    String label = AppConstants.typeLabels[type] ?? type;
 
-    switch (grade) {
-      case 'economy':
+    switch (type) {
+      case 'saving':
         bgColor = AppColors.accentGreenLight;
         textColor = AppColors.accentGreen;
         break;
@@ -654,7 +711,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         bgColor = AppColors.accentBlueLight;
         textColor = AppColors.accentBlue;
         break;
-      case 'premium':
+      case 'reward':
         bgColor = AppColors.accentPurpleLight;
         textColor = AppColors.accentPurple;
         break;

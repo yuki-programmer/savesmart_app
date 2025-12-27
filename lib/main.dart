@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'config/theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_screen.dart';
@@ -7,6 +9,11 @@ import 'screens/analytics_screen.dart';
 import 'widgets/bottom_nav.dart';
 
 void main() {
+  // Windows/Linux/macOSデスクトップではFFI初期化が必要
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   runApp(const SaveSmartApp());
 }
 
