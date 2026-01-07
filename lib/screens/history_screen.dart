@@ -97,23 +97,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
-                size: 20,
-                color: AppColors.textSecondary,
+                size: 18,
+                color: AppColors.textSecondary.withOpacity(0.8),
               ),
             ),
           ),
@@ -121,10 +121,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Expanded(
             child: Text(
               '履歴',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary.withOpacity(0.9),
+                height: 1.3,
               ),
             ),
           ),
@@ -138,25 +139,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
               });
             },
             child: Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: _isSearching ? AppColors.accentBlueLight : Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                color: _isSearching ? AppColors.accentBlueLight.withOpacity(0.7) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
               child: Icon(
                 Icons.search_rounded,
-                size: 22,
+                size: 20,
                 color: _isSearching
                     ? AppColors.accentBlue
-                    : AppColors.textSecondary,
+                    : AppColors.textSecondary.withOpacity(0.7),
               ),
             ),
           ),
@@ -172,18 +173,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
         controller: _searchController,
         autofocus: true,
         onChanged: (_) => setState(() {}),
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: AppColors.textPrimary,
+        ),
         decoration: InputDecoration(
           hintText: 'カテゴリ・メモで検索',
-          hintStyle: GoogleFonts.plusJakartaSans(
-            color: AppColors.textMuted,
+          hintStyle: GoogleFonts.inter(
+            color: AppColors.textMuted.withOpacity(0.7),
+            fontSize: 14,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search,
-            color: AppColors.textMuted,
+            color: AppColors.textMuted.withOpacity(0.6),
+            size: 20,
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear, color: AppColors.textMuted),
+                  icon: Icon(Icons.clear, color: AppColors.textMuted.withOpacity(0.6), size: 18),
                   onPressed: () {
                     _searchController.clear();
                     setState(() {});
@@ -193,20 +201,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.borderSubtle),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: AppColors.borderSubtle.withOpacity(0.5)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.borderSubtle),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: AppColors.borderSubtle.withOpacity(0.5)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.accentBlue),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: AppColors.accentBlue.withOpacity(0.5)),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
-            vertical: 14,
+            vertical: 12,
           ),
         ),
       ),
@@ -223,17 +231,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             Icon(
               Icons.receipt_long_outlined,
-              size: 64,
-              color: AppColors.textMuted.withOpacity(0.5),
+              size: 56,
+              color: AppColors.textMuted.withOpacity(0.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
               _searchController.text.isNotEmpty
                   ? '検索結果がありません'
                   : '支出データがありません',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                color: AppColors.textMuted,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textMuted.withOpacity(0.7),
+                height: 1.4,
               ),
             ),
           ],
@@ -270,10 +280,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
               padding: const EdgeInsets.only(top: 16, bottom: 12),
               child: Text(
                 dateLabel,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary.withOpacity(0.7),
+                  height: 1.4,
                 ),
               ),
             ),
@@ -289,16 +300,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
         '${expense.createdAt.hour.toString().padLeft(2, '0')}:${expense.createdAt.minute.toString().padLeft(2, '0')}';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderSubtle.withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -306,27 +317,37 @@ class _HistoryScreenState extends State<HistoryScreen> {
         children: [
           // メインコンテンツ
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        expense.category,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      // カテゴリが「その他」の場合は非表示
+                      if (expense.category != 'その他')
+                        Text(
+                          expense.category,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary.withOpacity(0.9),
+                            height: 1.4,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
+                      if (expense.category != 'その他')
+                        const SizedBox(height: 4),
                       Text(
-                        '${expense.memo ?? ''} • $time',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          color: AppColors.textMuted,
+                        expense.category == 'その他'
+                            ? (expense.memo != null && expense.memo!.isNotEmpty ? '${expense.memo} • $time' : time)
+                            : '${expense.memo ?? ''} • $time',
+                        style: GoogleFonts.inter(
+                          fontSize: expense.category == 'その他' && (expense.memo == null || expense.memo!.isEmpty) ? 13 : 12,
+                          fontWeight: FontWeight.w400,
+                          color: expense.category == 'その他' && (expense.memo == null || expense.memo!.isEmpty)
+                              ? AppColors.textSecondary.withOpacity(0.8)
+                              : AppColors.textMuted.withOpacity(0.75),
+                          height: 1.4,
                         ),
                       ),
                     ],
@@ -337,10 +358,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   children: [
                     Text(
                       '¥${_formatNumber(expense.amount)}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary.withOpacity(0.9),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -352,9 +373,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
           // アクションボタン
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: AppColors.borderSubtle),
+                top: BorderSide(color: AppColors.borderSubtle.withOpacity(0.5)),
               ),
             ),
             child: Row(
@@ -397,25 +418,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
             border: isLast
                 ? null
-                : const Border(
-                    right: BorderSide(color: AppColors.borderSubtle),
+                : Border(
+                    right: BorderSide(color: AppColors.borderSubtle.withOpacity(0.5)),
                   ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(icon, style: const TextStyle(fontSize: 14)),
+              Text(icon, style: const TextStyle(fontSize: 13)),
               const SizedBox(width: 4),
               Text(
                 label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: color.withOpacity(0.9),
                 ),
               ),
             ],
@@ -432,33 +453,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     switch (type) {
       case 'saving':
-        bgColor = AppColors.accentGreenLight;
+        bgColor = AppColors.accentGreenLight.withOpacity(0.7);
         textColor = AppColors.accentGreen;
         break;
       case 'standard':
-        bgColor = AppColors.accentBlueLight;
+        bgColor = AppColors.accentBlueLight.withOpacity(0.7);
         textColor = AppColors.accentBlue;
         break;
       case 'reward':
-        bgColor = AppColors.accentPurpleLight;
+        bgColor = AppColors.accentPurpleLight.withOpacity(0.7);
         textColor = AppColors.accentPurple;
         break;
       default:
-        bgColor = AppColors.textMuted.withOpacity(0.1);
+        bgColor = AppColors.textMuted.withOpacity(0.08);
         textColor = AppColors.textMuted;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         label,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+        style: GoogleFonts.inter(
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
           color: textColor,
         ),
       ),
@@ -493,20 +514,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         title: Text(
           '支出を削除',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.inter(
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           '「${expense.category}」¥${_formatNumber(expense.amount)} を削除しますか？\nこの操作は取り消せません。',
-          style: GoogleFonts.plusJakartaSans(),
+          style: GoogleFonts.inter(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'キャンセル',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.inter(
                 color: AppColors.textSecondary,
               ),
             ),
@@ -520,7 +541,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 SnackBar(
                   content: Text(
                     '削除しました',
-                    style: GoogleFonts.plusJakartaSans(),
+                    style: GoogleFonts.inter(),
                   ),
                   backgroundColor: AppColors.accentRed,
                   behavior: SnackBarBehavior.floating,
@@ -532,7 +553,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             },
             child: Text(
               '削除',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.inter(
                 color: AppColors.accentRed,
                 fontWeight: FontWeight.bold,
               ),

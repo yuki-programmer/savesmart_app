@@ -27,13 +27,16 @@ class SaveSmartApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AppState()..loadData(),
+      create: (_) => AppState()
+        ..loadData()
+        ..loadEntitlement()
+        ..loadMonthlyAvailableAmount(),
       child: MaterialApp(
         title: 'SaveSmart',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           scaffoldBackgroundColor: AppColors.bgPrimary,
-          textTheme: GoogleFonts.plusJakartaSansTextTheme(),
+          textTheme: GoogleFonts.interTextTheme(),
           colorScheme: ColorScheme.fromSeed(
             seedColor: AppColors.accentGreen,
           ),
@@ -68,6 +71,17 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // タブ切り替えリクエストを監視
+    final appState = context.watch<AppState>();
+    final requestedTab = appState.consumeRequestedTabIndex();
+    if (requestedTab != null && requestedTab != _currentIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _currentIndex = requestedTab;
+        });
+      });
+    }
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,

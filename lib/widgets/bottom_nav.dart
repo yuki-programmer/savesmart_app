@@ -15,7 +15,7 @@ class BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 80,
+      height: 40,
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -33,7 +33,7 @@ class BottomNav extends StatelessWidget {
                 label: 'ホーム',
                 index: 0,
               ),
-              const SizedBox(width: 60),
+              const SizedBox(width: 48),
               _buildNavItem(
                 icon: Icons.bar_chart_rounded,
                 label: '分析',
@@ -42,7 +42,7 @@ class BottomNav extends StatelessWidget {
             ],
           ),
           Positioned(
-            top: -30,
+            top: -24,
             left: 0,
             right: 0,
             child: Center(
@@ -60,21 +60,21 @@ class BottomNav extends StatelessWidget {
     required int index,
   }) {
     final isActive = currentIndex == index;
-    final color = isActive ? AppColors.accentGreen : AppColors.textMuted;
+    final color = isActive ? AppColors.accentBlue : AppColors.textMuted;
 
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
+            Icon(icon, color: color, size: 18),
+            const SizedBox(height: 1),
             Text(
               label,
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: color,
@@ -90,30 +90,23 @@ class BottomNav extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTap(1),
       child: Container(
-        width: 60,
-        height: 60,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.accentGreen,
-              AppColors.accentGreenDark,
-            ],
-          ),
+          borderRadius: BorderRadius.circular(14),
+          color: AppColors.accentBlue.withOpacity(0.9),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentGreen.withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: AppColors.accentBlue.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: const Icon(
           Icons.add_rounded,
           color: Colors.white,
-          size: 32,
+          size: 22,
         ),
       ),
     );

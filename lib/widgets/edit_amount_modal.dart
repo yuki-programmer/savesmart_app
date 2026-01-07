@@ -47,91 +47,97 @@ class _EditAmountModalState extends State<EditAmountModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // ハンドル
           Container(
-            width: 40,
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textMuted.withOpacity(0.3),
+              color: AppColors.textMuted.withOpacity(0.25),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
           // タイトル
           Text(
             '金額を修正',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+            style: GoogleFonts.inter(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary.withOpacity(0.9),
+              height: 1.3,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             '${widget.expense.category}の金額を変更します',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              color: AppColors.textSecondary,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary.withOpacity(0.75),
+              height: 1.4,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // 現在の金額
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: AppColors.bgPrimary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   '現在の金額',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary.withOpacity(0.75),
+                    height: 1.4,
                   ),
                 ),
                 Text(
                   '¥${_formatNumber(widget.expense.amount)}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textMuted,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted.withOpacity(0.8),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // 新しい金額
           Text(
             '新しい金額',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary.withOpacity(0.75),
+              height: 1.4,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '¥${_formatNumber(_newAmount)}',
-            style: GoogleFonts.outfit(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 30,
+              fontWeight: FontWeight.w600,
               color: AppColors.accentOrange,
             ),
           ),
@@ -162,11 +168,11 @@ class _EditAmountModalState extends State<EditAmountModal> {
           // 差額表示
           if (_newAmount != widget.expense.amount)
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: _newAmount > widget.expense.amount
-                    ? AppColors.accentRedLight
-                    : AppColors.accentGreenLight,
+                    ? AppColors.accentRedLight.withOpacity(0.6)
+                    : AppColors.accentGreenLight.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -176,17 +182,17 @@ class _EditAmountModalState extends State<EditAmountModal> {
                     _newAmount > widget.expense.amount
                         ? Icons.arrow_upward_rounded
                         : Icons.arrow_downward_rounded,
-                    size: 18,
+                    size: 16,
                     color: _newAmount > widget.expense.amount
                         ? AppColors.accentRed
                         : AppColors.accentGreen,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Text(
                     '¥${_formatNumber((_newAmount - widget.expense.amount).abs())} ${_newAmount > widget.expense.amount ? '増加' : '減少'}',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                       color: _newAmount > widget.expense.amount
                           ? AppColors.accentRed
                           : AppColors.accentGreen,
@@ -195,7 +201,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                 ],
               ),
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // ボタン
           Row(
@@ -204,44 +210,44 @@ class _EditAmountModalState extends State<EditAmountModal> {
                 child: GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: AppColors.bgPrimary,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
                       child: Text(
                         'キャンセル',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary.withOpacity(0.75),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: GestureDetector(
                   onTap: _newAmount > 0 && _newAmount != widget.expense.amount
                       ? _performUpdate
                       : null,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: _newAmount > 0 && _newAmount != widget.expense.amount
-                          ? AppColors.accentOrange
-                          : AppColors.textMuted.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(14),
+                          ? AppColors.accentOrange.withOpacity(0.9)
+                          : AppColors.textMuted.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
                       child: Text(
                         '変更する',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                           color: Colors.white,
                         ),
                       ),
@@ -292,7 +298,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
               ),
               child: Text(
                 '$unit円',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
@@ -328,7 +334,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
       SnackBar(
         content: Text(
           '金額を ¥${_formatNumber(_newAmount)} に更新しました',
-          style: GoogleFonts.plusJakartaSans(),
+          style: GoogleFonts.inter(),
         ),
         backgroundColor: AppColors.accentOrange,
         behavior: SnackBarBehavior.floating,

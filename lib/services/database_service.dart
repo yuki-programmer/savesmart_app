@@ -3,6 +3,8 @@ import 'package:path/path.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
 import '../models/budget.dart';
+import '../models/fixed_cost.dart';
+import '../models/fixed_cost_category.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -24,8 +26,9 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -61,6 +64,30 @@ class DatabaseService {
         UNIQUE (year, month)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE fixed_cost_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        is_default INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE fixed_costs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER,
+        category_name_snapshot TEXT,
+        amount INTEGER NOT NULL,
+        memo TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (category_id) REFERENCES fixed_cost_categories (id)
+      )
+    ''');
+
+    // デフォルト固定費カテゴリを挿入
+    await _ensureDefaultFixedCostCategories(db);
 
     // デフォルトカテゴリを挿入
     final defaultCategories = [
@@ -104,7 +131,7 @@ class DatabaseService {
       'expenses',
       where: whereClause,
       whereArgs: whereArgs,
-      orderBy: 'created_at DESC',
+      orderBy: 'created_at DESC, id DESC',
     );
 
     return maps.map((map) => Expense.fromMap(map)).toList();
@@ -163,8 +190,70 @@ class DatabaseService {
     );
   }
 
+  // カテゴリ名を更新（関連する支出のカテゴリ名も更新）
+  Future<void> updateCategoryName(int id, String newName) async {
+    final db = await database;
+
+    // 古いカテゴリ名を取得
+    final categories = await db.query(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (categories.isNotEmpty) {
+      final oldName = categories.first['name'] as String;
+
+      // 関連する支出のカテゴリ名を更新
+      await db.update(
+        'expenses',
+        {'category': newName},
+        where: 'category = ?',
+        whereArgs: [oldName],
+      );
+    }
+
+    // カテゴリ名を更新
+    await db.update(
+      'categories',
+      {'name': newName},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<void> deleteCategory(int id) async {
     final db = await database;
+    await db.delete(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // カテゴリ削除（関連する支出も削除）
+  Future<void> deleteCategoryWithExpenses(int id) async {
+    final db = await database;
+
+    // カテゴリ名を取得
+    final categories = await db.query(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (categories.isNotEmpty) {
+      final categoryName = categories.first['name'] as String;
+
+      // 関連する支出を削除
+      await db.delete(
+        'expenses',
+        where: 'category = ?',
+        whereArgs: [categoryName],
+      );
+    }
+
+    // カテゴリを削除
     await db.delete(
       'categories',
       where: 'id = ?',
@@ -216,6 +305,161 @@ class DatabaseService {
       budget.toMap(),
       where: 'id = ?',
       whereArgs: [budget.id],
+    );
+  }
+
+  // Database migration
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS fixed_costs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          amount INTEGER NOT NULL,
+          day_of_month INTEGER,
+          memo TEXT,
+          created_at TEXT NOT NULL
+        )
+      ''');
+    }
+
+    if (oldVersion < 3) {
+      // 固定費カテゴリテーブルを作成
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS fixed_cost_categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          is_default INTEGER NOT NULL DEFAULT 0,
+          sort_order INTEGER NOT NULL
+        )
+      ''');
+
+      // デフォルト固定費カテゴリを挿入
+      await _ensureDefaultFixedCostCategories(db);
+
+      // fixed_costs テーブルに新しいカラムを追加（既存データの互換性維持）
+      await db.execute('ALTER TABLE fixed_costs ADD COLUMN category_id INTEGER');
+      await db.execute('ALTER TABLE fixed_costs ADD COLUMN category_name_snapshot TEXT');
+
+      // 既存の name を category_name_snapshot にコピー
+      await db.execute('UPDATE fixed_costs SET category_name_snapshot = name WHERE name IS NOT NULL');
+    }
+  }
+
+  /// デフォルト固定費カテゴリが存在しない場合に投入する
+  /// 判定条件: isDefault=1 のレコードが1件も無い場合に投入
+  /// マイグレーションと初期ロード両方から呼ばれる（二重化で堅牢性確保）
+  Future<void> _ensureDefaultFixedCostCategories(Database db) async {
+    // isDefault=1 のレコードが存在するかチェック
+    final existing = await db.query(
+      'fixed_cost_categories',
+      where: 'is_default = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+
+    // 既にデフォルトカテゴリが存在する場合は何もしない
+    if (existing.isNotEmpty) return;
+
+    // デフォルト固定費カテゴリを挿入
+    final defaultFixedCostCategories = ['家賃', '光熱費', 'スマホ代'];
+    for (var i = 0; i < defaultFixedCostCategories.length; i++) {
+      await db.insert('fixed_cost_categories', {
+        'name': defaultFixedCostCategories[i],
+        'is_default': 1,
+        'sort_order': i,
+      });
+    }
+  }
+
+  /// 外部から呼び出し可能なデフォルトカテゴリ確保メソッド
+  /// AppState.loadData() から呼び出して保険をかける
+  Future<void> ensureDefaultFixedCostCategories() async {
+    final db = await database;
+    await _ensureDefaultFixedCostCategories(db);
+  }
+
+  // FixedCostCategory CRUD
+  Future<List<FixedCostCategory>> getFixedCostCategories() async {
+    final db = await database;
+    final maps = await db.query(
+      'fixed_cost_categories',
+      orderBy: 'sort_order ASC',
+    );
+    return maps.map((map) => FixedCostCategory.fromMap(map)).toList();
+  }
+
+  Future<int> insertFixedCostCategory(FixedCostCategory category) async {
+    final db = await database;
+    final map = category.toMap();
+    map.remove('id');
+    return await db.insert('fixed_cost_categories', map);
+  }
+
+  Future<void> updateFixedCostCategory(FixedCostCategory category) async {
+    final db = await database;
+    await db.update(
+      'fixed_cost_categories',
+      category.toMap(),
+      where: 'id = ?',
+      whereArgs: [category.id],
+    );
+  }
+
+  Future<void> deleteFixedCostCategory(int id) async {
+    final db = await database;
+    await db.delete(
+      'fixed_cost_categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// カテゴリが固定費に参照されているかチェック
+  Future<bool> isFixedCostCategoryInUse(int categoryId) async {
+    final db = await database;
+    final result = await db.query(
+      'fixed_costs',
+      where: 'category_id = ?',
+      whereArgs: [categoryId],
+      limit: 1,
+    );
+    return result.isNotEmpty;
+  }
+
+  // FixedCost CRUD
+  Future<List<FixedCost>> getFixedCosts() async {
+    final db = await database;
+    final maps = await db.query(
+      'fixed_costs',
+      orderBy: 'created_at DESC',
+    );
+    return maps.map((map) => FixedCost.fromMap(map)).toList();
+  }
+
+  Future<int> insertFixedCost(FixedCost fixedCost) async {
+    final db = await database;
+    final map = fixedCost.toMap();
+    map.remove('id');
+    return await db.insert('fixed_costs', map);
+  }
+
+  Future<void> updateFixedCost(FixedCost fixedCost) async {
+    final db = await database;
+    await db.update(
+      'fixed_costs',
+      fixedCost.toMap(),
+      where: 'id = ?',
+      whereArgs: [fixedCost.id],
+    );
+  }
+
+  Future<void> deleteFixedCost(int id) async {
+    final db = await database;
+    await db.delete(
+      'fixed_costs',
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 }

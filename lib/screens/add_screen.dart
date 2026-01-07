@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../widgets/wheel_picker.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
+import 'fixed_cost_screen.dart';
 
 class AddScreen extends StatefulWidget {
   const AddScreen({super.key});
@@ -14,22 +15,46 @@ class AddScreen extends StatefulWidget {
 }
 
 class _AddScreenState extends State<AddScreen> {
-  // 支出セクション
-  bool _isExpenseExpanded = true;
-  bool _isBudgetExpanded = false;
+  // グレード選択状態（nullの場合はグレード選択画面を表示）
+  String? _selectedGrade;
+
+  // 支出入力
   int _expenseAmount = 0;
   int _expenseUnit = 100;
   String? _selectedCategory;
-  String _selectedType = 'standard';
   final TextEditingController _memoController = TextEditingController();
   final List<Map<String, dynamic>> _breakdowns = [];
 
-  // 予算セクション
-  int _budgetAmount = 0;
-  int _budgetUnit = 10000;
-  bool _isAddMode = true; // true: 追加, false: 減額
-
-  // カテゴリリストはAppStateから取得
+  // グレード定義
+  final List<Map<String, dynamic>> _grades = [
+    {
+      'value': 'saving',
+      'label': '節約',
+      'description': 'いい判断',
+      'icon': Icons.savings_outlined,
+      'color': AppColors.accentGreen,
+      'lightColor': AppColors.accentGreenLight,
+      'shadowOpacity': 0.06,
+    },
+    {
+      'value': 'standard',
+      'label': '標準',
+      'description': 'いつも通り',
+      'icon': Icons.balance_outlined,
+      'color': AppColors.accentBlue,
+      'lightColor': AppColors.accentBlueLight,
+      'shadowOpacity': 0.03,
+    },
+    {
+      'value': 'reward',
+      'label': 'ご褒美',
+      'description': 'たまの楽しみ',
+      'icon': Icons.star_outline,
+      'color': AppColors.accentOrange,
+      'lightColor': AppColors.accentOrangeLight,
+      'shadowOpacity': 0.04,
+    },
+  ];
 
   @override
   void dispose() {
@@ -39,20 +64,419 @@ class _AddScreenState extends State<AddScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_selectedGrade == null) {
+      return _buildGradeSelectionScreen();
+    } else {
+      return _buildExpenseInputScreen();
+    }
+  }
+
+  // ========== グレード選択画面 ==========
+  Widget _buildGradeSelectionScreen() {
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildGradeHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 32),
+                    // 問い
+                    Text(
+                      'これはどんな買い物？',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // ディスクレーマー
+                    Text(
+                      '迷ったら、直感でOK',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary.withOpacity(0.8),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'あとからいつでも変更できます',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary.withOpacity(0.7),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    // グレード選択カード
+                    ..._grades.map((grade) => _buildGradeCard(grade)),
+                    const SizedBox(height: 16),
+                    // 固定費を登録するリンク
+                    _buildFixedCostLink(),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradeHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          '支出を記録',
+          style: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary.withOpacity(0.9),
+            height: 1.3,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradeCard(Map<String, dynamic> grade) {
+    final isSaving = grade['value'] == 'saving';
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedGrade = grade['value'] as String;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isSaving ? 0.025 : 0.015),
+              blurRadius: 8,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: (grade['lightColor'] as Color).withOpacity(isSaving ? 0.9 : 0.7),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(
+                  grade['icon'] as IconData,
+                  size: 22,
+                  color: grade['color'] as Color,
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            // ラベルと説明
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    grade['label'] as String,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary.withOpacity(0.9),
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    grade['description'] as String,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary.withOpacity(0.75),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 矢印
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.textMuted.withOpacity(0.5),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFixedCostLink() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const FixedCostScreen(),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '固定費を登録する',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary.withOpacity(0.8),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: AppColors.textSecondary.withOpacity(0.6),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========== 金額・カテゴリ入力画面 ==========
+  Widget _buildExpenseInputScreen() {
+    final selectedGradeData = _grades.firstWhere(
+      (g) => g['value'] == _selectedGrade,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildExpenseHeader(),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildExpenseSection(),
+                    // 選択中のグレード表示（タップで変更可能）
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedGrade = null;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selectedGradeData['lightColor'] as Color,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selectedGradeData['color'] as Color,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              selectedGradeData['icon'] as IconData,
+                              size: 18,
+                              color: selectedGradeData['color'] as Color,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              selectedGradeData['label'] as String,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: selectedGradeData['color'] as Color,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: selectedGradeData['color'] as Color,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // 金額表示
+                    Center(
+                      child: Text(
+                        '¥${_formatNumber(_expenseAmount)}',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: selectedGradeData['color'] as Color,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    _buildBudgetSection(),
+
+                    // 単位選択
+                    _buildUnitSelector(
+                      units: [10, 100, 1000, 10000],
+                      selectedUnit: _expenseUnit,
+                      onChanged: (unit) {
+                        setState(() {
+                          _expenseUnit = unit;
+                          _expenseAmount = 0;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+
+                    // ホイールピッカー
+                    WheelPicker(
+                      key: ValueKey('expense_$_expenseUnit'),
+                      unit: _expenseUnit,
+                      maxMultiplier: _expenseUnit >= 1000 ? 100 : 99,
+                      initialValue: _expenseAmount,
+                      highlightColor: selectedGradeData['lightColor'] as Color,
+                      onChanged: (value) {
+                        setState(() {
+                          _expenseAmount = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // カテゴリ選択
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'カテゴリ',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'あとで変更できます',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextButton(
+                          onPressed: _showAddCategoryModal,
+                          child: Text(
+                            '+ 新規追加',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: selectedGradeData['color'] as Color,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCategoryGrid(selectedGradeData),
+                    const SizedBox(height: 24),
+
+                    // 内訳セクション
+                    if (_breakdowns.isNotEmpty) ...[
+                      Text(
+                        '内訳',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ..._breakdowns.map((b) => _buildBreakdownItem(b)),
+                      const SizedBox(height: 12),
+                    ],
+                    _buildAddBreakdownButton(),
+                    const SizedBox(height: 24),
+
+                    // メモ入力
+                    Text(
+                      'メモ（任意）',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _memoController,
+                      decoration: InputDecoration(
+                        hintText: '例: スタバ 新作フラペチーノ',
+                        hintStyle: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.bgPrimary,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // 登録内容の確認表示
+                    if (_expenseAmount > 0 && _selectedCategory != null)
+                      _buildExpenseSummary(selectedGradeData),
+                    if (_expenseAmount > 0 && _selectedCategory != null)
+                      const SizedBox(height: 24),
+
+                    // 記録ボタン
+                    _buildGradientButton(
+                      label: '記録する',
+                      onPressed: _recordExpense,
+                      colors: [
+                        selectedGradeData['color'] as Color,
+                        (selectedGradeData['color'] as Color).withOpacity(0.8),
+                      ],
+                    ),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -64,518 +488,72 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildExpenseHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            '追加',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedGrade = null;
+              });
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 18,
+                color: AppColors.textSecondary.withOpacity(0.8),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              '支出を記録',
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary.withOpacity(0.9),
+                height: 1.3,
+              ),
             ),
           ),
           Container(
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.close, size: 22),
-              color: AppColors.textSecondary,
-              onPressed: () {},
+              icon: Icon(Icons.close, size: 20, color: AppColors.textSecondary.withOpacity(0.7)),
+              onPressed: () {
+                setState(() {
+                  _selectedGrade = null;
+                });
+              },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExpenseSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildAccordionHeader(
-            icon: '💸',
-            title: '支出を記録',
-            isExpanded: _isExpenseExpanded,
-            onTap: () {
-              setState(() {
-                _isExpenseExpanded = !_isExpenseExpanded;
-              });
-            },
-          ),
-          if (_isExpenseExpanded) _buildExpenseContent(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBudgetSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildAccordionHeader(
-            icon: '💰',
-            title: '予算を調整',
-            isExpanded: _isBudgetExpanded,
-            onTap: () {
-              setState(() {
-                _isBudgetExpanded = !_isBudgetExpanded;
-              });
-            },
-          ),
-          if (_isBudgetExpanded) _buildBudgetContent(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAccordionHeader({
-    required String icon,
-    required String title,
-    required bool isExpanded,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            Icon(
-              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              color: AppColors.textMuted,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpenseContent() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 金額表示
-          Center(
-            child: Text(
-              '¥${_formatNumber(_expenseAmount)}',
-              style: GoogleFonts.outfit(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: AppColors.accentGreen,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 単位選択
-          _buildUnitSelector(
-            units: [10, 100, 1000],
-            selectedUnit: _expenseUnit,
-            onChanged: (unit) {
-              setState(() {
-                _expenseUnit = unit;
-                _expenseAmount = 0;
-              });
-            },
-          ),
-          const SizedBox(height: 8),
-
-          // ホイールピッカー
-          WheelPicker(
-            key: ValueKey('expense_$_expenseUnit'),
-            unit: _expenseUnit,
-            maxMultiplier: _expenseUnit == 1000 ? 100 : 99,
-            initialValue: _expenseAmount,
-            highlightColor: AppColors.accentGreenLight,
-            onChanged: (value) {
-              setState(() {
-                _expenseAmount = value;
-              });
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // カテゴリ選択
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'カテゴリ',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextButton(
-                onPressed: _showAddCategoryModal,
-                child: Text(
-                  '+ 新規追加',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.accentGreen,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildCategoryGrid(),
-          const SizedBox(height: 24),
-
-          // 内訳セクション
-          if (_breakdowns.isNotEmpty) ...[
-            Text(
-              '内訳',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ..._breakdowns.map((b) => _buildBreakdownItem(b)),
-            const SizedBox(height: 12),
-          ],
-          _buildAddBreakdownButton(),
-          const SizedBox(height: 24),
-
-          // タイプ選択
-          Text(
-            'タイプ',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildTypeSelector(),
-          const SizedBox(height: 24),
-
-          // メモ入力
-          Text(
-            'メモ（任意）',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _memoController,
-            decoration: InputDecoration(
-              hintText: '例: スタバ 新作フラペチーノ',
-              hintStyle: GoogleFonts.plusJakartaSans(
-                color: AppColors.textMuted,
-              ),
-              filled: true,
-              fillColor: AppColors.bgPrimary,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // 登録内容の確認表示
-          if (_expenseAmount > 0 && _selectedCategory != null)
-            _buildExpenseSummary(),
-          if (_expenseAmount > 0 && _selectedCategory != null)
-            const SizedBox(height: 24),
-
-          // 記録ボタン
-          _buildGradientButton(
-            label: '記録する',
-            onPressed: _recordExpense,
-            colors: [AppColors.accentGreen, AppColors.accentGreenDark],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBudgetContent() {
-    final currentBudget = context.watch<AppState>().currentBudget?.amount ?? 0;
-    final newBudget = _isAddMode
-        ? currentBudget + _budgetAmount
-        : currentBudget - _budgetAmount;
-    final isValidBudget = newBudget >= 0;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        children: [
-          // 現在の予算表示
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  '現在の予算',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '¥${_formatNumber(currentBudget)}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // 追加/減額トグル
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isAddMode = true;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _isAddMode ? AppColors.accentGreenLight : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '＋ 追加',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: _isAddMode ? AppColors.accentGreen : AppColors.textMuted,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isAddMode = false;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: !_isAddMode ? AppColors.accentRedLight : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '− 減額',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: !_isAddMode ? AppColors.accentRed : AppColors.textMuted,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // 調整金額表示
-          Center(
-            child: Text(
-              '${_isAddMode ? '+' : '-'} ¥${_formatNumber(_budgetAmount)}',
-              style: GoogleFonts.outfit(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: _isAddMode ? AppColors.accentGreen : AppColors.accentRed,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 単位選択
-          _buildUnitSelector(
-            units: [1000, 10000, 100000],
-            selectedUnit: _budgetUnit,
-            onChanged: (unit) {
-              setState(() {
-                _budgetUnit = unit;
-                _budgetAmount = 0;
-              });
-            },
-            labels: ['1000円', '1万円', '10万円'],
-          ),
-          const SizedBox(height: 8),
-
-          // ホイールピッカー
-          WheelPicker(
-            key: ValueKey('budget_${_budgetUnit}_$_isAddMode'),
-            unit: _budgetUnit,
-            maxMultiplier: _budgetUnit == 100000 ? 10 : 100,
-            initialValue: _budgetAmount,
-            highlightColor: _isAddMode ? AppColors.accentGreenLight : AppColors.accentRedLight,
-            onChanged: (value) {
-              setState(() {
-                _budgetAmount = value;
-              });
-            },
-          ),
-          const SizedBox(height: 20),
-
-          // プレビュー表示
-          if (_budgetAmount > 0)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isValidBudget
-                    ? (_isAddMode ? AppColors.accentGreenLight : AppColors.accentRedLight).withOpacity(0.5)
-                    : AppColors.accentRed.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isValidBudget
-                      ? (_isAddMode ? AppColors.accentGreen : AppColors.accentRed).withOpacity(0.3)
-                      : AppColors.accentRed.withOpacity(0.5),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '変更後の予算',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        '¥${_formatNumber(newBudget)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: isValidBudget
-                              ? (_isAddMode ? AppColors.accentGreen : AppColors.accentRed)
-                              : AppColors.accentRed,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (!isValidBudget) ...[
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Icon(Icons.warning_amber_rounded, color: AppColors.accentRed, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '予算がマイナスになります',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.accentRed,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          if (_budgetAmount > 0) const SizedBox(height: 24),
-
-          // 確定ボタン
-          _buildGradientButton(
-            label: _isAddMode ? '予算を追加' : '予算を減額',
-            onPressed: isValidBudget && _budgetAmount > 0 ? _setBudget : () {},
-            colors: _isAddMode
-                ? [AppColors.accentGreen, AppColors.accentGreenDark]
-                : [AppColors.accentRed, const Color(0xFFDC2626)],
           ),
         ],
       ),
@@ -588,55 +566,59 @@ class _AddScreenState extends State<AddScreen> {
     required Function(int) onChanged,
     List<String>? labels,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(units.length, (index) {
-          final unit = units[index];
-          final isSelected = selectedUnit == unit;
-          final label = labels != null ? labels[index] : '$unit円';
-          return GestureDetector(
-            onTap: () => onChanged(unit),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected
-                      ? AppColors.textPrimary
-                      : AppColors.textMuted,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.bgPrimary,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(units.length, (index) {
+            final unit = units[index];
+            final isSelected = selectedUnit == unit;
+            final label = labels != null ? labels[index] : '$unit円';
+            return GestureDetector(
+              onTap: () => onChanged(unit),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ),
     );
   }
 
-  Widget _buildCategoryGrid() {
+  Widget _buildCategoryGrid(Map<String, dynamic> gradeData) {
     final categories = context.watch<AppState>().categoryNames;
+    final gradeColor = gradeData['color'] as Color;
+    final gradeLightColor = gradeData['lightColor'] as Color;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -658,26 +640,20 @@ class _AddScreenState extends State<AddScreen> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.accentGreenLight
-                  : AppColors.bgPrimary,
+              color: isSelected ? gradeLightColor : AppColors.bgPrimary,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isSelected
-                    ? AppColors.accentGreen
-                    : Colors.transparent,
+                color: isSelected ? gradeColor : Colors.transparent,
                 width: 1.5,
               ),
             ),
             child: Center(
               child: Text(
                 category,
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isSelected
-                      ? AppColors.accentGreen
-                      : AppColors.textSecondary,
+                  color: isSelected ? gradeColor : AppColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -707,7 +683,7 @@ class _AddScreenState extends State<AddScreen> {
               children: [
                 Text(
                   breakdown['category'] as String,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textPrimary,
@@ -722,7 +698,7 @@ class _AddScreenState extends State<AddScreen> {
                   ),
                   child: Text(
                     typeInfo['label'] as String,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: typeInfo['textColor'] as Color,
@@ -734,7 +710,7 @@ class _AddScreenState extends State<AddScreen> {
           ),
           Text(
             '¥${_formatNumber(breakdown['amount'] as int)}',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -761,38 +737,53 @@ class _AddScreenState extends State<AddScreen> {
   Map<String, dynamic> _getTypeInfo(String type) {
     switch (type) {
       case 'saving':
-        return {'label': '💰 節約', 'color': AppColors.accentGreenLight, 'textColor': AppColors.accentGreen};
+        return {
+          'label': '💰 節約',
+          'color': AppColors.accentGreenLight,
+          'textColor': AppColors.accentGreen
+        };
       case 'reward':
-        return {'label': '⭐ ご褒美', 'color': AppColors.accentPurpleLight, 'textColor': AppColors.accentPurple};
+        return {
+          'label': '⭐ ご褒美',
+          'color': AppColors.accentPurpleLight,
+          'textColor': AppColors.accentPurple
+        };
       default:
-        return {'label': '🎯 標準', 'color': AppColors.accentBlueLight, 'textColor': AppColors.accentBlue};
+        return {
+          'label': '🎯 標準',
+          'color': AppColors.accentBlueLight,
+          'textColor': AppColors.accentBlue
+        };
     }
   }
 
-  int get _breakdownsTotal => _breakdowns.fold(0, (sum, b) => sum + (b['amount'] as int));
+  int get _breakdownsTotal =>
+      _breakdowns.fold(0, (sum, b) => sum + (b['amount'] as int));
 
   int get _mainCategoryAmount => _expenseAmount - _breakdownsTotal;
 
-  Widget _buildExpenseSummary() {
+  Widget _buildExpenseSummary(Map<String, dynamic> gradeData) {
     final hasBreakdowns = _breakdowns.isNotEmpty;
-    final mainTypeInfo = _getTypeInfo(_selectedType);
+    final mainTypeInfo = _getTypeInfo(_selectedGrade ?? 'standard');
+    final gradeColor = gradeData['color'] as Color;
+    final gradeLightColor = gradeData['lightColor'] as Color;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.accentGreenLight.withOpacity(0.5),
+        color: gradeLightColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accentGreen.withOpacity(0.3)),
+        border: Border.all(color: gradeColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '登録内容',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.accentGreen,
+              color: gradeColor,
             ),
           ),
           const SizedBox(height: 12),
@@ -805,7 +796,7 @@ class _AddScreenState extends State<AddScreen> {
                 children: [
                   Text(
                     _selectedCategory ?? '',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -820,7 +811,7 @@ class _AddScreenState extends State<AddScreen> {
                     ),
                     child: Text(
                       mainTypeInfo['label'] as String,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: mainTypeInfo['textColor'] as Color,
@@ -831,7 +822,7 @@ class _AddScreenState extends State<AddScreen> {
               ),
               Text(
                 '¥${_formatNumber(hasBreakdowns ? _mainCategoryAmount : _expenseAmount)}',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -854,7 +845,7 @@ class _AddScreenState extends State<AddScreen> {
                       children: [
                         Text(
                           b['category'] as String,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: AppColors.textSecondary,
@@ -869,7 +860,7 @@ class _AddScreenState extends State<AddScreen> {
                           ),
                           child: Text(
                             typeInfo['label'] as String,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: typeInfo['textColor'] as Color,
@@ -880,7 +871,7 @@ class _AddScreenState extends State<AddScreen> {
                     ),
                     Text(
                       '¥${_formatNumber(b['amount'] as int)}',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
@@ -896,7 +887,7 @@ class _AddScreenState extends State<AddScreen> {
               children: [
                 Text(
                   '合計',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -904,10 +895,10 @@ class _AddScreenState extends State<AddScreen> {
                 ),
                 Text(
                   '¥${_formatNumber(_expenseAmount)}',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.accentGreen,
+                    color: gradeColor,
                   ),
                 ),
               ],
@@ -925,12 +916,13 @@ class _AddScreenState extends State<AddScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.accentRed, size: 18),
+                  const Icon(Icons.warning_amber_rounded,
+                      color: AppColors.accentRed, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '内訳の合計が入力金額を超えています',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.accentRed,
@@ -951,13 +943,12 @@ class _AddScreenState extends State<AddScreen> {
       onTap: _showAddBreakdownModal,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: AppColors.accentBlue,
-            width: 1.5,
-            style: BorderStyle.solid,
+            color: AppColors.textMuted.withOpacity(0.3),
+            width: 1,
           ),
         ),
         child: Row(
@@ -965,74 +956,30 @@ class _AddScreenState extends State<AddScreen> {
           children: [
             const Icon(
               Icons.add,
-              color: AppColors.accentBlue,
-              size: 20,
+              color: AppColors.textMuted,
+              size: 18,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Text(
               '内訳を追加',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.accentBlue,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '必要な人だけ',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textMuted.withOpacity(0.7),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTypeSelector() {
-    final types = [
-      {'key': 'saving', 'label': '💰 節約', 'color': AppColors.accentGreenLight, 'textColor': AppColors.accentGreen},
-      {'key': 'standard', 'label': '🎯 標準', 'color': AppColors.accentBlueLight, 'textColor': AppColors.accentBlue},
-      {'key': 'reward', 'label': '⭐ ご褒美', 'color': AppColors.accentPurpleLight, 'textColor': AppColors.accentPurple},
-    ];
-
-    return Row(
-      children: types.map((type) {
-        final isSelected = _selectedType == type['key'];
-        return Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedType = type['key'] as String;
-              });
-            },
-            child: Container(
-              margin: EdgeInsets.only(
-                right: type['key'] != 'reward' ? 8 : 0,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? type['color'] as Color
-                    : AppColors.bgPrimary,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected
-                      ? type['textColor'] as Color
-                      : Colors.transparent,
-                  width: 1.5,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  type['label'] as String,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected
-                        ? type['textColor'] as Color
-                        : AppColors.textMuted,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 
@@ -1045,28 +992,24 @@ class _AddScreenState extends State<AddScreen> {
       onTap: onPressed,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 15),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: colors,
-          ),
+          borderRadius: BorderRadius.circular(12),
+          color: colors[0].withOpacity(0.9),
           boxShadow: [
             BoxShadow(
-              color: colors[0].withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: colors[0].withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Center(
           child: Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
@@ -1077,9 +1020,9 @@ class _AddScreenState extends State<AddScreen> {
 
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 
   void _showAddCategoryModal() {
@@ -1104,7 +1047,7 @@ class _AddScreenState extends State<AddScreen> {
             children: [
               Text(
                 'カテゴリを追加',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -1116,7 +1059,7 @@ class _AddScreenState extends State<AddScreen> {
                 autofocus: true,
                 decoration: InputDecoration(
                   hintText: 'カテゴリ名を入力',
-                  hintStyle: GoogleFonts.plusJakartaSans(
+                  hintStyle: GoogleFonts.inter(
                     color: AppColors.textMuted,
                   ),
                   filled: true,
@@ -1146,7 +1089,7 @@ class _AddScreenState extends State<AddScreen> {
                         child: Center(
                           child: Text(
                             'キャンセル',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textSecondary,
@@ -1161,7 +1104,9 @@ class _AddScreenState extends State<AddScreen> {
                     child: GestureDetector(
                       onTap: () async {
                         if (controller.text.isNotEmpty) {
-                          await context.read<AppState>().addCategory(controller.text);
+                          await context
+                              .read<AppState>()
+                              .addCategory(controller.text);
                           if (!context.mounted) return;
                           Navigator.pop(context);
                         }
@@ -1175,7 +1120,7 @@ class _AddScreenState extends State<AddScreen> {
                         child: Center(
                           child: Text(
                             '追加',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -1199,9 +1144,24 @@ class _AddScreenState extends State<AddScreen> {
     required Function(String) onChanged,
   }) {
     final types = [
-      {'key': 'saving', 'label': '💰 節約', 'color': AppColors.accentGreenLight, 'textColor': AppColors.accentGreen},
-      {'key': 'standard', 'label': '🎯 標準', 'color': AppColors.accentBlueLight, 'textColor': AppColors.accentBlue},
-      {'key': 'reward', 'label': '⭐ ご褒美', 'color': AppColors.accentPurpleLight, 'textColor': AppColors.accentPurple},
+      {
+        'key': 'saving',
+        'label': '💰 節約',
+        'color': AppColors.accentGreenLight,
+        'textColor': AppColors.accentGreen
+      },
+      {
+        'key': 'standard',
+        'label': '🎯 標準',
+        'color': AppColors.accentBlueLight,
+        'textColor': AppColors.accentBlue
+      },
+      {
+        'key': 'reward',
+        'label': '⭐ ご褒美',
+        'color': AppColors.accentPurpleLight,
+        'textColor': AppColors.accentPurple
+      },
     ];
 
     return Row(
@@ -1216,21 +1176,18 @@ class _AddScreenState extends State<AddScreen> {
               ),
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? type['color'] as Color
-                    : AppColors.bgPrimary,
+                color: isSelected ? type['color'] as Color : AppColors.bgPrimary,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isSelected
-                      ? type['textColor'] as Color
-                      : Colors.transparent,
+                  color:
+                      isSelected ? type['textColor'] as Color : Colors.transparent,
                   width: 1.5,
                 ),
               ),
               child: Center(
                 child: Text(
                   type['label'] as String,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: isSelected
@@ -1252,9 +1209,8 @@ class _AddScreenState extends State<AddScreen> {
     String? breakdownCategory;
     String breakdownType = 'standard';
     final categories = context.read<AppState>().categoryNames;
-    final availableCategories = categories
-        .where((c) => c != _selectedCategory)
-        .toList();
+    final availableCategories =
+        categories.where((c) => c != _selectedCategory).toList();
 
     showModalBottomSheet(
       context: context,
@@ -1282,7 +1238,7 @@ class _AddScreenState extends State<AddScreen> {
                       children: [
                         Text(
                           '内訳を追加',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
@@ -1294,7 +1250,7 @@ class _AddScreenState extends State<AddScreen> {
                         Center(
                           child: Text(
                             '¥${_formatNumber(breakdownAmount)}',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
                               color: AppColors.accentBlue,
@@ -1306,7 +1262,7 @@ class _AddScreenState extends State<AddScreen> {
                         // 単位選択
                         Center(
                           child: _buildUnitSelector(
-                            units: [10, 100, 1000],
+                            units: [10, 100, 1000, 10000],
                             selectedUnit: breakdownUnit,
                             onChanged: (unit) {
                               setModalState(() {
@@ -1324,7 +1280,7 @@ class _AddScreenState extends State<AddScreen> {
                           child: WheelPicker(
                             key: ValueKey('breakdown_$breakdownUnit'),
                             unit: breakdownUnit,
-                            maxMultiplier: breakdownUnit == 1000 ? 100 : 99,
+                            maxMultiplier: breakdownUnit >= 1000 ? 100 : 99,
                             initialValue: breakdownAmount,
                             highlightColor: AppColors.accentBlueLight,
                             onChanged: (value) {
@@ -1339,7 +1295,7 @@ class _AddScreenState extends State<AddScreen> {
                         // カテゴリ選択
                         Text(
                           'カテゴリ',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
@@ -1356,7 +1312,7 @@ class _AddScreenState extends State<AddScreen> {
                             value: breakdownCategory,
                             hint: Text(
                               'カテゴリを選択',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.inter(
                                 color: AppColors.textMuted,
                               ),
                             ),
@@ -1367,7 +1323,7 @@ class _AddScreenState extends State<AddScreen> {
                                 value: category,
                                 child: Text(
                                   category,
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: GoogleFonts.inter(
                                     color: AppColors.textPrimary,
                                   ),
                                 ),
@@ -1385,7 +1341,7 @@ class _AddScreenState extends State<AddScreen> {
                         // タイプ選択
                         Text(
                           'タイプ',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
@@ -1423,7 +1379,7 @@ class _AddScreenState extends State<AddScreen> {
                             child: Center(
                               child: Text(
                                 'キャンセル',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textSecondary,
@@ -1457,7 +1413,7 @@ class _AddScreenState extends State<AddScreen> {
                             child: Center(
                               child: Text(
                                 '追加',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -1479,7 +1435,10 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   Future<void> _recordExpense() async {
-    if (_expenseAmount <= 0 || _selectedCategory == null) return;
+    if (_expenseAmount <= 0) return;
+
+    // カテゴリ未選択の場合はデフォルトカテゴリを使用
+    final category = _selectedCategory ?? 'その他';
 
     // 内訳がある場合、メイン金額が0以下なら登録しない
     if (_breakdowns.isNotEmpty && _mainCategoryAmount <= 0) {
@@ -1487,7 +1446,7 @@ class _AddScreenState extends State<AddScreen> {
         SnackBar(
           content: Text(
             '内訳の合計が入力金額を超えています',
-            style: GoogleFonts.plusJakartaSans(),
+            style: GoogleFonts.inter(),
           ),
           backgroundColor: AppColors.accentRed,
           behavior: SnackBarBehavior.floating,
@@ -1502,12 +1461,13 @@ class _AddScreenState extends State<AddScreen> {
     final appState = context.read<AppState>();
 
     // 内訳がある場合はメイン金額から内訳合計を差し引く
-    final mainAmount = _breakdowns.isNotEmpty ? _mainCategoryAmount : _expenseAmount;
+    final mainAmount =
+        _breakdowns.isNotEmpty ? _mainCategoryAmount : _expenseAmount;
 
     final expense = Expense(
       amount: mainAmount,
-      category: _selectedCategory!,
-      grade: _selectedType,
+      category: category,
+      grade: _selectedGrade ?? 'standard',
       memo: _memoController.text.isEmpty ? null : _memoController.text,
       createdAt: DateTime.now(),
     );
@@ -1521,62 +1481,27 @@ class _AddScreenState extends State<AddScreen> {
 
     if (!mounted) return;
 
-    // 入力をリセット
+    final gradeData = _grades.firstWhere(
+      (g) => g['value'] == _selectedGrade,
+      orElse: () => _grades[1],
+    );
+
+    // 入力をリセットしてグレード選択に戻る
     setState(() {
       _expenseAmount = 0;
       _selectedCategory = null;
-      _selectedType = 'standard';
       _memoController.clear();
       _breakdowns.clear();
+      _selectedGrade = null;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           '¥${_formatNumber(expense.amount)} を記録しました',
-          style: GoogleFonts.plusJakartaSans(),
+          style: GoogleFonts.inter(),
         ),
-        backgroundColor: AppColors.accentGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _setBudget() async {
-    if (_budgetAmount <= 0) return;
-
-    final appState = context.read<AppState>();
-    final currentBudget = appState.currentBudget?.amount ?? 0;
-    final newBudget = _isAddMode
-        ? currentBudget + _budgetAmount
-        : currentBudget - _budgetAmount;
-
-    // マイナスになる場合は設定しない
-    if (newBudget < 0) return;
-
-    await appState.setBudget(newBudget);
-
-    if (!mounted) return;
-
-    final message = _isAddMode
-        ? '予算を ¥${_formatNumber(_budgetAmount)} 追加しました'
-        : '予算を ¥${_formatNumber(_budgetAmount)} 減額しました';
-
-    // 入力をリセット
-    setState(() {
-      _budgetAmount = 0;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: GoogleFonts.plusJakartaSans(),
-        ),
-        backgroundColor: _isAddMode ? AppColors.accentGreen : AppColors.accentRed,
+        backgroundColor: gradeData['color'] as Color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),

@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +6,9 @@ import '../config/constants.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
 import 'history_screen.dart';
+import 'category_manage_screen.dart';
+import 'settings_screen.dart';
+import 'fixed_cost_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,58 +17,80 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  bool _isFlipped = false;
-  int _selectedPeriod = 2; // 0: 今日, 1: 今週, 2: 今月
-  late AnimationController _flipController;
-  late AnimationController _fadeController;
-  late Animation<double> _flipAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _flipController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
-    );
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _flipController.dispose();
-    _fadeController.dispose();
-    super.dispose();
-  }
-
-  void _toggleFlip() {
-    setState(() {
-      _isFlipped = !_isFlipped;
-    });
-    if (_isFlipped) {
-      _flipController.forward();
-    } else {
-      _flipController.reverse();
-    }
-  }
-
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'おはようございます';
-    if (hour < 18) return 'こんにちは';
-    return 'こんばんは';
-  }
-
+class _HomeScreenState extends State<HomeScreen> {
   String _getFormattedDate() {
     final now = DateTime.now();
     final weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     return '${now.month}月${now.day}日 ${weekdays[now.weekday - 1]}曜日';
+  }
+
+  // 状態に応じた評価文を返す
+  Map<String, dynamic> _getEvaluation(AppState appState) {
+    final savings = appState.thisMonthSavings;
+    final expenseCount = appState.thisMonthExpenses.length;
+
+    // データがない場合
+    if (expenseCount == 0) {
+      return {
+        'emoji': '👋',
+        'title': '記録をはじめよう',
+        'subtitle': '最初の支出を記録してみましょう',
+        'color': AppColors.accentBlue,
+      };
+    }
+
+    // 節約できている場合
+    if (savings > 0) {
+      if (savings >= 5000) {
+        return {
+          'emoji': '🎉',
+          'title': 'すごい！かなりお得です',
+          'subtitle': '今月はいい買い方ができています',
+          'color': AppColors.accentGreen,
+        };
+      } else if (savings >= 1000) {
+        return {
+          'emoji': '✨',
+          'title': 'いい調子です',
+          'subtitle': '賢い選択が続いています',
+          'color': AppColors.accentGreen,
+        };
+      } else {
+        return {
+          'emoji': '👍',
+          'title': 'いい感じ',
+          'subtitle': 'このペースを維持しましょう',
+          'color': AppColors.accentGreen,
+        };
+      }
+    }
+
+    // 使いすぎの場合
+    if (savings < 0) {
+      if (savings <= -5000) {
+        return {
+          'emoji': '💭',
+          'title': '少し振り返ってみましょう',
+          'subtitle': 'どこで差が出たか確認できます',
+          'color': AppColors.accentOrange,
+        };
+      } else {
+        return {
+          'emoji': '📝',
+          'title': '様子を見てみましょう',
+          'subtitle': '次の買い物で調整できます',
+          'color': AppColors.accentBlue,
+        };
+      }
+    }
+
+    // ちょうど0の場合
+    return {
+      'emoji': '📊',
+      'title': '今月は様子見でOK',
+      'subtitle': 'いつも通りの買い方です',
+      'color': AppColors.accentBlue,
+    };
   }
 
   @override
@@ -84,12 +108,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHeader(),
-                        const SizedBox(height: 24),
-                        _buildFlipCard(appState),
-                        const SizedBox(height: 32),
-                        _buildCategoryPerformance(appState),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
+                        _buildEvaluationCard(appState),
+                        _buildAvailableAmountLink(appState),
+                        const SizedBox(height: 28),
+                        _buildCategorySection(appState),
+                        const SizedBox(height: 28),
                         _buildRecentExpenses(appState),
+                        const SizedBox(height: 28),
+                        _buildFixedCostsSection(appState),
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -104,275 +131,272 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getGreeting(),
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _getFormattedDate(),
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
+        Text(
+          _getFormattedDate(),
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textSecondary.withOpacity(0.7),
+            height: 1.3,
+          ),
         ),
         Container(
-          width: 44,
-          height: 44,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.settings_outlined, size: 22),
-            color: AppColors.textSecondary,
-            onPressed: () {},
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFlipCard(AppState appState) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: _toggleFlip,
-          child: AnimatedBuilder(
-            animation: _flipAnimation,
-            builder: (context, child) {
-              final angle = _flipAnimation.value * math.pi;
-              final isFront = angle < math.pi / 2;
-              return Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(angle),
-                child: isFront
-                    ? _buildSavingsCard(appState)
-                    : Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.identity()..rotateY(math.pi),
-                        child: _buildExpenseCard(appState),
-                      ),
+            icon: Icon(Icons.settings_outlined, size: 18, color: AppColors.textMuted.withOpacity(0.6)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildDotIndicator(!_isFlipped),
-            const SizedBox(width: 8),
-            _buildDotIndicator(_isFlipped),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'タップして切り替え',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            color: AppColors.textMuted,
-          ),
-        ),
       ],
     );
   }
 
-  Widget _buildDotIndicator(bool isActive) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isActive ? AppColors.accentGreen : AppColors.textMuted.withOpacity(0.3),
-      ),
-    );
-  }
-
-  int _getSavingsForPeriod(AppState appState) {
-    switch (_selectedPeriod) {
-      case 0:
-        return appState.todaySavings;
-      case 1:
-        return appState.thisWeekSavings;
-      case 2:
-      default:
-        return appState.thisMonthSavings;
-    }
-  }
-
-  int _getTotalForPeriod(AppState appState) {
-    switch (_selectedPeriod) {
-      case 0:
-        return appState.todayTotal;
-      case 1:
-        return appState.thisWeekTotal;
-      case 2:
-      default:
-        return appState.thisMonthTotal;
-    }
-  }
-
-  String _getPeriodLabel() {
-    switch (_selectedPeriod) {
-      case 0:
-        return '今日';
-      case 1:
-        return '今週';
-      case 2:
-      default:
-        return '今月';
-    }
-  }
-
-  Widget _buildSavingsCard(AppState appState) {
-    final savings = _getSavingsForPeriod(appState);
-    final total = _getTotalForPeriod(appState);
-    final percentage = total > 0 ? (savings / total * 100).round() : 0;
+  Widget _buildEvaluationCard(AppState appState) {
+    final evaluation = _getEvaluation(appState);
+    final accentColor = evaluation['color'] as Color;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.accentGreen,
-            AppColors.accentGreenDark,
-          ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(
+          top: BorderSide(
+            color: accentColor.withOpacity(0.12),
+            width: 1.5,
+          ),
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentGreen.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_getPeriodLabel()}、得した額',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-              ),
-              _buildLiveIndicator(),
-            ],
-          ),
-          const SizedBox(height: 16),
           Text(
-            '¥${_formatNumber(savings)}',
-            style: GoogleFonts.outfit(
-              fontSize: 44,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+            evaluation['emoji'] as String,
+            style: const TextStyle(fontSize: 28),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            evaluation['title'] as String,
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+              height: 1.3,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            savings >= 0
-                ? 'いつもの買い方より +$percentage% お得に'
-                : 'いつもの買い方より $percentage% 多く使用',
-            style: GoogleFonts.plusJakartaSans(
+            evaluation['subtitle'] as String,
+            style: GoogleFonts.inter(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary.withOpacity(0.75),
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 20),
-          _buildPeriodSelector(isLight: true),
         ],
       ),
     );
   }
 
-  Widget _buildExpenseCard(AppState appState) {
-    final total = _getTotalForPeriod(appState);
-    final budget = appState.currentBudget?.amount ?? 0;
+  /// 今月の使える金額リンク（評価カード直下）
+  Widget _buildAvailableAmountLink(AppState appState) {
+    final availableAmount = appState.thisMonthAvailableAmount;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.accentBlue,
-            Color(0xFF2563EB),
+    return GestureDetector(
+      onTap: () {
+        // 分析タブへ切り替え + incomeSheet自動起動
+        appState.requestOpenIncomeSheet();
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '今月の使える金額：',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textMuted.withOpacity(0.6),
+              ),
+            ),
+            Text(
+              availableAmount != null
+                  ? '¥${_formatNumber(availableAmount)}'
+                  : '未設定',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: availableAmount != null
+                    ? AppColors.textSecondary.withOpacity(0.7)
+                    : AppColors.textMuted.withOpacity(0.5),
+              ),
+            ),
+            Text(
+              availableAmount != null ? '（変更）' : '（追加）',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.accentBlue.withOpacity(0.7),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySection(AppState appState) {
+    final stats = appState.categoryStats;
+    final categories = stats.keys.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'どこで差が出た？',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary.withOpacity(0.85),
+                height: 1.4,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CategoryManageScreen()),
+                );
+              },
+              child: Text(
+                '編集',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.accentBlue.withOpacity(0.8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        if (categories.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                '記録するとここに表示されます',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textMuted.withOpacity(0.8),
+                  height: 1.4,
+                ),
+              ),
+            ),
+          )
+        else
+          ...categories.take(3).map((category) {
+            final stat = stats[category]!;
+            return _buildCategoryCard(stat);
+          }),
+      ],
+    );
+  }
+
+  Widget _buildCategoryCard(CategoryStats stat) {
+    final isPositive = stat.savingsAmount > 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentBlue.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_getPeriodLabel()}の支出',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.9),
+          Expanded(
+            child: Text(
+              stat.category,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary.withOpacity(0.9),
+                height: 1.4,
+              ),
+            ),
+          ),
+          if (stat.savingsAmount != 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isPositive
+                    ? AppColors.accentGreenLight.withOpacity(0.7)
+                    : AppColors.accentRedLight.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                isPositive
+                    ? '+¥${_formatNumber(stat.savingsAmount)}'
+                    : '-¥${_formatNumber(stat.savingsAmount.abs())}',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isPositive ? AppColors.accentGreen : AppColors.accentRed,
                 ),
               ),
-              _buildLiveIndicator(),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '¥${_formatNumber(total)}',
-            style: GoogleFonts.outfit(
-              fontSize: 44,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+            )
+          else
+            Text(
+              '±0',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textMuted.withOpacity(0.8),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            budget > 0
-                ? '予算残り ¥${_formatNumber(budget - appState.thisMonthTotal)}'
-                : '予算未設定',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildPeriodSelector(isLight: true),
         ],
       ),
     );
@@ -382,229 +406,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return number.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]},',
-    );
-  }
-
-  Widget _buildLiveIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            'LIVE',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPeriodSelector({required bool isLight}) {
-    final periods = ['今日', '今週', '今月'];
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(periods.length, (index) {
-          final isSelected = _selectedPeriod == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedPeriod = index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                periods[index],
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected
-                      ? AppColors.accentGreen
-                      : Colors.white.withOpacity(0.9),
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildCategoryPerformance(AppState appState) {
-    final stats = appState.categoryStats;
-    final categories = stats.keys.toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'カテゴリ別パフォーマンス',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (categories.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Center(
-              child: Text(
-                'カテゴリデータがありません',
-                style: GoogleFonts.plusJakartaSans(
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-          )
-        else
-          ...categories.take(4).map((category) {
-            final stat = stats[category]!;
-            return _buildCategoryCard(stat);
-          }),
-      ],
-    );
-  }
-
-  Widget _buildCategoryCard(CategoryStats stat) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    stat.category,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '平均 ¥${_formatNumber(stat.standardAverage)} / 標準',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '¥${_formatNumber(stat.totalAmount)}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _buildDifferenceBadge(stat.savingsAmount),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDifferenceBadge(int difference) {
-    if (difference == 0) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.textMuted.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          '±¥0',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textMuted,
-          ),
-        ),
-      );
-    }
-
-    final isPositive = difference > 0;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: isPositive
-            ? AppColors.accentGreenLight
-            : AppColors.accentRedLight,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        isPositive ? '+¥${_formatNumber(difference)} 得' : '-¥${_formatNumber(difference.abs())}',
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: isPositive ? AppColors.accentGreen : AppColors.accentRed,
-        ),
-      ),
     );
   }
 
@@ -618,44 +419,48 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '最近の支出',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+              '日々の出費',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary.withOpacity(0.85),
+                height: 1.4,
               ),
             ),
-            TextButton(
-              onPressed: () {
+            GestureDetector(
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const HistoryScreen()),
                 );
               },
               child: Text(
-                '履歴',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.accentGreen,
+                'すべて見る',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.accentBlue.withOpacity(0.8),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         if (recentExpenses.isEmpty)
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
               child: Text(
-                '支出データがありません',
-                style: GoogleFonts.plusJakartaSans(
-                  color: AppColors.textMuted,
+                '記録がありません',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textMuted.withOpacity(0.8),
+                  height: 1.4,
                 ),
               ),
             ),
@@ -666,78 +471,198 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildExpenseItem(Expense expense) {
-    final time = '${expense.createdAt.hour.toString().padLeft(2, '0')}:${expense.createdAt.minute.toString().padLeft(2, '0')}';
+  Widget _buildFixedCostsSection(AppState appState) {
+    final fixedCosts = appState.fixedCosts;
+    final totalFixedCosts = fixedCosts.fold(0, (sum, fc) => sum + fc.amount);
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '今月の固定費',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary.withOpacity(0.85),
+                height: 1.4,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FixedCostHistoryScreen()),
+                );
+              },
+              child: Text(
+                '編集',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.accentBlue.withOpacity(0.8),
+                ),
+              ),
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.015),
+                blurRadius: 6,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // 合計金額
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    expense.category,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                    '合計',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary.withOpacity(0.8),
                     ),
                   ),
-                  const SizedBox(height: 4),
                   Text(
-                    '${expense.memo ?? ''} • $time',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
+                    '¥${_formatNumber(totalFixedCosts)}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary.withOpacity(0.9),
                     ),
                   ),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '¥${_formatNumber(expense.amount)}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+              if (fixedCosts.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+                // 固定費リスト
+                ...fixedCosts.map((fc) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            fc.name,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondary.withOpacity(0.9),
+                            ),
+                          ),
+                          Text(
+                            '¥${_formatNumber(fc.amount)}',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textPrimary.withOpacity(0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+              ],
+              if (fixedCosts.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '固定費が登録されていません',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textMuted.withOpacity(0.7),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                _buildTypeBadge(expense.grade),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpenseItem(Expense expense) {
+    // カテゴリが「その他」の場合は非表示
+    final showCategory = expense.category != 'その他';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showCategory)
+                  Text(
+                    expense.category,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary.withOpacity(0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                if (expense.memo != null && expense.memo!.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: showCategory ? 4 : 0),
+                    child: Text(
+                      expense.memo!,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textMuted.withOpacity(0.8),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                // カテゴリもメモもない場合は空のスペースを維持
+                if (!showCategory && (expense.memo == null || expense.memo!.isEmpty))
+                  const SizedBox(height: 14),
               ],
             ),
-          ],
-        ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '¥${_formatNumber(expense.amount)}',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary.withOpacity(0.9),
+                ),
+              ),
+              const SizedBox(height: 3),
+              _buildTypeBadge(expense.grade),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -749,33 +674,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     switch (type) {
       case 'saving':
-        bgColor = AppColors.accentGreenLight;
+        bgColor = AppColors.accentGreenLight.withOpacity(0.7);
         textColor = AppColors.accentGreen;
         break;
       case 'standard':
-        bgColor = AppColors.accentBlueLight;
+        bgColor = AppColors.accentBlueLight.withOpacity(0.7);
         textColor = AppColors.accentBlue;
         break;
       case 'reward':
-        bgColor = AppColors.accentPurpleLight;
+        bgColor = AppColors.accentPurpleLight.withOpacity(0.7);
         textColor = AppColors.accentPurple;
         break;
       default:
-        bgColor = AppColors.textMuted.withOpacity(0.1);
+        bgColor = AppColors.textMuted.withOpacity(0.08);
         textColor = AppColors.textMuted;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+        style: GoogleFonts.inter(
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
           color: textColor,
         ),
       ),

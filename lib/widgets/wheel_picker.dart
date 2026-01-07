@@ -81,12 +81,12 @@ class _WheelPickerState extends State<WheelPicker> {
                   child: Text(
                     _formatValue(index),
                     style: isSelected
-                        ? GoogleFonts.outfit(
+                        ? GoogleFonts.ibmPlexSans(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           )
-                        : GoogleFonts.outfit(
+                        : GoogleFonts.ibmPlexSans(
                             fontSize: 20,
                             fontWeight: FontWeight.normal,
                             color: AppColors.textMuted,

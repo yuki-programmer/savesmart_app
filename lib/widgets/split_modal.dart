@@ -24,6 +24,7 @@ class _SplitModalState extends State<SplitModal> {
   int _splitAmount = 0;
   int _splitUnit = 100;
   String? _targetCategory;
+  late String _targetGrade;
   late List<String> _availableCategories;
 
   @override
@@ -35,6 +36,8 @@ class _SplitModalState extends State<SplitModal> {
     if (_availableCategories.isNotEmpty) {
       _targetCategory = _availableCategories.first;
     }
+    // デフォルトは切り出し元のタイプ
+    _targetGrade = widget.expense.grade;
   }
 
   int get _maxSplitAmount => widget.expense.amount - 1;
@@ -51,92 +54,101 @@ class _SplitModalState extends State<SplitModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           // ハンドル
           Container(
-            width: 40,
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textMuted.withOpacity(0.3),
+              color: AppColors.textMuted.withOpacity(0.25),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
           // タイトル
           Text(
             '支出を切り出す',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+            style: GoogleFonts.inter(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary.withOpacity(0.9),
+              height: 1.3,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             '一部を別のカテゴリに移動します',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              color: AppColors.textSecondary,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary.withOpacity(0.75),
+              height: 1.4,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // 元の支出情報
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: AppColors.bgPrimary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   widget.expense.category,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary.withOpacity(0.9),
+                    height: 1.4,
                   ),
                 ),
                 Text(
                   '¥${_formatNumber(widget.expense.amount)}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary.withOpacity(0.9),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // 切り出す金額
           Text(
             '切り出す金額',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary.withOpacity(0.75),
+              height: 1.4,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '¥${_formatNumber(_splitAmount)}',
-            style: GoogleFonts.outfit(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
               color: AppColors.accentBlue,
             ),
           ),
@@ -169,18 +181,19 @@ class _SplitModalState extends State<SplitModal> {
           // 移動先カテゴリ
           Text(
             '移動先カテゴリ',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary.withOpacity(0.75),
+              height: 1.4,
             ),
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: AppColors.bgPrimary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: DropdownButton<String>(
               value: _targetCategory,
@@ -188,7 +201,7 @@ class _SplitModalState extends State<SplitModal> {
               underline: const SizedBox(),
               hint: Text(
                 'カテゴリを選択',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.inter(
                   color: AppColors.textMuted,
                 ),
               ),
@@ -197,7 +210,7 @@ class _SplitModalState extends State<SplitModal> {
                   value: category,
                   child: Text(
                     category,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.inter(
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -210,15 +223,29 @@ class _SplitModalState extends State<SplitModal> {
               },
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          // 支出タイプ選択
+          Text(
+            '支出タイプ',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary.withOpacity(0.75),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildGradeSelector(),
+          const SizedBox(height: 22),
 
           // プレビュー
           if (_splitAmount > 0 && _targetCategory != null)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.accentBlueLight,
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.accentBlueLight.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
                 children: [
@@ -227,17 +254,19 @@ class _SplitModalState extends State<SplitModal> {
                     children: [
                       Text(
                         widget.expense.category,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.textPrimary.withOpacity(0.85),
+                          height: 1.4,
                         ),
                       ),
                       Text(
                         '¥${_formatNumber(_remainingAmount)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary.withOpacity(0.9),
                         ),
                       ),
                     ],
@@ -250,37 +279,22 @@ class _SplitModalState extends State<SplitModal> {
                         children: [
                           Text(
                             _targetCategory!,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              color: AppColors.textPrimary,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textPrimary.withOpacity(0.85),
+                              height: 1.4,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentBlue,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'NEW',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          _buildGradeBadge(_targetGrade),
                         ],
                       ),
                       Text(
                         '¥${_formatNumber(_splitAmount)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.accentBlue,
                         ),
                       ),
@@ -289,7 +303,7 @@ class _SplitModalState extends State<SplitModal> {
                 ],
               ),
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // ボタン
           Row(
@@ -298,44 +312,44 @@ class _SplitModalState extends State<SplitModal> {
                 child: GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: AppColors.bgPrimary,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
                       child: Text(
                         'キャンセル',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary.withOpacity(0.75),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: GestureDetector(
                   onTap: _splitAmount > 0 && _targetCategory != null
                       ? _performSplit
                       : null,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: _splitAmount > 0 && _targetCategory != null
-                          ? AppColors.accentBlue
-                          : AppColors.textMuted.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(14),
+                          ? AppColors.accentBlue.withOpacity(0.9)
+                          : AppColors.textMuted.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
                       child: Text(
                         '切り出す',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                           color: Colors.white,
                         ),
                       ),
@@ -347,6 +361,110 @@ class _SplitModalState extends State<SplitModal> {
           ),
         ],
       ),
+      ),
+    );
+  }
+
+  Widget _buildGradeBadge(String grade) {
+    String label;
+    Color color;
+    IconData icon;
+
+    switch (grade) {
+      case 'saving':
+        label = '節約';
+        color = AppColors.accentGreen;
+        icon = Icons.savings_outlined;
+        break;
+      case 'reward':
+        label = 'ご褒美';
+        color = AppColors.accentOrange;
+        icon = Icons.star_outline;
+        break;
+      default:
+        label = '標準';
+        color = AppColors.accentBlue;
+        icon = Icons.balance_outlined;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradeSelector() {
+    final grades = [
+      {'key': 'saving', 'label': '節約', 'icon': Icons.savings_outlined, 'color': AppColors.accentGreen},
+      {'key': 'standard', 'label': '標準', 'icon': Icons.balance_outlined, 'color': AppColors.accentBlue},
+      {'key': 'reward', 'label': 'ご褒美', 'icon': Icons.star_outline, 'color': AppColors.accentOrange},
+    ];
+
+    return Row(
+      children: grades.map((grade) {
+        final isSelected = _targetGrade == grade['key'];
+        final color = grade['color'] as Color;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () {
+              setState(() {
+                _targetGrade = grade['key'] as String;
+              });
+            },
+            child: Container(
+              margin: EdgeInsets.only(
+                right: grade['key'] != 'reward' ? 8 : 0,
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? color.withOpacity(0.15) : AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected ? color : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    grade['icon'] as IconData,
+                    size: 16,
+                    color: isSelected ? color : AppColors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    grade['label'] as String,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? color : AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -387,7 +505,7 @@ class _SplitModalState extends State<SplitModal> {
               ),
               child: Text(
                 '$unit円',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
@@ -421,7 +539,7 @@ class _SplitModalState extends State<SplitModal> {
     final newExpense = Expense(
       amount: _splitAmount,
       category: _targetCategory!,
-      grade: widget.expense.grade,
+      grade: _targetGrade,
       memo: '${widget.expense.category}から切り出し',
       createdAt: widget.expense.createdAt,
       parentId: widget.expense.id,
@@ -436,7 +554,7 @@ class _SplitModalState extends State<SplitModal> {
       SnackBar(
         content: Text(
           '¥${_formatNumber(_splitAmount)} を $_targetCategory に切り出しました',
-          style: GoogleFonts.plusJakartaSans(),
+          style: GoogleFonts.inter(),
         ),
         backgroundColor: AppColors.accentBlue,
         behavior: SnackBarBehavior.floating,
