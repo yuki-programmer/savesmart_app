@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../config/constants.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
+import '../utils/formatters.dart';
 import '../widgets/split_modal.dart';
 import '../widgets/edit_amount_modal.dart';
 
@@ -357,7 +358,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '¥${_formatNumber(expense.amount)}',
+                      '¥${formatNumber(expense.amount)}',
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -486,13 +487,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  String _formatNumber(int number) {
-    return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        );
-  }
-
   void _showSplitModal(Expense expense) {
     showSplitModal(context, expense, () {
       context.read<AppState>().loadData();
@@ -519,7 +513,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         content: Text(
-          '「${expense.category}」¥${_formatNumber(expense.amount)} を削除しますか？\nこの操作は取り消せません。',
+          '「${expense.category}」¥${formatNumber(expense.amount)} を削除しますか？\nこの操作は取り消せません。',
           style: GoogleFonts.inter(),
         ),
         actions: [
@@ -534,16 +528,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
           TextButton(
             onPressed: () async {
-              await context.read<AppState>().deleteExpense(expense.id!);
+              final success = await context.read<AppState>().deleteExpense(expense.id!);
               if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    '削除しました',
+                    success ? '削除しました' : '削除に失敗しました',
                     style: GoogleFonts.inter(),
                   ),
-                  backgroundColor: AppColors.accentRed,
+                  backgroundColor: success ? AppColors.accentRed : AppColors.textSecondary,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),

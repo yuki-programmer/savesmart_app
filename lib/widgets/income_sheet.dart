@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../services/app_state.dart';
+import '../utils/formatters.dart';
 
 /// 今月の使える金額を入力するBottom Sheet
 Future<void> showIncomeSheet(BuildContext context, DateTime month) {
@@ -65,13 +66,6 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
     await context.read<AppState>().setMonthlyAvailableAmount(widget.month, null);
     if (!mounted) return;
     Navigator.pop(context);
-  }
-
-  String _formatNumber(int number) {
-    return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        );
   }
 
   @override
@@ -183,7 +177,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
               if (hasCurrentValue) ...[
                 const SizedBox(height: 12),
                 Text(
-                  '現在の設定: ¥${_formatNumber(currentAmount)}',
+                  '現在の設定: ¥${formatNumber(currentAmount)}',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,

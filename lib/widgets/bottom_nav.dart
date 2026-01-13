@@ -15,7 +15,7 @@ class BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 40,
+      height: 56,
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -33,7 +33,7 @@ class BottomNav extends StatelessWidget {
                 label: 'ホーム',
                 index: 0,
               ),
-              const SizedBox(width: 48),
+              const SizedBox(width: 56),
               _buildNavItem(
                 icon: Icons.bar_chart_rounded,
                 label: '分析',
@@ -42,7 +42,7 @@ class BottomNav extends StatelessWidget {
             ],
           ),
           Positioned(
-            top: -24,
+            top: -22,
             left: 0,
             right: 0,
             child: Center(
@@ -66,16 +66,16 @@ class BottomNav extends StatelessWidget {
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(height: 1),
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 2),
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: color,
               ),
@@ -90,10 +90,10 @@ class BottomNav extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTap(1),
       child: Container(
-        width: 44,
-        height: 44,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           color: AppColors.accentBlue.withOpacity(0.9),
           boxShadow: [
             BoxShadow(
@@ -106,7 +106,7 @@ class BottomNav extends StatelessWidget {
         child: const Icon(
           Icons.add_rounded,
           color: Colors.white,
-          size: 22,
+          size: 26,
         ),
       ),
     );

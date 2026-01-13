@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../services/app_state.dart';
 import '../models/fixed_cost.dart';
+import '../utils/formatters.dart';
 
 class FixedCostHistoryScreen extends StatefulWidget {
   const FixedCostHistoryScreen({super.key});
@@ -140,7 +141,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                 ),
               ),
               Text(
-                '¥${_formatNumber(totalAmount)}',
+                '¥${formatNumber(totalAmount)}',
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -207,7 +208,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                   ),
                 ),
                 Text(
-                  '¥${_formatNumber(fixedCost.amount)}',
+                  '¥${formatNumber(fixedCost.amount)}',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -284,13 +285,6 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
         ),
       ),
     );
-  }
-
-  String _formatNumber(int number) {
-    return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        );
   }
 
   void _showEditAmountModal(FixedCost fixedCost) {
@@ -391,9 +385,24 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                           final newAmount = int.tryParse(controller.text);
                           if (newAmount != null && newAmount > 0) {
                             final updated = fixedCost.copyWith(amount: newAmount);
-                            await context.read<AppState>().updateFixedCost(updated);
+                            final success = await context.read<AppState>().updateFixedCost(updated);
                             if (!context.mounted) return;
                             Navigator.pop(context);
+                            if (!success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '更新に失敗しました',
+                                    style: GoogleFonts.inter(),
+                                  ),
+                                  backgroundColor: AppColors.accentRed,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -436,7 +445,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
           ),
         ),
         content: Text(
-          '「${fixedCost.name}」¥${_formatNumber(fixedCost.amount)} を削除しますか？\nこの操作は取り消せません。',
+          '「${fixedCost.name}」¥${formatNumber(fixedCost.amount)} を削除しますか？\nこの操作は取り消せません。',
           style: GoogleFonts.inter(),
         ),
         actions: [
@@ -451,16 +460,16 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
           ),
           TextButton(
             onPressed: () async {
-              await context.read<AppState>().removeFixedCost(fixedCost.id!);
+              final success = await context.read<AppState>().removeFixedCost(fixedCost.id!);
               if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    '削除しました',
+                    success ? '削除しました' : '削除に失敗しました',
                     style: GoogleFonts.inter(),
                   ),
-                  backgroundColor: AppColors.accentRed,
+                  backgroundColor: success ? AppColors.accentRed : AppColors.textSecondary,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),

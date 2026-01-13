@@ -5,6 +5,7 @@ import '../models/category.dart';
 import '../models/budget.dart';
 import '../models/fixed_cost.dart';
 import '../models/fixed_cost_category.dart';
+import '../models/quick_entry.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -17,7 +18,29 @@ class DatabaseService {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
+    // 起動時にquick_entriesテーブルが存在しない場合は作成（マイグレーション漏れ対策）
+    await _ensureQuickEntriesTable(_database!);
     return _database!;
+  }
+
+  /// quick_entriesテーブルが存在しない場合に作成（マイグレーション漏れ対策）
+  Future<void> _ensureQuickEntriesTable(Database db) async {
+    final tables = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='quick_entries'"
+    );
+    if (tables.isEmpty) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS quick_entries (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          category TEXT NOT NULL,
+          amount INTEGER NOT NULL,
+          grade TEXT NOT NULL,
+          memo TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+    }
   }
 
   Future<Database> _initDatabase() async {
@@ -26,7 +49,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -108,6 +131,27 @@ class DatabaseService {
         'is_default': 1,
       });
     }
+
+    // インデックス作成（時系列クエリ高速化）
+    await db.execute('''
+      CREATE INDEX idx_expenses_created_at ON expenses (created_at)
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_expenses_category_created_at ON expenses (category, created_at)
+    ''');
+
+    // クイック登録テーブル
+    await db.execute('''
+      CREATE TABLE quick_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        category TEXT NOT NULL,
+        amount INTEGER NOT NULL,
+        grade TEXT NOT NULL,
+        memo TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
   }
 
   // Expense CRUD
@@ -344,6 +388,32 @@ class DatabaseService {
       // 既存の name を category_name_snapshot にコピー
       await db.execute('UPDATE fixed_costs SET category_name_snapshot = name WHERE name IS NOT NULL');
     }
+
+    if (oldVersion < 4) {
+      // expenses.created_at にインデックスを追加（時系列クエリ高速化）
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_expenses_created_at ON expenses (created_at)
+      ''');
+      // カテゴリ + 日付の複合インデックス（カテゴリ別時系列集計用）
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_expenses_category_created_at ON expenses (category, created_at)
+      ''');
+    }
+
+    if (oldVersion < 5) {
+      // クイック登録テーブルを作成
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS quick_entries (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          category TEXT NOT NULL,
+          amount INTEGER NOT NULL,
+          grade TEXT NOT NULL,
+          memo TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+    }
   }
 
   /// デフォルト固定費カテゴリが存在しない場合に投入する
@@ -461,5 +531,120 @@ class DatabaseService {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  /// カテゴリ別・月別・グレード別の支出集計を取得（SQL集計）
+  /// 返り値: List<{ 'month': 'YYYY-MM', 'grade': String, 'total': int, 'count': int }>
+  Future<List<Map<String, dynamic>>> getMonthlyGradeBreakdown({
+    required String categoryName,
+    required int months,
+  }) async {
+    final db = await database;
+
+    // 開始月を計算（months ヶ月前の月初）
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month - months + 1, 1);
+    final startDateStr = startDate.toIso8601String().substring(0, 10);
+
+    final results = await db.rawQuery('''
+      SELECT
+        strftime('%Y-%m', created_at) as month,
+        grade,
+        SUM(amount) as total,
+        COUNT(*) as count
+      FROM expenses
+      WHERE category = ?
+        AND created_at >= ?
+      GROUP BY strftime('%Y-%m', created_at), grade
+      ORDER BY month ASC, grade ASC
+    ''', [categoryName, startDateStr]);
+
+    return results.map((row) => {
+      'month': row['month'] as String,
+      'grade': row['grade'] as String,
+      'total': row['total'] as int,
+      'count': row['count'] as int,
+    }).toList();
+  }
+
+  /// スマート・コンボ予測: カテゴリ別に頻出の「金額×支出タイプ」組み合わせを取得
+  /// 返り値: List<{ 'amount': int, 'grade': String, 'freq': int, 'lastUsed': String }>
+  /// 優先順位: 頻度 DESC → 最終利用日 DESC
+  Future<List<Map<String, dynamic>>> getSmartCombos({
+    required String categoryName,
+    int limit = 3,
+  }) async {
+    final db = await database;
+
+    final results = await db.rawQuery('''
+      SELECT
+        amount,
+        grade,
+        COUNT(*) as freq,
+        MAX(created_at) as last_used
+      FROM expenses
+      WHERE category = ?
+      GROUP BY amount, grade
+      ORDER BY freq DESC, last_used DESC
+      LIMIT ?
+    ''', [categoryName, limit]);
+
+    return results.map((row) => {
+      'amount': row['amount'] as int,
+      'grade': row['grade'] as String,
+      'freq': row['freq'] as int,
+      'lastUsed': row['last_used'] as String,
+    }).toList();
+  }
+
+  // QuickEntry CRUD
+  Future<List<QuickEntry>> getQuickEntries() async {
+    final db = await database;
+    final maps = await db.query(
+      'quick_entries',
+      orderBy: 'sort_order ASC',
+    );
+    return maps.map((map) => QuickEntry.fromMap(map)).toList();
+  }
+
+  Future<int> insertQuickEntry(QuickEntry entry) async {
+    final db = await database;
+    final map = entry.toMap();
+    map.remove('id');
+    return await db.insert('quick_entries', map);
+  }
+
+  Future<void> updateQuickEntry(QuickEntry entry) async {
+    final db = await database;
+    await db.update(
+      'quick_entries',
+      entry.toMap(),
+      where: 'id = ?',
+      whereArgs: [entry.id],
+    );
+  }
+
+  Future<void> deleteQuickEntry(int id) async {
+    final db = await database;
+    await db.delete(
+      'quick_entries',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// クイック登録の並び順を更新
+  Future<void> updateQuickEntryOrder(List<QuickEntry> entries) async {
+    final db = await database;
+    final batch = db.batch();
+    for (var i = 0; i < entries.length; i++) {
+      batch.update(
+        'quick_entries',
+        {'sort_order': i},
+        where: 'id = ?',
+        whereArgs: [entries[i].id],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 }

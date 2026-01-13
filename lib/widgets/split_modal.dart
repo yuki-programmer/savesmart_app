@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../config/constants.dart';
 import '../models/expense.dart';
-import '../services/database_service.dart';
+import '../services/app_state.dart';
+import '../utils/formatters.dart';
 import 'wheel_picker.dart';
 
 class SplitModal extends StatefulWidget {
@@ -43,13 +45,6 @@ class _SplitModalState extends State<SplitModal> {
   int get _maxSplitAmount => widget.expense.amount - 1;
 
   int get _remainingAmount => widget.expense.amount - _splitAmount;
-
-  String _formatNumber(int number) {
-    return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +116,7 @@ class _SplitModalState extends State<SplitModal> {
                   ),
                 ),
                 Text(
-                  '¥${_formatNumber(widget.expense.amount)}',
+                  '¥${formatNumber(widget.expense.amount)}',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -145,7 +140,7 @@ class _SplitModalState extends State<SplitModal> {
           ),
           const SizedBox(height: 8),
           Text(
-            '¥${_formatNumber(_splitAmount)}',
+            '¥${formatNumber(_splitAmount)}',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 28,
               fontWeight: FontWeight.w600,
@@ -262,7 +257,7 @@ class _SplitModalState extends State<SplitModal> {
                         ),
                       ),
                       Text(
-                        '¥${_formatNumber(_remainingAmount)}',
+                        '¥${formatNumber(_remainingAmount)}',
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -291,7 +286,7 @@ class _SplitModalState extends State<SplitModal> {
                         ],
                       ),
                       Text(
-                        '¥${_formatNumber(_splitAmount)}',
+                        '¥${formatNumber(_splitAmount)}',
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -521,42 +516,29 @@ class _SplitModalState extends State<SplitModal> {
   Future<void> _performSplit() async {
     if (_splitAmount <= 0 || _targetCategory == null) return;
 
-    final db = DatabaseService();
-
-    // 元の支出を更新
-    final updatedOriginal = Expense(
-      id: widget.expense.id,
-      amount: _remainingAmount,
-      category: widget.expense.category,
-      grade: widget.expense.grade,
-      memo: widget.expense.memo,
-      createdAt: widget.expense.createdAt,
-      parentId: widget.expense.parentId,
-    );
-    await db.updateExpense(updatedOriginal);
-
-    // 新しい支出を作成
-    final newExpense = Expense(
-      amount: _splitAmount,
-      category: _targetCategory!,
+    final success = await context.read<AppState>().splitExpense(
+      widget.expense.id!,
+      _splitAmount,
+      _targetCategory!,
       grade: _targetGrade,
-      memo: '${widget.expense.category}から切り出し',
-      createdAt: widget.expense.createdAt,
-      parentId: widget.expense.id,
     );
-    await db.insertExpense(newExpense);
 
     if (!mounted) return;
     Navigator.pop(context);
-    widget.onSplit();
+
+    if (success) {
+      widget.onSplit();
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '¥${_formatNumber(_splitAmount)} を $_targetCategory に切り出しました',
+          success
+              ? '¥${formatNumber(_splitAmount)} を $_targetCategory に切り出しました'
+              : '切り出しに失敗しました',
           style: GoogleFonts.inter(),
         ),
-        backgroundColor: AppColors.accentBlue,
+        backgroundColor: success ? AppColors.accentBlue : AppColors.accentRed,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),

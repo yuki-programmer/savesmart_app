@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
+
+/// 比較線のタイプ
+enum ComparisonLineType {
+  ideal,    // 理想線（初月または前月データ不足時）
+  previous, // 前月線
+}
 
 /// 予算消化ペースの折れ線グラフ（CustomPainter実装）
 class BurnRateChart extends StatelessWidget {
@@ -12,27 +19,266 @@ class BurnRateChart extends StatelessWidget {
   /// 当月の日数
   final int daysInMonth;
 
+  /// 今月の記録開始日（1-indexed）。この日より前は線を描画しない
+  final int startDay;
+
+  /// 前月の日ごとの累積支出率（%）。null = 前月データなし
+  final List<double>? previousMonthRates;
+
+  /// 前月の日数
+  final int? previousMonthDays;
+
+  /// 前月の記録開始日（1-indexed）。null = 1日から開始
+  final int? previousMonthStartDay;
+
   const BurnRateChart({
     super.key,
     required this.dailyRates,
     required this.todayDay,
     required this.daysInMonth,
+    this.startDay = 1,
+    this.previousMonthRates,
+    this.previousMonthDays,
+    this.previousMonthStartDay,
   });
+
+  /// 前月データが有効かどうか（記録日数>=3）
+  bool get _hasSufficientPreviousData {
+    if (previousMonthRates == null || previousMonthDays == null) return false;
+    if (previousMonthRates!.isEmpty) return false;
+
+    // 記録開始日を考慮して、実際に記録がある日数をカウント
+    final prevStartDay = previousMonthStartDay ?? 1;
+    int recordedDays = 0;
+    double lastRate = 0;
+    for (int i = prevStartDay - 1; i < previousMonthRates!.length; i++) {
+      if (previousMonthRates![i] > lastRate) {
+        recordedDays++;
+        lastRate = previousMonthRates![i];
+      }
+    }
+
+    return recordedDays >= 3;
+  }
+
+  /// 比較線のタイプを決定
+  ComparisonLineType get _comparisonLineType {
+    return _hasSufficientPreviousData
+        ? ComparisonLineType.previous
+        : ComparisonLineType.ideal;
+  }
+
+  /// 理想線データを生成（月全体に表示）
+  List<double> _generateIdealLine() {
+    // 理想線: d=1で0%, d=Dで100%の直線
+    return List.generate(daysInMonth, (i) {
+      return (i / (daysInMonth - 1)) * 100;
+    });
+  }
+
+  /// 前月比較線データを生成（当月日数に補間、前月の開始日も考慮）
+  /// 返り値: (rates, startDay) - startDayは前月補間後の開始日
+  (List<double?>, int) _generatePreviousMonthLine() {
+    final prevRates = previousMonthRates!;
+    final prevDays = previousMonthDays!;
+    final prevStartDay = previousMonthStartDay ?? 1;
+
+    final result = <double?>[];
+
+    for (int d = 1; d <= daysInMonth; d++) {
+      // t = (d - 1)/(D_curr - 1) * (D_prev - 1) + 1
+      final t = (d - 1) / (daysInMonth - 1) * (prevDays - 1) + 1;
+
+      // 補間元の日が前月の開始日より前の場合はnull（ギャップ）
+      if (t < prevStartDay) {
+        result.add(null);
+        continue;
+      }
+
+      final floorT = t.floor().clamp(1, prevDays);
+      final ceilT = t.ceil().clamp(1, prevDays);
+      final fraction = t - t.floor();
+
+      // 0-indexed に変換
+      final y1 = prevRates[floorT - 1];
+      final y2 = prevRates[ceilT - 1];
+
+      // 線形補間: lerp(y1, y2, fraction)
+      final interpolated = y1 + (y2 - y1) * fraction;
+      result.add(interpolated.clamp(0, 100));
+    }
+
+    // 補間後の開始日を計算
+    int interpolatedStartDay = 1;
+    for (int i = 0; i < result.length; i++) {
+      if (result[i] != null) {
+        interpolatedStartDay = i + 1;
+        break;
+      }
+    }
+
+    return (result, interpolatedStartDay);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 150,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: CustomPaint(
-        size: Size.infinite,
-        painter: _BurnRateChartPainter(
-          dailyRates: dailyRates,
-          todayDay: todayDay,
-          daysInMonth: daysInMonth,
+    final comparisonType = _comparisonLineType;
+
+    // 比較線データを生成
+    List<double?> comparisonRates;
+    int comparisonStartDay;
+
+    if (comparisonType == ComparisonLineType.ideal) {
+      // 理想線は月全体に表示
+      comparisonRates = _generateIdealLine().map((e) => e as double?).toList();
+      comparisonStartDay = 1;
+    } else {
+      // 前月線は前月の開始日を考慮
+      final (rates, startDayResult) = _generatePreviousMonthLine();
+      comparisonRates = rates;
+      comparisonStartDay = startDayResult;
+    }
+
+    return Column(
+      children: [
+        // 凡例
+        _buildLegend(comparisonType),
+        const SizedBox(height: 8),
+        // グラフ
+        Container(
+          height: 150,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: CustomPaint(
+            size: Size.infinite,
+            painter: _BurnRateChartPainter(
+              dailyRates: dailyRates,
+              todayDay: todayDay,
+              daysInMonth: daysInMonth,
+              startDay: startDay,
+              comparisonRates: comparisonRates,
+              comparisonStartDay: comparisonStartDay,
+              comparisonType: comparisonType,
+            ),
+          ),
         ),
-      ),
+      ],
     );
+  }
+
+  Widget _buildLegend(ComparisonLineType type) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 今月
+        _buildLegendItem(
+          color: AppColors.accentBlue,
+          label: '今月',
+          isDashed: false,
+        ),
+        const SizedBox(width: 16),
+        // 比較線
+        _buildLegendItem(
+          color: AppColors.textMuted.withOpacity(0.5),
+          label: type == ComparisonLineType.previous ? '前月' : '理想',
+          isDashed: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem({
+    required Color color,
+    required String label,
+    required bool isDashed,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 線のサンプル
+        SizedBox(
+          width: 16,
+          height: 2,
+          child: CustomPaint(
+            painter: _LegendLinePainter(
+              color: color,
+              isDashed: isDashed,
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textMuted.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 凡例の線を描画するPainter
+class _LegendLinePainter extends CustomPainter {
+  final Color color;
+  final bool isDashed;
+
+  _LegendLinePainter({
+    required this.color,
+    required this.isDashed,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    if (isDashed) {
+      _drawDashedLine(
+        canvas,
+        Offset(0, size.height / 2),
+        Offset(size.width, size.height / 2),
+        paint,
+      );
+    } else {
+      canvas.drawLine(
+        Offset(0, size.height / 2),
+        Offset(size.width, size.height / 2),
+        paint,
+      );
+    }
+  }
+
+  void _drawDashedLine(Canvas canvas, Offset p1, Offset p2, Paint paint) {
+    const dashWidth = 3.0;
+    const dashSpace = 2.0;
+    final distance = (p2 - p1).distance;
+    final dx = (p2.dx - p1.dx) / distance;
+    final dy = (p2.dy - p1.dy) / distance;
+
+    var currentX = p1.dx;
+    var currentY = p1.dy;
+    var drawn = 0.0;
+
+    while (drawn < distance) {
+      final nextDrawn = (drawn + dashWidth).clamp(0.0, distance);
+      canvas.drawLine(
+        Offset(currentX, currentY),
+        Offset(p1.dx + dx * nextDrawn, p1.dy + dy * nextDrawn),
+        paint,
+      );
+      drawn = nextDrawn + dashSpace;
+      currentX = p1.dx + dx * drawn;
+      currentY = p1.dy + dy * drawn;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LegendLinePainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.isDashed != isDashed;
   }
 }
 
@@ -40,11 +286,19 @@ class _BurnRateChartPainter extends CustomPainter {
   final List<double> dailyRates;
   final int todayDay;
   final int daysInMonth;
+  final int startDay;
+  final List<double?> comparisonRates;
+  final int comparisonStartDay;
+  final ComparisonLineType comparisonType;
 
   _BurnRateChartPainter({
     required this.dailyRates,
     required this.todayDay,
     required this.daysInMonth,
+    required this.startDay,
+    required this.comparisonRates,
+    required this.comparisonStartDay,
+    required this.comparisonType,
   });
 
   @override
@@ -76,7 +330,10 @@ class _BurnRateChartPainter extends CustomPainter {
     _drawAxisLabels(
         canvas, size, chartLeft, chartTop, chartWidth, chartHeight, chartBottom, yMax);
 
-    // 折れ線の描画
+    // 比較線の描画（今月線より先に描画して背面に）
+    _drawComparisonLine(canvas, chartLeft, chartTop, chartWidth, chartHeight, yMax);
+
+    // 今月の折れ線の描画
     _drawLine(canvas, chartLeft, chartTop, chartWidth, chartHeight, yMax);
 
     // 今日のドットを描画
@@ -158,6 +415,71 @@ class _BurnRateChartPainter extends CustomPainter {
     }
   }
 
+  /// 比較線を描画（点線）
+  void _drawComparisonLine(Canvas canvas, double chartLeft, double chartTop,
+      double chartWidth, double chartHeight, double yMax) {
+    if (comparisonRates.isEmpty) return;
+
+    final paint = Paint()
+      ..color = AppColors.textMuted.withOpacity(0.5)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // 連続したセグメントごとにPathを作成（nullでギャップ）
+    Path? currentPath;
+    final paths = <Path>[];
+
+    for (var i = 0; i < comparisonRates.length; i++) {
+      final rate = comparisonRates[i];
+
+      if (rate == null) {
+        // ギャップ：現在のパスを保存して新しいパスを開始
+        if (currentPath != null) {
+          paths.add(currentPath);
+          currentPath = null;
+        }
+        continue;
+      }
+
+      final x = chartLeft + i / (daysInMonth - 1) * chartWidth;
+      final y = chartTop + chartHeight * (1 - rate.clamp(0.0, yMax) / yMax);
+
+      if (currentPath == null) {
+        currentPath = Path();
+        currentPath.moveTo(x, y);
+      } else {
+        currentPath.lineTo(x, y);
+      }
+    }
+
+    // 最後のパスを追加
+    if (currentPath != null) {
+      paths.add(currentPath);
+    }
+
+    // 各パスを点線で描画
+    for (final path in paths) {
+      _drawDashedPath(canvas, path, paint);
+    }
+  }
+
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
+    const dashWidth = 4.0;
+    const dashSpace = 3.0;
+
+    final pathMetrics = path.computeMetrics();
+    for (final metric in pathMetrics) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final nextDistance = (distance + dashWidth).clamp(0.0, metric.length);
+        final extractPath = metric.extractPath(distance, nextDistance);
+        canvas.drawPath(extractPath, paint);
+        distance = nextDistance + dashSpace;
+      }
+    }
+  }
+
   void _drawLine(Canvas canvas, double chartLeft, double chartTop,
       double chartWidth, double chartHeight, double yMax) {
     if (dailyRates.isEmpty) return;
@@ -180,19 +502,23 @@ class _BurnRateChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final path = Path();
+    Path? path;
     Path? overPath;
+    bool pathStarted = false;
 
-    for (var i = 0; i < dataLength; i++) {
+    // startDayから描画開始（それ以前はギャップ）
+    for (var i = startDay - 1; i < dataLength; i++) {
       final x = chartLeft + i / (daysInMonth - 1) * chartWidth;
       final rate = dailyRates[i].clamp(0.0, yMax);
       final y = chartTop + chartHeight * (1 - rate / yMax);
 
-      if (i == 0) {
+      if (!pathStarted) {
+        path = Path();
         path.moveTo(x, y);
+        pathStarted = true;
       } else {
         // 100%を超えた瞬間から赤い線に切り替え
-        if (dailyRates[i] > 100 && (i == 0 || dailyRates[i - 1] <= 100)) {
+        if (dailyRates[i] > 100 && dailyRates[i - 1] <= 100) {
           // 100%超え開始点
           overPath = Path();
           overPath.moveTo(x, y);
@@ -201,12 +527,14 @@ class _BurnRateChartPainter extends CustomPainter {
         if (overPath != null && dailyRates[i] > 100) {
           overPath.lineTo(x, y);
         } else {
-          path.lineTo(x, y);
+          path?.lineTo(x, y);
         }
       }
     }
 
-    canvas.drawPath(path, normalPaint);
+    if (path != null) {
+      canvas.drawPath(path, normalPaint);
+    }
     if (overPath != null) {
       canvas.drawPath(overPath, overPaint);
     }
@@ -215,6 +543,8 @@ class _BurnRateChartPainter extends CustomPainter {
   void _drawTodayDot(Canvas canvas, double chartLeft, double chartTop,
       double chartWidth, double chartHeight, double yMax) {
     if (todayDay < 1 || todayDay > dailyRates.length) return;
+    // 記録開始前の日にはドットを表示しない
+    if (todayDay < startDay) return;
 
     final rate = dailyRates[todayDay - 1];
     final x = chartLeft + (todayDay - 1) / (daysInMonth - 1) * chartWidth;
@@ -242,6 +572,10 @@ class _BurnRateChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _BurnRateChartPainter oldDelegate) {
     return oldDelegate.dailyRates != dailyRates ||
         oldDelegate.todayDay != todayDay ||
-        oldDelegate.daysInMonth != daysInMonth;
+        oldDelegate.daysInMonth != daysInMonth ||
+        oldDelegate.startDay != startDay ||
+        oldDelegate.comparisonRates != comparisonRates ||
+        oldDelegate.comparisonStartDay != comparisonStartDay ||
+        oldDelegate.comparisonType != comparisonType;
   }
 }

@@ -21,7 +21,6 @@ class FixedCost {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'name': name, // 後方互換性: 既存DBの NOT NULL 制約対応
       'category_id': categoryId,
       'category_name_snapshot': categoryNameSnapshot,
       'amount': amount,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../models/expense.dart';
-import '../services/database_service.dart';
+import '../services/app_state.dart';
+import '../utils/formatters.dart';
 import 'wheel_picker.dart';
 
 class EditAmountModal extends StatefulWidget {
@@ -35,13 +37,6 @@ class _EditAmountModalState extends State<EditAmountModal> {
     } else {
       _unit = 10;
     }
-  }
-
-  String _formatNumber(int number) {
-    return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        );
   }
 
   @override
@@ -110,7 +105,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                   ),
                 ),
                 Text(
-                  '¥${_formatNumber(widget.expense.amount)}',
+                  '¥${formatNumber(widget.expense.amount)}',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -134,7 +129,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
           ),
           const SizedBox(height: 8),
           Text(
-            '¥${_formatNumber(_newAmount)}',
+            '¥${formatNumber(_newAmount)}',
             style: GoogleFonts.ibmPlexSans(
               fontSize: 30,
               fontWeight: FontWeight.w600,
@@ -189,7 +184,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '¥${_formatNumber((_newAmount - widget.expense.amount).abs())} ${_newAmount > widget.expense.amount ? '増加' : '減少'}',
+                    '¥${formatNumber((_newAmount - widget.expense.amount).abs())} ${_newAmount > widget.expense.amount ? '増加' : '減少'}',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -324,19 +319,22 @@ class _EditAmountModalState extends State<EditAmountModal> {
       parentId: widget.expense.parentId,
     );
 
-    await DatabaseService().updateExpense(updatedExpense);
+    final success = await context.read<AppState>().updateExpense(updatedExpense);
 
     if (!mounted) return;
     Navigator.pop(context);
-    widget.onUpdate();
+
+    if (success) {
+      widget.onUpdate();
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '金額を ¥${_formatNumber(_newAmount)} に更新しました',
+          success ? '金額を ¥${formatNumber(_newAmount)} に更新しました' : '更新に失敗しました',
           style: GoogleFonts.inter(),
         ),
-        backgroundColor: AppColors.accentOrange,
+        backgroundColor: success ? AppColors.accentOrange : AppColors.accentRed,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
