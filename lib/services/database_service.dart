@@ -49,7 +49,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -150,6 +150,14 @@ class DatabaseService {
         grade TEXT NOT NULL,
         memo TEXT,
         sort_order INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    // 日別予算テーブル（今日使えるお金の固定値を保存）
+    await db.execute('''
+      CREATE TABLE daily_budgets (
+        date TEXT PRIMARY KEY,
+        fixed_amount INTEGER NOT NULL
       )
     ''');
   }
@@ -352,6 +360,37 @@ class DatabaseService {
     );
   }
 
+  // Daily Budget (今日使えるお金の固定値)
+
+  /// 指定日の固定予算を取得
+  Future<int?> getDailyBudget(DateTime date) async {
+    final db = await database;
+    final dateStr = _formatDateOnly(date);
+    final maps = await db.query(
+      'daily_budgets',
+      where: 'date = ?',
+      whereArgs: [dateStr],
+    );
+    if (maps.isEmpty) return null;
+    return maps.first['fixed_amount'] as int;
+  }
+
+  /// 指定日の固定予算を保存（存在すれば上書き）
+  Future<void> saveDailyBudget(DateTime date, int amount) async {
+    final db = await database;
+    final dateStr = _formatDateOnly(date);
+    await db.insert(
+      'daily_budgets',
+      {'date': dateStr, 'fixed_amount': amount},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// 日付を YYYY-MM-DD 形式の文字列に変換
+  String _formatDateOnly(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   // Database migration
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
@@ -411,6 +450,16 @@ class DatabaseService {
           grade TEXT NOT NULL,
           memo TEXT,
           sort_order INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+    }
+
+    if (oldVersion < 6) {
+      // 日別予算テーブルを作成
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS daily_budgets (
+          date TEXT PRIMARY KEY,
+          fixed_amount INTEGER NOT NULL
         )
       ''');
     }

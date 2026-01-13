@@ -8,6 +8,7 @@ import '../models/expense.dart';
 import '../models/quick_entry.dart';
 import '../utils/formatters.dart';
 import '../widgets/quick_entry/quick_entry_edit_modal.dart';
+import 'quick_entry_manage_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
 import 'fixed_cost_history_screen.dart';
@@ -66,6 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 28),
                         // クイック登録セクション
                         _buildQuickEntrySection(appState),
+                        const SizedBox(height: 28),
+                        // 今日使えるお金セクション
+                        _buildDailyAvailableSection(appState),
                         const SizedBox(height: 28),
                         _buildRecentExpenses(appState),
                         const SizedBox(height: 28),
@@ -265,9 +269,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => showQuickEntryEditModal(context),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const QuickEntryManageScreen(),
+                ),
+              ),
               child: Text(
-                '+ 追加',
+                '+ 追加・管理',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -296,7 +305,12 @@ class _HomeScreenState extends State<HomeScreen> {
   /// クイック登録が空の時のヒント表示
   Widget _buildEmptyQuickEntryHint() {
     return GestureDetector(
-      onTap: () => showQuickEntryEditModal(context),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const QuickEntryManageScreen(),
+        ),
+      ),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -331,6 +345,287 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// 今日使えるお金セクション
+  Widget _buildDailyAvailableSection(AppState appState) {
+    final todayAmount = appState.fixedTodayAllowance;
+    final tomorrowAmount = appState.dynamicTomorrowForecast;
+    final isLastDay = appState.isLastDayOfMonth;
+
+    // 予算未設定の場合は非表示
+    if (todayAmount == null) {
+      return const SizedBox.shrink();
+    }
+
+    final isNegative = todayAmount < 0;
+    final isTomorrowNegative = tomorrowAmount != null && tomorrowAmount < 0;
+    final isTomorrowBetter = tomorrowAmount != null && tomorrowAmount > todayAmount;
+
+    return GestureDetector(
+      onTap: () => _showDailyAvailableTapAction(appState),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isNegative
+                ? AppColors.accentRed.withOpacity(0.12)
+                : Colors.black.withOpacity(0.04),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 左側: ラベルと明日の予測
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1行目: ラベルと補足
+                  Row(
+                    children: [
+                      Text(
+                        '今日使えるお金',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(日割り)',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.textMuted.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // 2行目: 明日の予測
+                  _buildTomorrowForecast(
+                    tomorrowAmount: tomorrowAmount,
+                    isLastDay: isLastDay,
+                    isTomorrowNegative: isTomorrowNegative,
+                    isTomorrowBetter: isTomorrowBetter,
+                  ),
+                ],
+              ),
+            ),
+            // 右側: メイン金額
+            Text(
+              '¥${formatNumber(todayAmount.abs())}${isNegative ? '' : ''}',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: isNegative
+                    ? AppColors.accentRed
+                    : AppColors.textPrimary,
+              ),
+            ),
+            if (isNegative)
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Text(
+                  'オーバー',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.accentRed,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 明日の予測表示
+  Widget _buildTomorrowForecast({
+    required int? tomorrowAmount,
+    required bool isLastDay,
+    required bool isTomorrowNegative,
+    required bool isTomorrowBetter,
+  }) {
+    // 月末日の場合
+    if (isLastDay) {
+      return Text(
+        '今月もあと1日！',
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w400,
+          color: AppColors.textMuted.withOpacity(0.7),
+        ),
+      );
+    }
+
+    // 予測が計算できない場合
+    if (tomorrowAmount == null) {
+      return const SizedBox.shrink();
+    }
+
+    // マイナスの場合（使い込み中）
+    if (isTomorrowNegative) {
+      return Row(
+        children: [
+          Text(
+            'このままだと明日は ',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textMuted.withOpacity(0.7),
+            ),
+          ),
+          Text(
+            '¥${formatNumber(tomorrowAmount.abs())} オーバー',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.accentRed,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 通常表示（節約成功なら緑色）
+    return Row(
+      children: [
+        Text(
+          'このままなら明日は ',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textMuted.withOpacity(0.7),
+          ),
+        ),
+        Text(
+          '¥${formatNumber(tomorrowAmount)}',
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isTomorrowBetter
+                ? AppColors.accentGreen
+                : AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 今日使えるお金タップ時のアクション
+  void _showDailyAvailableTapAction(AppState appState) {
+    if (appState.isPremium) {
+      // サブスク加入者: 分析画面へ遷移
+      // MainScreenのタブを分析（index: 2）に切り替える
+      appState.requestTabChange(2);
+    } else {
+      // サブスク未加入者: PLUS紹介ダイアログを表示
+      _showPlusPromotionDialog();
+    }
+  }
+
+  /// PLUSプラン紹介ダイアログ
+  void _showPlusPromotionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'PLUSプランのご紹介',
+          style: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'PLUSプランなら、予算余力の推移や予測をグラフで確認できます。',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.accentBlueLight.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.insights_outlined,
+                    size: 20,
+                    color: AppColors.accentBlue,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '日々の余裕を可視化して、計画的な支出管理を',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accentBlue,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '閉じる',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // 設定画面へ遷移（PLUSプラン詳細）
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+            child: Text(
+              '詳しく見る',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentBlue,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// クイック登録タイル
   Widget _buildQuickEntryTile(QuickEntry entry, AppState appState) {
     // グレードに対応する色を取得
@@ -360,7 +655,8 @@ class _HomeScreenState extends State<HomeScreen> {
       onLongPress: () => showQuickEntryEditModal(context, entry: entry),
       child: Container(
         margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        constraints: const BoxConstraints(minWidth: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),

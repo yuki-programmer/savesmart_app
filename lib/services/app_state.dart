@@ -54,6 +54,9 @@ class AppState extends ChangeNotifier {
   int? _requestedTabIndex;
   bool _openIncomeSheetRequested = false;
 
+  // === 今日使えるお金（固定値） ===
+  int? _fixedTodayAllowance;
+
   // Getters
   List<Expense> get expenses => _expenses;
   List<Category> get categories => _categories;
@@ -128,6 +131,105 @@ class AppState extends ChangeNotifier {
     final income = thisMonthAvailableAmount;
     if (income == null) return null;
     return income - fixedCostsTotal;
+  }
+
+  /// 今日使えるお金（固定値 - DBから取得、なければ計算して保存）
+  /// 一日の開始時点で固定され、支出を登録しても変動しない
+  int? get fixedTodayAllowance => _fixedTodayAllowance;
+
+  /// 明日の予算予測（変動値 - リアルタイム計算）
+  /// 支出を登録するたびに再計算される
+  int? get dynamicTomorrowForecast {
+    final income = thisMonthAvailableAmount;
+    if (income == null) return null;
+
+    final now = DateTime.now();
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
+
+    // 月末日の場合は計算不可（明日は来月）
+    if (now.day == lastDayOfMonth) return null;
+
+    // 今日までの支出合計
+    final variableExpenseTotal = thisMonthTotal;
+
+    // 現在の残り予算 = 予算 - 今日までの支出 - 固定費
+    final remainingBudget = income - variableExpenseTotal - fixedCostsTotal;
+
+    // 明日から月末までの日数
+    final remainingDaysFromTomorrow = lastDayOfMonth - now.day;
+
+    if (remainingDaysFromTomorrow <= 0) return null;
+
+    return (remainingBudget / remainingDaysFromTomorrow).round();
+  }
+
+  /// 今日が月末日かどうか
+  bool get isLastDayOfMonth {
+    final now = DateTime.now();
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
+    return now.day == lastDayOfMonth;
+  }
+
+  /// 今月末までの残り日数（今日を含む）
+  int get remainingDaysInMonth {
+    final now = DateTime.now();
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
+    return lastDayOfMonth - now.day + 1;
+  }
+
+  /// 昨日までの支出合計を取得
+  int get _expenseTotalUntilYesterday {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return _expenses
+        .where((e) {
+          final expenseDate = DateTime(
+            e.createdAt.year,
+            e.createdAt.month,
+            e.createdAt.day,
+          );
+          return expenseDate.year == now.year &&
+              expenseDate.month == now.month &&
+              expenseDate.isBefore(today);
+        })
+        .fold(0, (sum, e) => sum + e.amount);
+  }
+
+  /// 今日の固定予算を計算（DBに保存用）
+  int? _calculateTodayAllowance() {
+    final income = thisMonthAvailableAmount;
+    if (income == null) return null;
+
+    // 昨日までの支出
+    final expensesUntilYesterday = _expenseTotalUntilYesterday;
+
+    // 残り予算 = 予算 - 昨日までの支出 - 固定費
+    final remainingBudget = income - expensesUntilYesterday - fixedCostsTotal;
+
+    // 今日を含む残り日数
+    final remainingDays = remainingDaysInMonth;
+
+    return (remainingBudget / remainingDays).round();
+  }
+
+  /// 今日の固定予算をロード（なければ計算して保存）
+  Future<void> _loadOrCreateTodayAllowance() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // DBから今日の値を取得
+    final savedAmount = await _db.getDailyBudget(today);
+
+    if (savedAmount != null) {
+      _fixedTodayAllowance = savedAmount;
+    } else {
+      // 計算して保存
+      final calculated = _calculateTodayAllowance();
+      if (calculated != null) {
+        await _db.saveDailyBudget(today, calculated);
+        _fixedTodayAllowance = calculated;
+      }
+    }
   }
 
   // スタンダード比での節約額を計算
@@ -238,6 +340,9 @@ class AppState extends ChangeNotifier {
       _fixedCostCategories = results[3] as List<FixedCostCategory>;
       _currentBudget = results[4] as Budget?;
       _quickEntries = results[5] as List<QuickEntry>;
+
+      // 今日の固定予算をロード（データロード後に実行）
+      await _loadOrCreateTodayAllowance();
     } catch (e) {
       debugPrint('Error loading data: $e');
     }
@@ -782,6 +887,12 @@ class AppState extends ChangeNotifier {
   void requestOpenIncomeSheet() {
     _requestedTabIndex = 2; // 分析タブのindex
     _openIncomeSheetRequested = true;
+    notifyListeners();
+  }
+
+  /// 指定したタブへの切り替えをリクエスト
+  void requestTabChange(int tabIndex) {
+    _requestedTabIndex = tabIndex;
     notifyListeners();
   }
 
