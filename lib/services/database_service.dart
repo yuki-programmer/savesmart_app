@@ -49,7 +49,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 8,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -74,7 +74,8 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
         sort_order INTEGER NOT NULL,
-        is_default INTEGER NOT NULL DEFAULT 0
+        is_default INTEGER NOT NULL DEFAULT 0,
+        icon TEXT
       )
     ''');
 
@@ -159,6 +160,23 @@ class DatabaseService {
         date TEXT PRIMARY KEY,
         fixed_amount INTEGER NOT NULL
       )
+    ''');
+
+    // サイクル収入テーブル（メイン収入・サブ収入を一元管理）
+    await db.execute('''
+      CREATE TABLE cycle_incomes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cycle_key TEXT NOT NULL,
+        is_main INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        amount INTEGER NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    // cycle_key でのクエリ高速化
+    await db.execute('''
+      CREATE INDEX idx_cycle_incomes_cycle_key ON cycle_incomes (cycle_key)
     ''');
   }
 
@@ -463,6 +481,59 @@ class DatabaseService {
         )
       ''');
     }
+
+    if (oldVersion < 7) {
+      // サイクル収入テーブルを作成
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS cycle_incomes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          cycle_key TEXT NOT NULL,
+          is_main INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          amount INTEGER NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      // cycle_key でのクエリ高速化
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_cycle_incomes_cycle_key ON cycle_incomes (cycle_key)
+      ''');
+    }
+
+    if (oldVersion < 8) {
+      // categories テーブルに icon カラムを追加
+      await db.execute('ALTER TABLE categories ADD COLUMN icon TEXT');
+
+      // 既存カテゴリにデフォルトアイコンをマッピング
+      final defaultIcons = {
+        '食費': 'local_grocery_store',
+        '食料品': 'local_grocery_store',
+        '外食': 'restaurant',
+        'ランチ': 'lunch_dining',
+        'コーヒー': 'local_cafe',
+        'カフェ': 'local_cafe',
+        '日用品': 'shopping_bag',
+        '買い物': 'shopping_bag',
+        '交通費': 'train',
+        'ガソリン': 'directions_car',
+        '趣味・娯楽': 'sports_esports',
+        '娯楽': 'sports_esports',
+        '交際費': 'local_bar',
+        '衣服・美容': 'content_cut',
+        '美容室': 'content_cut',
+        '健康': 'medical_services',
+        '医療': 'medical_services',
+        'その他': 'category',
+      };
+
+      for (final entry in defaultIcons.entries) {
+        await db.execute(
+          'UPDATE categories SET icon = ? WHERE name = ?',
+          [entry.value, entry.key],
+        );
+      }
+    }
   }
 
   /// デフォルト固定費カテゴリが存在しない場合に投入する
@@ -695,5 +766,245 @@ class DatabaseService {
       );
     }
     await batch.commit(noResult: true);
+  }
+
+  // ========================================
+  // CycleIncome CRUD（サイクル収入管理）
+  // ========================================
+
+  /// 指定サイクルの全収入を取得
+  Future<List<Map<String, dynamic>>> getCycleIncomes(String cycleKey) async {
+    final db = await database;
+    final maps = await db.query(
+      'cycle_incomes',
+      where: 'cycle_key = ?',
+      whereArgs: [cycleKey],
+      orderBy: 'is_main DESC, created_at ASC', // メイン収入を先頭に
+    );
+    return maps;
+  }
+
+  /// 指定サイクルの収入合計を取得
+  Future<int> getCycleIncomeTotal(String cycleKey) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM cycle_incomes
+      WHERE cycle_key = ?
+    ''', [cycleKey]);
+    return result.first['total'] as int;
+  }
+
+  /// 指定サイクルのメイン収入を取得（1件のみ想定）
+  Future<Map<String, dynamic>?> getMainIncome(String cycleKey) async {
+    final db = await database;
+    final maps = await db.query(
+      'cycle_incomes',
+      where: 'cycle_key = ? AND is_main = 1',
+      whereArgs: [cycleKey],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return maps.first;
+  }
+
+  /// 指定サイクルのサブ収入一覧を取得
+  Future<List<Map<String, dynamic>>> getSubIncomes(String cycleKey) async {
+    final db = await database;
+    final maps = await db.query(
+      'cycle_incomes',
+      where: 'cycle_key = ? AND is_main = 0',
+      whereArgs: [cycleKey],
+      orderBy: 'created_at ASC',
+    );
+    return maps;
+  }
+
+  /// 収入を登録
+  Future<int> insertCycleIncome({
+    required String cycleKey,
+    required bool isMain,
+    required String name,
+    required int amount,
+  }) async {
+    final db = await database;
+    return await db.insert('cycle_incomes', {
+      'cycle_key': cycleKey,
+      'is_main': isMain ? 1 : 0,
+      'name': name,
+      'amount': amount,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// 収入を更新
+  Future<void> updateCycleIncome({
+    required int id,
+    required String name,
+    required int amount,
+  }) async {
+    final db = await database;
+    await db.update(
+      'cycle_incomes',
+      {
+        'name': name,
+        'amount': amount,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// 収入を削除
+  Future<void> deleteCycleIncome(int id) async {
+    final db = await database;
+    await db.delete(
+      'cycle_incomes',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// 指定サイクルにメイン収入が存在するかチェック
+  Future<bool> hasMainIncome(String cycleKey) async {
+    final db = await database;
+    final result = await db.query(
+      'cycle_incomes',
+      where: 'cycle_key = ? AND is_main = 1',
+      whereArgs: [cycleKey],
+      limit: 1,
+    );
+    return result.isNotEmpty;
+  }
+
+  // ========================================
+  // サイクル別支出集計（前サイクル比較用）
+  // ========================================
+
+  /// 指定期間内の日ごとの支出合計を取得
+  /// 返り値: Map<日付オフセット(0-indexed), 支出合計>
+  ///
+  /// 例: サイクル開始日から3日目の支出 → { 2: 5000 }
+  Future<Map<int, int>> getDailyExpensesByCycle({
+    required DateTime cycleStartDate,
+    required DateTime cycleEndDate,
+  }) async {
+    final db = await database;
+
+    // サイクル期間内の支出を取得
+    final startStr = cycleStartDate.toIso8601String().substring(0, 10);
+    // endDateは23:59:59までを含めるため、翌日の00:00:00未満とする
+    final endDate = cycleEndDate.add(const Duration(days: 1));
+    final endStr = endDate.toIso8601String().substring(0, 10);
+
+    final results = await db.rawQuery('''
+      SELECT
+        date(created_at) as expense_date,
+        SUM(amount) as total
+      FROM expenses
+      WHERE date(created_at) >= ? AND date(created_at) < ?
+      GROUP BY date(created_at)
+      ORDER BY expense_date ASC
+    ''', [startStr, endStr]);
+
+    // 結果を日オフセットに変換
+    final dailyExpenses = <int, int>{};
+    for (final row in results) {
+      final dateStr = row['expense_date'] as String;
+      final dateParts = dateStr.split('-');
+      final expenseDate = DateTime(
+        int.parse(dateParts[0]),
+        int.parse(dateParts[1]),
+        int.parse(dateParts[2]),
+      );
+      final dayOffset = expenseDate.difference(cycleStartDate).inDays;
+      if (dayOffset >= 0) {
+        dailyExpenses[dayOffset] = row['total'] as int;
+      }
+    }
+
+    return dailyExpenses;
+  }
+
+  /// 指定期間内の支出合計を取得
+  Future<int> getTotalExpensesByCycle({
+    required DateTime cycleStartDate,
+    required DateTime cycleEndDate,
+  }) async {
+    final db = await database;
+
+    final startStr = cycleStartDate.toIso8601String().substring(0, 10);
+    final endDate = cycleEndDate.add(const Duration(days: 1));
+    final endStr = endDate.toIso8601String().substring(0, 10);
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM expenses
+      WHERE date(created_at) >= ? AND date(created_at) < ?
+    ''', [startStr, endStr]);
+
+    return result.first['total'] as int;
+  }
+
+  // ========================================
+  // 全履歴取得（ページネーション対応）
+  // ========================================
+
+  /// 全支出をページネーションで取得（新しい順）
+  ///
+  /// - [limit]: 1回の取得件数
+  /// - [offset]: スキップする件数
+  /// 返り値: List<Expense>
+  Future<List<Expense>> getAllExpensesPaged({
+    required int limit,
+    required int offset,
+  }) async {
+    final db = await database;
+    final maps = await db.query(
+      'expenses',
+      orderBy: 'created_at DESC, id DESC',
+      limit: limit,
+      offset: offset,
+    );
+    return maps.map((map) => Expense.fromMap(map)).toList();
+  }
+
+  /// 全支出の総件数を取得
+  Future<int> getAllExpensesCount() async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM expenses');
+    return result.first['count'] as int;
+  }
+
+  /// 全期間から検索（ページネーション対応）
+  ///
+  /// カテゴリ名またはメモで部分一致検索
+  Future<List<Expense>> searchExpensesPaged({
+    required String query,
+    required int limit,
+    required int offset,
+  }) async {
+    final db = await database;
+    final searchQuery = '%$query%';
+    final maps = await db.query(
+      'expenses',
+      where: 'category LIKE ? OR memo LIKE ?',
+      whereArgs: [searchQuery, searchQuery],
+      orderBy: 'created_at DESC, id DESC',
+      limit: limit,
+      offset: offset,
+    );
+    return maps.map((map) => Expense.fromMap(map)).toList();
+  }
+
+  /// 検索結果の総件数を取得
+  Future<int> searchExpensesCount(String query) async {
+    final db = await database;
+    final searchQuery = '%$query%';
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM expenses WHERE category LIKE ? OR memo LIKE ?',
+      [searchQuery, searchQuery],
+    );
+    return result.first['count'] as int;
   }
 }

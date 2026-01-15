@@ -8,20 +8,19 @@ import '../models/fixed_cost_category.dart';
 import '../models/quick_entry.dart';
 import '../config/constants.dart';
 import '../core/dev_config.dart';
+import '../core/financial_cycle.dart';
 import 'database_service.dart';
 
 class CategoryStats {
   final String category;
   final int totalAmount;
   final int standardAverage;
-  final int savingsAmount;
   final int expenseCount;
 
   CategoryStats({
     required this.category,
     required this.totalAmount,
     required this.standardAverage,
-    required this.savingsAmount,
     required this.expenseCount,
   });
 }
@@ -50,12 +49,20 @@ class AppState extends ChangeNotifier {
   final Map<String, int?> _monthlyAvailableAmounts = {};
   static const String _keyMonthlyAmountPrefix = 'monthly_amount_';
 
+  // === FinancialCycle（給料日ベースのサイクル管理） ===
+  int _mainSalaryDay = 1; // デフォルト: 1日（従来のカレンダー月と同じ）
+  static const String _keyMainSalaryDay = 'main_salary_day';
+  FinancialCycle _financialCycle = const FinancialCycle(mainSalaryDay: 1);
+
   // === タブ切り替え & incomeSheet自動起動 ===
   int? _requestedTabIndex;
   bool _openIncomeSheetRequested = false;
 
   // === 今日使えるお金（固定値） ===
   int? _fixedTodayAllowance;
+
+  // === サイクル収入（DB一元管理） ===
+  int? _currentCycleIncomeTotal; // 現在サイクルの収入合計（キャッシュ）
 
   // Getters
   List<Expense> get expenses => _expenses;
@@ -74,6 +81,12 @@ class AppState extends ChangeNotifier {
 
   /// 現在のoverride値（null=override無し）
   bool? get devPremiumOverride => _devPremiumOverride;
+
+  /// 給料日（サイクル開始日）
+  int get mainSalaryDay => _mainSalaryDay;
+
+  /// FinancialCycleインスタンス
+  FinancialCycle get financialCycle => _financialCycle;
 
   List<Expense> get todayExpenses {
     final now = DateTime.now();
@@ -97,8 +110,9 @@ class AppState extends ChangeNotifier {
 
   List<Expense> get thisMonthExpenses {
     final now = DateTime.now();
+    // FinancialCycleを使用してサイクル内の支出をフィルタ
     return _expenses.where((e) {
-      return e.createdAt.year == now.year && e.createdAt.month == now.month;
+      return _financialCycle.isDateInCurrentCycle(e.createdAt, now);
     }).toList();
   }
 
@@ -144,10 +158,9 @@ class AppState extends ChangeNotifier {
     if (income == null) return null;
 
     final now = DateTime.now();
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
 
-    // 月末日の場合は計算不可（明日は来月）
-    if (now.day == lastDayOfMonth) return null;
+    // サイクル最終日の場合は計算不可（明日は次のサイクル）
+    if (_financialCycle.isLastDayOfCycle(now)) return null;
 
     // 今日までの支出合計
     final variableExpenseTotal = thisMonthTotal;
@@ -155,32 +168,32 @@ class AppState extends ChangeNotifier {
     // 現在の残り予算 = 予算 - 今日までの支出 - 固定費
     final remainingBudget = income - variableExpenseTotal - fixedCostsTotal;
 
-    // 明日から月末までの日数
-    final remainingDaysFromTomorrow = lastDayOfMonth - now.day;
+    // 明日からサイクル終了日までの日数
+    final remainingDaysFromTomorrow = _financialCycle.getDaysRemaining(now) - 1;
 
     if (remainingDaysFromTomorrow <= 0) return null;
 
     return (remainingBudget / remainingDaysFromTomorrow).round();
   }
 
-  /// 今日が月末日かどうか
+  /// 今日がサイクル最終日かどうか
   bool get isLastDayOfMonth {
     final now = DateTime.now();
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-    return now.day == lastDayOfMonth;
+    return _financialCycle.isLastDayOfCycle(now);
   }
 
-  /// 今月末までの残り日数（今日を含む）
+  /// サイクル終了日までの残り日数（今日を含む）
   int get remainingDaysInMonth {
     final now = DateTime.now();
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-    return lastDayOfMonth - now.day + 1;
+    return _financialCycle.getDaysRemaining(now);
   }
 
-  /// 昨日までの支出合計を取得
+  /// 昨日までの支出合計を取得（サイクル内）
   int get _expenseTotalUntilYesterday {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final cycleStart = _financialCycle.getStartDate(now);
+
     return _expenses
         .where((e) {
           final expenseDate = DateTime(
@@ -188,8 +201,8 @@ class AppState extends ChangeNotifier {
             e.createdAt.month,
             e.createdAt.day,
           );
-          return expenseDate.year == now.year &&
-              expenseDate.month == now.month &&
+          // サイクル開始日以降かつ今日より前
+          return !expenseDate.isBefore(cycleStart) &&
               expenseDate.isBefore(today);
         })
         .fold(0, (sum, e) => sum + e.amount);
@@ -232,39 +245,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // スタンダード比での節約額を計算
-  // 節約タイプの支出は「スタンダード価格の70%」と仮定
-  // ご褒美タイプの支出は「スタンダード価格の130%」と仮定
-
-  /// 単一支出の節約額を計算
-  int _savingsForExpense(Expense expense) {
-    switch (expense.grade) {
-      case 'saving':
-        // 節約タイプ: 通常より30%安い → 節約額 = 実額 / 0.7 - 実額
-        return (expense.amount / 0.7 - expense.amount).round();
-      case 'reward':
-        // ご褒美タイプ: 通常より30%高い → 損失 = 実額 - 実額 / 1.3
-        return -(expense.amount - expense.amount / 1.3).round();
-      default:
-        // 標準タイプ: 差分なし
-        return 0;
-    }
-  }
-
-  /// 支出リストの節約額合計を計算
-  int _calculateSavings(List<Expense> expenses) {
-    return expenses.fold(0, (sum, e) => sum + _savingsForExpense(e));
-  }
-
-  int get thisMonthSavings => _calculateSavings(thisMonthExpenses);
-  int get todaySavings => _calculateSavings(todayExpenses);
-  int get thisWeekSavings => _calculateSavings(thisWeekExpenses);
-
-  double get savingsPercentage {
-    if (thisMonthTotal == 0) return 0;
-    return (thisMonthSavings / thisMonthTotal) * 100;
-  }
-
   Map<String, CategoryStats> get categoryStats {
     final Map<String, CategoryStats> stats = {};
     final monthExpenses = thisMonthExpenses;
@@ -301,13 +281,10 @@ class AppState extends ChangeNotifier {
           ? (standardTotal / expenses.length).round()
           : 0;
 
-      final savingsAmount = standardTotal - totalAmount;
-
       stats[entry.key] = CategoryStats(
         category: entry.key,
         totalAmount: totalAmount,
         standardAverage: standardAverage,
-        savingsAmount: savingsAmount,
         expenseCount: expenses.length,
       );
     }
@@ -340,6 +317,9 @@ class AppState extends ChangeNotifier {
       _fixedCostCategories = results[3] as List<FixedCostCategory>;
       _currentBudget = results[4] as Budget?;
       _quickEntries = results[5] as List<QuickEntry>;
+
+      // サイクル収入をロード（FinancialCycleロード後に実行）
+      await _loadCurrentCycleIncome();
 
       // 今日の固定予算をロード（データロード後に実行）
       await _loadOrCreateTodayAllowance();
@@ -474,20 +454,27 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> addCategory(String name) async {
+  Future<void> addCategory(String name, {String? icon}) async {
     final sortOrder = _categories.length;
     final category = Category(
       name: name,
       sortOrder: sortOrder,
       isDefault: false,
+      icon: icon,
     );
     await _db.insertCategory(category);
     await _reloadCategories();
   }
 
-  // カテゴリ名を更新
-  Future<void> updateCategory(int id, String newName) async {
+  // カテゴリ名とアイコンを更新
+  Future<void> updateCategoryNameAndIcon(int id, String newName, {String? icon}) async {
     await _db.updateCategoryName(id, newName);
+    // アイコンも更新する場合
+    if (icon != null) {
+      final category = _categories.firstWhere((c) => c.id == id);
+      category.icon = icon;
+      await _db.updateCategory(category);
+    }
     await _reloadCategories();
   }
 
@@ -812,8 +799,14 @@ class AppState extends ChangeNotifier {
     return _monthlyAvailableAmounts[key];
   }
 
-  /// 今月の使える金額を取得（便利getter）
+  /// 今月の使える金額を取得（DB一元管理）
+  /// サイクル収入の合計を返す。未設定の場合はnull
   int? get thisMonthAvailableAmount {
+    // DBからロードされた収入合計を使用
+    if (_currentCycleIncomeTotal != null && _currentCycleIncomeTotal! > 0) {
+      return _currentCycleIncomeTotal;
+    }
+    // フォールバック: 旧SharedPreferencesデータ
     return getMonthlyAvailableAmount(DateTime.now());
   }
 
@@ -863,6 +856,64 @@ class AppState extends ChangeNotifier {
       debugPrint('Error loading monthly available amount: $e');
     }
   }
+
+  // === FinancialCycle（給料日）Methods ===
+
+  /// 給料日設定を読み込み
+  Future<void> loadMainSalaryDay() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _mainSalaryDay = prefs.getInt(_keyMainSalaryDay) ?? 1;
+      _financialCycle = FinancialCycle(mainSalaryDay: _mainSalaryDay);
+    } catch (e) {
+      debugPrint('Error loading main salary day: $e');
+    }
+  }
+
+  /// 給料日を設定（1〜28、29〜31は末日扱いに注意）
+  Future<void> setMainSalaryDay(int day) async {
+    // 有効範囲: 1〜31
+    final clampedDay = day.clamp(1, 31);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_keyMainSalaryDay, clampedDay);
+      _mainSalaryDay = clampedDay;
+      _financialCycle = FinancialCycle(mainSalaryDay: clampedDay);
+
+      // 給料日変更時は今日の固定予算を再計算
+      await _recalculateTodayAllowance();
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error setting main salary day: $e');
+    }
+  }
+
+  /// 今日の固定予算を強制再計算（給料日変更時用）
+  Future<void> _recalculateTodayAllowance() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final calculated = _calculateTodayAllowance();
+    if (calculated != null) {
+      await _db.saveDailyBudget(today, calculated);
+      _fixedTodayAllowance = calculated;
+    }
+  }
+
+  /// サイクル開始日を取得
+  DateTime get cycleStartDate => _financialCycle.getStartDate(DateTime.now());
+
+  /// サイクル終了日を取得
+  DateTime get cycleEndDate => _financialCycle.getEndDate(DateTime.now());
+
+  /// サイクル開始日から今日までの全日程を生成（降順）
+  List<DateTime> get cycleAllDates =>
+      _financialCycle.generateDatesFromStartToToday(DateTime.now());
+
+  /// 現在のサイクルキーを取得（例: 'cycle_2025_01_25'）
+  String get currentCycleKey => _financialCycle.getCycleKey(DateTime.now());
 
   // === タブ切り替え & incomeSheet自動起動 Methods ===
 
@@ -1166,5 +1217,290 @@ class AppState extends ChangeNotifier {
       createdAt: DateTime.now(),
     );
     return await addExpense(expense);
+  }
+
+  // ========================================
+  // サイクル収入管理（DB一元管理）
+  // ========================================
+
+  /// 現在サイクルの収入合計をDBからロード
+  Future<void> _loadCurrentCycleIncome() async {
+    try {
+      final cycleKey = currentCycleKey;
+
+      // SP→DB移行: DBにデータがなく、SPにデータがある場合は移行
+      final hasDbIncome = await _db.hasMainIncome(cycleKey);
+      if (!hasDbIncome) {
+        await _migrateSpToDb();
+      }
+
+      _currentCycleIncomeTotal = await _db.getCycleIncomeTotal(cycleKey);
+    } catch (e) {
+      debugPrint('Error loading cycle income: $e');
+      _currentCycleIncomeTotal = null;
+    }
+  }
+
+  /// SharedPreferences → DB 移行
+  /// 現在月のmonthly_amountがあればDBに移行
+  Future<void> _migrateSpToDb() async {
+    try {
+      final now = DateTime.now();
+      final spAmount = getMonthlyAvailableAmount(now);
+
+      if (spAmount != null && spAmount > 0) {
+        // DBにメイン収入として登録
+        await _db.insertCycleIncome(
+          cycleKey: currentCycleKey,
+          isMain: true,
+          name: '給料',
+          amount: spAmount,
+        );
+        debugPrint('Migrated SP monthly_amount to DB: $spAmount');
+      }
+    } catch (e) {
+      debugPrint('Error migrating SP to DB: $e');
+    }
+  }
+
+  /// 収入をリロード（追加・更新・削除後に呼び出し）
+  Future<void> _reloadCycleIncome() async {
+    await _loadCurrentCycleIncome();
+    // 収入変更時は今日の固定予算も再計算
+    await _recalculateTodayAllowance();
+    notifyListeners();
+  }
+
+  /// 現在サイクルの全収入データを取得
+  Future<List<Map<String, dynamic>>> getCurrentCycleIncomes() async {
+    return await _db.getCycleIncomes(currentCycleKey);
+  }
+
+  /// 現在サイクルのメイン収入を取得
+  Future<Map<String, dynamic>?> getMainIncome() async {
+    return await _db.getMainIncome(currentCycleKey);
+  }
+
+  /// 現在サイクルのサブ収入一覧を取得
+  Future<List<Map<String, dynamic>>> getSubIncomes() async {
+    return await _db.getSubIncomes(currentCycleKey);
+  }
+
+  /// メイン収入を登録（1サイクルに1件のみ）
+  /// 既にメイン収入がある場合は更新
+  Future<bool> setMainIncome(int amount, {String name = '給料'}) async {
+    try {
+      final cycleKey = currentCycleKey;
+      final existing = await _db.getMainIncome(cycleKey);
+
+      if (existing != null) {
+        // 既存のメイン収入を更新
+        await _db.updateCycleIncome(
+          id: existing['id'] as int,
+          name: name,
+          amount: amount,
+        );
+      } else {
+        // 新規登録
+        await _db.insertCycleIncome(
+          cycleKey: cycleKey,
+          isMain: true,
+          name: name,
+          amount: amount,
+        );
+      }
+
+      await _reloadCycleIncome();
+      return true;
+    } catch (e) {
+      debugPrint('Error setting main income: $e');
+      return false;
+    }
+  }
+
+  /// サブ収入を追加（補填・ボーナス等）
+  Future<bool> addSubIncome(int amount, String name) async {
+    try {
+      await _db.insertCycleIncome(
+        cycleKey: currentCycleKey,
+        isMain: false,
+        name: name,
+        amount: amount,
+      );
+
+      await _reloadCycleIncome();
+      return true;
+    } catch (e) {
+      debugPrint('Error adding sub income: $e');
+      return false;
+    }
+  }
+
+  /// 収入を更新
+  Future<bool> updateIncome(int id, int amount, String name) async {
+    try {
+      await _db.updateCycleIncome(id: id, name: name, amount: amount);
+      await _reloadCycleIncome();
+      return true;
+    } catch (e) {
+      debugPrint('Error updating income: $e');
+      return false;
+    }
+  }
+
+  /// 収入を削除
+  Future<bool> deleteIncome(int id) async {
+    try {
+      await _db.deleteCycleIncome(id);
+      await _reloadCycleIncome();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting income: $e');
+      return false;
+    }
+  }
+
+  /// 現在サイクルにメイン収入が設定されているか
+  Future<bool> hasMainIncome() async {
+    return await _db.hasMainIncome(currentCycleKey);
+  }
+
+  // ========================================
+  // 前サイクル比較用データ取得
+  // ========================================
+
+  /// 前サイクルのキーを取得
+  String get previousCycleKey => _financialCycle.getPreviousCycleKey(DateTime.now());
+
+  /// 前サイクルの開始日を取得
+  DateTime get previousCycleStartDate =>
+      _financialCycle.getPreviousCycleStartDate(DateTime.now());
+
+  /// 前サイクルの終了日を取得
+  DateTime get previousCycleEndDate =>
+      _financialCycle.getPreviousCycleEndDate(DateTime.now());
+
+  /// 前サイクルの総日数を取得
+  int get previousCycleTotalDays =>
+      _financialCycle.getPreviousCycleTotalDays(DateTime.now());
+
+  /// 前サイクルの収入合計を取得
+  Future<int> getPreviousCycleIncomeTotal() async {
+    return await _db.getCycleIncomeTotal(previousCycleKey);
+  }
+
+  /// 前サイクルの日ごとの支出を取得
+  /// 返り値: Map<日オフセット(0-indexed), 支出額>
+  Future<Map<int, int>> getPreviousCycleDailyExpenses() async {
+    return await _db.getDailyExpensesByCycle(
+      cycleStartDate: previousCycleStartDate,
+      cycleEndDate: previousCycleEndDate,
+    );
+  }
+
+  /// 前サイクルの支出合計を取得
+  Future<int> getPreviousCycleTotalExpenses() async {
+    return await _db.getTotalExpensesByCycle(
+      cycleStartDate: previousCycleStartDate,
+      cycleEndDate: previousCycleEndDate,
+    );
+  }
+
+  /// 前サイクルの累積支出率を計算
+  /// 返り値: { 'rates': List<double>, 'startDay': int, 'totalDays': int, 'income': int }
+  /// ratesは日ごとの累積支出率（%）
+  Future<Map<String, dynamic>?> getPreviousCycleBurnRateData() async {
+    try {
+      final prevIncome = await getPreviousCycleIncomeTotal();
+      if (prevIncome <= 0) return null;
+
+      // 前サイクルの可処分金額 = 収入 - 固定費
+      // 注: 固定費は現在のものを使用（過去の固定費データは保存していない）
+      final prevDisposable = prevIncome - fixedCostsTotal;
+      if (prevDisposable <= 0) return null;
+
+      final dailyExpenses = await getPreviousCycleDailyExpenses();
+      final totalDays = previousCycleTotalDays;
+
+      // 累積支出率を計算
+      final rates = <double>[];
+      int cumulative = 0;
+
+      // 記録開始日を検出
+      int startDay = 1;
+      bool recordStarted = false;
+
+      for (var i = 0; i < totalDays; i++) {
+        cumulative += dailyExpenses[i] ?? 0;
+
+        // 最初の支出を検出
+        if (!recordStarted && (dailyExpenses[i] ?? 0) > 0) {
+          startDay = i + 1;
+          recordStarted = true;
+        }
+
+        final rate = (cumulative / prevDisposable) * 100;
+        rates.add(rate);
+      }
+
+      // 記録日数が3日未満の場合は比較に不十分
+      final recordedDays = dailyExpenses.keys.length;
+      if (recordedDays < 3) return null;
+
+      return {
+        'rates': rates,
+        'startDay': startDay,
+        'totalDays': totalDays,
+        'income': prevIncome,
+        'disposable': prevDisposable,
+        'totalExpenses': cumulative,
+      };
+    } catch (e) {
+      debugPrint('Error getting previous cycle burn rate data: $e');
+      return null;
+    }
+  }
+
+  /// 今サイクルと前サイクルの同時点での差額を計算
+  /// 返り値: 正の値 = 今サイクルの方が支出が少ない（節約中）
+  ///         負の値 = 今サイクルの方が支出が多い（使いすぎ）
+  Future<int?> getCycleComparisonDiff() async {
+    try {
+      final prevData = await getPreviousCycleBurnRateData();
+      if (prevData == null) return null;
+
+      final prevRates = prevData['rates'] as List<double>;
+      final prevTotalDays = prevData['totalDays'] as int;
+      final prevDisposable = prevData['disposable'] as int;
+
+      final now = DateTime.now();
+      final currentTodayInCycle = _financialCycle.getDaysElapsed(now);
+      final currentTotalDays = _financialCycle.getTotalDays(now);
+
+      // 進捗率を合わせるための補間
+      // 今サイクルの進捗率 = currentTodayInCycle / currentTotalDays
+      // 前サイクルの対応する日 = 進捗率 * prevTotalDays
+      final progress = currentTodayInCycle / currentTotalDays;
+      final prevEquivalentDay = (progress * prevTotalDays).round().clamp(1, prevTotalDays);
+
+      // 前サイクルの同時点での累積支出率
+      final prevRateAtSameProgress = prevRates[prevEquivalentDay - 1];
+
+      // 今サイクルの可処分金額を確認
+      final currentDisposable = disposableAmount;
+      if (currentDisposable == null || currentDisposable <= 0) return null;
+
+      // 差額を金額に変換
+      // 前サイクル基準の支出額
+      final prevExpenseAtProgress = prevDisposable * (prevRateAtSameProgress / 100);
+      // 今サイクルの実際の支出額
+      final currentExpense = thisMonthTotal;
+
+      // 差額（正 = 節約、負 = 使いすぎ）
+      return (prevExpenseAtProgress - currentExpense).round();
+    } catch (e) {
+      debugPrint('Error calculating cycle comparison diff: $e');
+      return null;
+    }
   }
 }

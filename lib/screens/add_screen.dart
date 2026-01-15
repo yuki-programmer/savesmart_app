@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/category_icons.dart';
 import '../utils/formatters.dart';
 import '../widgets/wheel_picker.dart';
-import '../widgets/expense/add_category_modal.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
 import 'fixed_cost_screen.dart';
+import 'category_manage_screen.dart';
 
 /// 支出記録画面（1ページ完結型）
 /// 入力順: カテゴリ → 金額 → 支出タイプ
@@ -175,7 +176,7 @@ class _AddScreenState extends State<AddScreen> {
 
   /// ① カテゴリ選択セクション
   Widget _buildCategorySection() {
-    final categories = context.watch<AppState>().categoryNames;
+    final categories = context.watch<AppState>().categories;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,9 +194,16 @@ class _AddScreenState extends State<AddScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => showAddCategoryModal(context),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CategoryManageScreen(),
+                  ),
+                );
+              },
               child: Text(
-                '+ 新規追加',
+                '編集',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -211,18 +219,19 @@ class _AddScreenState extends State<AddScreen> {
           spacing: 8,
           runSpacing: 8,
           children: categories.map((category) {
-            final isSelected = _selectedCategory == category;
+            final isSelected = _selectedCategory == category.name;
+            final icon = CategoryIcons.getIcon(category.icon);
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  _selectedCategory = category;
+                  _selectedCategory = category.name;
                 });
                 // カテゴリ選択時にスマート・コンボを取得
-                _loadSmartCombos(category);
+                _loadSmartCombos(category.name);
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? _selectedGradeData['lightColor'] as Color
@@ -245,15 +254,28 @@ class _AddScreenState extends State<AddScreen> {
                         ]
                       : null,
                 ),
-                child: Text(
-                  category,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected
-                        ? _selectedGradeData['color'] as Color
-                        : AppColors.textSecondary,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: isSelected
+                          ? _selectedGradeData['color'] as Color
+                          : AppColors.textMuted,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      category.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected
+                            ? _selectedGradeData['color'] as Color
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

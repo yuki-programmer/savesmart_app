@@ -46,15 +46,17 @@ DatabaseService (Singleton)
 SQLite Database (savesmart.db)
 ```
 
-### Database Schema (Version 4)
-Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`
+### Database Schema (Version 7)
+Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`, `quick_entries`, `daily_budgets`, `incomes`
 
 Key fields:
 - `expenses.grade`: 'saving' | 'standard' | 'reward'
 - `expenses.parent_id`: Links split expenses to parent
 - `fixed_costs.category_name_snapshot`: Preserves category name at creation time
+- `quick_entries`: Quick entry templates (title, category, amount, grade, sort_order)
+- `daily_budgets`: Fixed daily allowance per date (date PK, fixed_amount)
 
-Indices (v4):
+Indices:
 - `idx_expenses_created_at`: Optimizes date-range queries
 - `idx_expenses_category_created_at`: Optimizes category+date aggregation
 
@@ -68,14 +70,15 @@ Indices (v4):
 ```
 lib/
 ├── config/          # AppColors (theme.dart), AppConstants (constants.dart)
-├── core/            # DevConfig for developer mode gating
-├── models/          # Data models (Expense, Category, Budget, FixedCost, FixedCostCategory)
+├── core/            # DevConfig, FinancialCycle (給料日ベースのサイクル計算)
+├── models/          # Data models (Expense, Category, Budget, FixedCost, FixedCostCategory, QuickEntry)
 ├── services/        # DatabaseService (singleton), AppState (ChangeNotifier)
-├── screens/         # Main screens (home, add, history, analytics, settings, fixed_cost)
+├── screens/         # Main screens (home, add, history, analytics, settings, fixed_cost, quick_entry_manage)
 ├── widgets/
 │   ├── expense/     # Add expense related widgets
 │   ├── analytics/   # Analytics charts and sheets
-│   └── fixed_cost/  # Fixed cost management widgets
+│   ├── fixed_cost/  # Fixed cost management widgets
+│   └── quick_entry/ # Quick entry edit modal
 └── utils/           # formatters.dart (formatNumber utility)
 ```
 
@@ -115,10 +118,23 @@ Text('¥${formatNumber(amount)}')  // ¥1,234
 
 ## Key Features
 
+### Financial Cycle System (給料日ベース)
+- `FinancialCycle` class at `lib/core/financial_cycle.dart`
+- Custom 1-month cycle based on salary date (1-31) instead of calendar month
+- Auto-normalizes for shorter months (31日設定 → 2月は28/29日に調整)
+- Key methods: `getStartDate()`, `getEndDate()`, `getDaysRemaining()`, `getCycleKey()`
+- Backward compatible with calendar month when salary day = 1
+
+### Income Management (収入管理)
+- `incomes` table stores main income and sub-income (Refill)
+- Cycle key format: `cycle_YYYY_MM_DD` (based on salary date)
+- Main income: Primary salary, used for budget calculation
+- Sub-income (Refill): Additional income added to remaining budget
+
 ### Monthly Available Amount
-- Stored per month in SharedPreferences with key `monthly_amount_YYYY-MM`
+- Budget stored in DB with cycle key
 - `thisMonthAvailableAmount` / `previousMonthAvailableAmount` getters
-- Disposable amount = Available amount - Fixed costs total
+- Disposable amount = Total income - Fixed costs total
 
 ### Burn Rate Chart (`lib/widgets/burn_rate_chart.dart`)
 - Shows cumulative spending percentage over the month
@@ -142,6 +158,43 @@ Text('¥${formatNumber(amount)}')  // ¥1,234
 - Stored separately from variable expenses
 - Has its own category system (`fixed_cost_categories`)
 - `categoryNameSnapshot` preserves category name at creation time
+
+### Quick Entry (クイック登録)
+- Templates for frequently used expenses stored in `quick_entries` table
+- Home screen displays tiles that record expense with 1-tap
+- Managed via QuickEntryManageScreen (list with 3-dot menu for edit/delete)
+- Title is optional (defaults to category name if empty)
+
+### Daily Budget (今日使えるお金)
+- **fixedTodayAllowance**: Fixed at day start, stored in `daily_budgets` table
+  - Formula: (予算 - 昨日までの支出 - 固定費) / 残り日数
+  - Does NOT change when expenses are added during the day
+- **dynamicTomorrowForecast**: Recalculated on every expense change
+  - Formula: (予算 - 今日までの支出 - 固定費) / (明日〜月末の日数)
+  - Shows green if better than today's allowance (節約成功)
+- Month-end edge case: Shows "今月もあと1日！" instead of tomorrow forecast
+
+### Smart Combo Prediction (スマート・コンボ)
+- SQL aggregation of frequently used amount+grade combinations per category
+- Displayed as chips after category selection in AddScreen
+- Tapping auto-fills amount and grade
+
+### History Screen (履歴)
+- Vertical timeline format with 2-column layout (date | content)
+- Shows all dates from month start to today (descending), including empty days
+- Tap expense row to open action bottom sheet (edit, split, delete)
+- Search mode shows flat list filtered by category/memo
+
+### Night Reflection (夜の振り返り)
+- `NightReflectionDialog` at `lib/widgets/night_reflection_dialog.dart`
+- Home screen switches between day card and night card based on time
+- Time-based display conditions:
+  - 19:00〜23:59: Always show night card (even with new expenses)
+  - 00:00〜03:59: Show night card only if no expenses registered today
+  - 04:00〜18:59: Always show day card
+- Night card shows: today's total spending + tomorrow's budget (日割り)
+- Tap night card to open fullscreen reflection dialog (can be viewed multiple times)
+- Logic via `NightReflectionDialog.shouldShowNightCard(hasTodayExpense: bool)`
 
 ## Desktop Support
 
@@ -187,6 +240,24 @@ _reloadCategories()         // Reload only categories
 _reloadFixedCosts()         // Reload only fixed costs
 _reloadFixedCostCategories() // Reload only fixed cost categories
 _reloadBudget()             // Reload only budget
+_reloadQuickEntries()       // Reload only quick entries
+```
+
+### Quick Entry Methods
+```dart
+addQuickEntry(QuickEntry)    // Add new template
+updateQuickEntry(QuickEntry) // Update existing template
+deleteQuickEntry(int id)     // Delete template
+executeQuickEntry(QuickEntry) // Create expense from template and save
+getSmartCombos(String category) // Get frequent amount+grade combos for category
+```
+
+### Daily Budget Methods
+```dart
+fixedTodayAllowance          // Getter: today's fixed allowance (from DB)
+dynamicTomorrowForecast      // Getter: tomorrow's forecast (calculated)
+isLastDayOfMonth             // Getter: bool for month-end edge case
+_loadOrCreateTodayAllowance() // Load from DB or calculate and save
 ```
 
 ## Hero Animation Pattern

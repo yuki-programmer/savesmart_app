@@ -8,6 +8,7 @@ import '../models/expense.dart';
 import '../models/quick_entry.dart';
 import '../utils/formatters.dart';
 import '../widgets/quick_entry/quick_entry_edit_modal.dart';
+import '../widgets/night_reflection_dialog.dart';
 import 'quick_entry_manage_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
@@ -22,6 +23,22 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _fixedCostsExpanded = false;
+
+  /// 夜の振り返りダイアログを表示
+  Future<void> _showNightReflectionDialog(AppState appState) async {
+    await NightReflectionDialog.show(
+      context,
+      todayTotal: appState.todayTotal,
+      tomorrowBudget: appState.dynamicTomorrowForecast,
+    );
+  }
+
+  /// 夜カードを表示すべきかどうか
+  bool _shouldShowNightCard(AppState appState) {
+    return NightReflectionDialog.shouldShowNightCard(
+      hasTodayExpense: appState.todayTotal > 0,
+    );
+  }
 
   // 日付ベースのランダムステータス文言
   String _getDailyStatusText() {
@@ -249,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// クイック登録セクション
+  /// クイック登録セクション（2カラムグリッド）
   Widget _buildQuickEntrySection(AppState appState) {
     final quickEntries = appState.quickEntries;
 
@@ -286,19 +303,55 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         if (quickEntries.isEmpty)
           _buildEmptyQuickEntryHint()
         else
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: quickEntries
-                  .map((entry) => _buildQuickEntryTile(entry, appState))
+          _buildQuickEntryGrid(quickEntries, appState),
+      ],
+    );
+  }
+
+  /// クイック登録グリッド（2行×横スクロール）
+  Widget _buildQuickEntryGrid(List<QuickEntry> entries, AppState appState) {
+    // 2行に分割（奇数インデックスは上段、偶数インデックスは下段）
+    final topRow = <QuickEntry>[];
+    final bottomRow = <QuickEntry>[];
+    for (var i = 0; i < entries.length; i++) {
+      if (i % 2 == 0) {
+        topRow.add(entries[i]);
+      } else {
+        bottomRow.add(entries[i]);
+      }
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 上段
+          Row(
+            children: topRow
+                .map((entry) => Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: _buildQuickEntryTile(entry, appState),
+                    ))
+                .toList(),
+          ),
+          if (bottomRow.isNotEmpty) const SizedBox(height: 10),
+          // 下段
+          if (bottomRow.isNotEmpty)
+            Row(
+              children: bottomRow
+                  .map((entry) => Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: _buildQuickEntryTile(entry, appState),
+                      ))
                   .toList(),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -345,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 今日使えるお金セクション
+  /// 今日使えるお金セクション（夜時間帯は振り返りカードに切り替え）
   Widget _buildDailyAvailableSection(AppState appState) {
     final todayAmount = appState.fixedTodayAllowance;
     final tomorrowAmount = appState.dynamicTomorrowForecast;
@@ -354,6 +407,11 @@ class _HomeScreenState extends State<HomeScreen> {
     // 予算未設定の場合は非表示
     if (todayAmount == null) {
       return const SizedBox.shrink();
+    }
+
+    // 夜時間帯（19:00〜翌4:00）かつ今日の支出がない場合は振り返りカードを表示
+    if (_shouldShowNightCard(appState)) {
+      return _buildNightReflectionCard(appState);
     }
 
     final isNegative = todayAmount < 0;
@@ -438,6 +496,132 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 夜の振り返りカード（19:00以降に表示）
+  Widget _buildNightReflectionCard(AppState appState) {
+    final todayTotal = appState.todayTotal;
+    final tomorrowBudget = appState.dynamicTomorrowForecast;
+
+    // ダークネイビー系の背景色
+    const cardBgColor = Color(0xFF1E2340);
+
+    return GestureDetector(
+      onTap: () => _showNightReflectionDialog(appState),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: cardBgColor,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ヘッダー行
+            Row(
+              children: [
+                const Text(
+                  '🌙',
+                  style: TextStyle(fontSize: 18),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '今日のふりかえり',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withOpacity(0.95),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // コンテンツ行：今日の支出と明日の予算
+            Row(
+              children: [
+                // 今日の支出
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '今日の支出',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '¥${formatNumber(todayTotal)}',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: todayTotal == 0
+                              ? AppColors.accentGreen.withOpacity(0.9)
+                              : Colors.white.withOpacity(0.95),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // 明日の予算
+                if (tomorrowBudget != null)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '明日の予算(日割り)',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          tomorrowBudget >= 0
+                              ? '¥${formatNumber(tomorrowBudget)}'
+                              : '-¥${formatNumber(tomorrowBudget.abs())}',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: tomorrowBudget >= 0
+                                ? Colors.white.withOpacity(0.95)
+                                : AppColors.accentOrange.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            // タップを促すヒント
+            const SizedBox(height: 10),
+            Center(
+              child: Text(
+                'タップして振り返る',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white.withOpacity(0.4),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -626,7 +810,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// クイック登録タイル
+  /// クイック登録タイル（コンパクト・縦並びレイアウト）
   Widget _buildQuickEntryTile(QuickEntry entry, AppState appState) {
     // グレードに対応する色を取得
     Color gradeColor;
@@ -654,60 +838,60 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () => _executeQuickEntry(entry, appState),
       onLongPress: () => showQuickEntryEditModal(context, entry: entry),
       child: Container(
-        margin: const EdgeInsets.only(right: 10),
-        constraints: const BoxConstraints(minWidth: 120),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        width: 130,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: gradeColor.withOpacity(0.25),
-            width: 1.5,
+            color: gradeColor.withOpacity(0.2),
+            width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: gradeColor.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: gradeColor.withOpacity(0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // タイトル
+            // 上段: 項目名（十分なスペースを確保）
             Text(
               entry.title,
               style: GoogleFonts.inter(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary.withOpacity(0.9),
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 6),
-            // 金額と支出タイプ
+            const SizedBox(height: 5),
+            // 下段: 金額とラベル
             Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   '¥${formatNumber(entry.amount)}',
                   style: GoogleFonts.ibmPlexSans(
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimary.withOpacity(0.85),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: gradeLightColor.withOpacity(0.7),
+                    color: gradeLightColor.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     gradeLabel,
                     style: GoogleFonts.inter(
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: FontWeight.w600,
                       color: gradeColor,
                     ),

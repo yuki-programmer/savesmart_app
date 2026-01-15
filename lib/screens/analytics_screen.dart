@@ -170,13 +170,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  /// 今月のまとめセクション（Free でも表示）
+  /// サイクル期間ラベルを生成（例: 1/25 〜 2/24）
+  String _getCyclePeriodLabel(AppState appState) {
+    final startDate = appState.cycleStartDate;
+    final endDate = appState.cycleEndDate;
+    return '${startDate.month}/${startDate.day} 〜 ${endDate.month}/${endDate.day}';
+  }
+
+  /// 今サイクルのまとめセクション（Free でも表示）
   Widget _buildMonthlySummary(AppState appState) {
     final fixedCostsTotal = appState.fixedCostsTotal;
     final total = appState.thisMonthTotal + fixedCostsTotal;
-    final savings = appState.thisMonthSavings;
-    final isPositive = savings >= 0;
     final availableAmount = appState.thisMonthAvailableAmount;
+    final cyclePeriod = _getCyclePeriodLabel(appState);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -194,76 +200,55 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '今月のまとめ',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withOpacity(0.8),
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '支出合計',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textMuted.withOpacity(0.8),
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '¥${formatNumber(total)}',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
+              Text(
+                '今サイクルのまとめ',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary.withOpacity(0.8),
+                  height: 1.4,
                 ),
               ),
+              const Spacer(),
               Container(
-                width: 1,
-                height: 40,
-                color: AppColors.bgPrimary,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'お得額',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textMuted.withOpacity(0.8),
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${isPositive ? '+' : ''}¥${formatNumber(savings)}',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: isPositive
-                              ? AppColors.accentGreen
-                              : AppColors.accentRed,
-                        ),
-                      ),
-                    ],
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.accentBlue.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  cyclePeriod,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.accentBlue,
                   ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '支出合計',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textMuted.withOpacity(0.8),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '¥${formatNumber(total)}',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary.withOpacity(0.9),
                 ),
               ),
             ],
@@ -623,26 +608,63 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  /// 円グラフウィジェット
+  // タッチされたセクションのインデックス
+  int _touchedIndex = -1;
+
+  /// 円グラフウィジェット（タップ対応）
   Widget _buildCategoryPieChart(List<Map<String, dynamic>> items, int total) {
+    final appState = context.read<AppState>();
+    final isPremium = appState.isPremium;
+
     return SizedBox(
       height: 180,
       child: PieChart(
         PieChartData(
           sectionsSpace: 2,
           centerSpaceRadius: 40,
-          sections: items.map((item) {
+          pieTouchData: isPremium
+              ? PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions ||
+                          pieTouchResponse == null ||
+                          pieTouchResponse.touchedSection == null) {
+                        _touchedIndex = -1;
+                        return;
+                      }
+                      _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                    });
+
+                    // タップ終了時（指を離したとき）に詳細画面へ遷移
+                    if (event is FlTapUpEvent &&
+                        pieTouchResponse != null &&
+                        pieTouchResponse.touchedSection != null) {
+                      final index = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                      if (index >= 0 && index < items.length) {
+                        final item = items[index];
+                        final category = item['category'] as String;
+                        final color = item['color'] as Color;
+                        showCategoryDetailScreen(context, category, color);
+                      }
+                    }
+                  },
+                )
+              : null,
+          sections: items.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
             final amount = item['amount'] as int;
             final percentage = (amount / total) * 100;
             final color = item['color'] as Color;
+            final isTouched = isPremium && index == _touchedIndex;
 
             return PieChartSectionData(
               value: amount.toDouble(),
               title: '${percentage.round()}%',
               color: color,
-              radius: 50,
+              radius: isTouched ? 58 : 50, // タッチ時に少し拡大
               titleStyle: GoogleFonts.ibmPlexSans(
-                fontSize: 12,
+                fontSize: isTouched ? 14 : 12,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -663,7 +685,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         final category = item['category'] as String;
 
         Widget rowContent = Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           child: Row(
             children: [
               // カラーインジケーター（Heroアニメーション対応）
@@ -712,6 +734,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
               ),
+              // Premiumの場合のみ矢印アイコンを表示
+              if (isPremium) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textMuted.withOpacity(0.4),
+                ),
+              ],
             ],
           ),
         );
@@ -719,7 +750,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         // Premium の場合のみタップ可能
         if (isPremium) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.only(bottom: 4),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -732,7 +763,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: 4),
           child: rowContent,
         );
       }).toList(),
@@ -749,9 +780,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final categoryStats = appState.categoryStats;
     final totalThisMonth = appState.thisMonthTotal;
 
-    // 当月の日数を取得
-    final now = DateTime.now();
-    final monthDays = DateTime(now.year, now.month + 1, 0).day;
+    // サイクルの総日数を取得（開始日から終了日まで）
+    final cycleStart = appState.cycleStartDate;
+    final cycleEnd = appState.cycleEndDate;
+    final cycleDays = cycleEnd.difference(cycleStart).inDays + 1;
 
     // カテゴリ別の日割り・週割りを計算
     final items = <Map<String, dynamic>>[];
@@ -759,7 +791,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       final total = entry.value.totalAmount;
       if (total <= 0) continue; // 0円カテゴリは表示しない
 
-      final dailyPace = total / monthDays;
+      final dailyPace = total / cycleDays;
       final weeklyPace = dailyPace * 7;
       items.add({
         'label': entry.key,
@@ -773,7 +805,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     items.sort((a, b) => (b['total'] as int).compareTo(a['total'] as int));
 
     // 全体の日割り・週割り
-    final totalDailyPace = totalThisMonth / monthDays;
+    final totalDailyPace = totalThisMonth / cycleDays;
     final totalWeeklyPace = totalDailyPace * 7;
 
     // データがない場合
@@ -808,7 +840,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         // 4件以上ある場合は「すべて見る」ボタン
         if (items.length > 3)
           GestureDetector(
-            onTap: () => showAllCategoriesPaceSheet(context, items: items, monthDays: monthDays),
+            onTap: () => showAllCategoriesPaceSheet(context, items: items, monthDays: cycleDays),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
@@ -961,8 +993,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final disposable = appState.disposableAmount;
     final variableSpending = appState.thisMonthTotal; // 変動費のみ
     final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final todayDay = now.day;
+
+    // サイクルベースの日数計算
+    final cycleStart = appState.cycleStartDate;
+    final cycleEnd = appState.cycleEndDate;
+    final daysInCycle = cycleEnd.difference(cycleStart).inDays + 1;
+
+    // 今日がサイクル内の何日目か（1-indexed）
+    final today = DateTime(now.year, now.month, now.day);
+    final todayInCycle = today.difference(cycleStart).inDays + 1;
 
     // 収入が未設定の場合
     if (income == null) {
@@ -1058,164 +1097,261 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       );
     }
 
-    // 今月の記録開始日を取得
-    final startDay = _getStartDay(appState.thisMonthExpenses);
+    // サイクル内の記録開始日を取得（サイクル開始日からの日数）
+    final startDay = _getStartDayInCycle(appState.thisMonthExpenses, cycleStart);
 
     // 日ごとの累積支出率を計算（変動費 / 可処分金額）
-    final dailyRates = _calculateDailyBurnRates(appState, disposable, daysInMonth);
-    final currentRate = todayDay > 0 && todayDay <= dailyRates.length
-        ? dailyRates[todayDay - 1]
+    final dailyRates = _calculateDailyBurnRates(appState, disposable, daysInCycle, cycleStart);
+    final currentRate = todayInCycle > 0 && todayInCycle <= dailyRates.length
+        ? dailyRates[todayInCycle - 1]
         : 0.0;
     final isOver100 = currentRate > 100;
 
-    // 前月データを計算
-    final prevMonthData = _calculatePreviousMonthRates(appState);
+    // 前サイクルデータと比較差額をFutureBuilderで取得
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([
+        appState.getPreviousCycleBurnRateData(),
+        appState.getCycleComparisonDiff(),
+      ]),
+      builder: (context, snapshot) {
+        // 前サイクルデータ
+        List<double>? prevRates;
+        int? prevDays;
+        int? prevStartDay;
+        int? comparisonDiff;
 
-    return Column(
-      children: [
-        // 収入 - 固定費 = 可処分 の表示
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.bgPrimary.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '収入 ¥${formatNumber(income)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withOpacity(0.8),
-                  ),
+        if (snapshot.hasData) {
+          final prevData = snapshot.data![0] as Map<String, dynamic>?;
+          comparisonDiff = snapshot.data![1] as int?;
+
+          if (prevData != null) {
+            prevRates = (prevData['rates'] as List<dynamic>).cast<double>();
+            prevDays = prevData['totalDays'] as int;
+            prevStartDay = prevData['startDay'] as int;
+          }
+        }
+
+        return Column(
+          children: [
+            // 収入 - 固定費 = 可処分 の表示
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '収入 ¥${formatNumber(income)}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary.withOpacity(0.8),
+                      ),
+                    ),
+                    Text(
+                      ' − ',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.textMuted.withOpacity(0.6),
+                      ),
+                    ),
+                    Text(
+                      '固定費 ¥${formatNumber(fixedCostsTotal)}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary.withOpacity(0.8),
+                      ),
+                    ),
+                    Text(
+                      ' = ',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.textMuted.withOpacity(0.6),
+                      ),
+                    ),
+                    Text(
+                      '¥${formatNumber(disposable)}',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  ' − ',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textMuted.withOpacity(0.6),
-                  ),
-                ),
-                Text(
-                  '固定費 ¥${formatNumber(fixedCostsTotal)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withOpacity(0.8),
-                  ),
-                ),
-                Text(
-                  ' = ',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textMuted.withOpacity(0.6),
-                  ),
-                ),
-                Text(
-                  '¥${formatNumber(disposable)}',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withOpacity(0.9),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 10),
+            const SizedBox(height: 10),
 
-        // 現在の消化率（数値）
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isOver100
-                ? AppColors.accentRed.withOpacity(0.08)
-                : AppColors.bgPrimary.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Text(
-                '変動費:',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withOpacity(0.8),
-                ),
+            // 現在の消化率（数値）
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: isOver100
+                    ? AppColors.accentRed.withOpacity(0.08)
+                    : AppColors.bgPrimary.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(width: 8),
-              Text(
-                '${currentRate.toStringAsFixed(0)}%',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: isOver100 ? AppColors.accentRed : AppColors.accentBlue,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    '変動費:',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${currentRate.toStringAsFixed(0)}%',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: isOver100 ? AppColors.accentRed : AppColors.accentBlue,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '¥${formatNumber(variableSpending)} / ¥${formatNumber(disposable)}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary.withOpacity(0.7),
+                    ),
+                  ),
+                ],
               ),
-              const Spacer(),
-              Text(
-                '¥${formatNumber(variableSpending)} / ¥${formatNumber(disposable)}',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withOpacity(0.7),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
+            ),
+            const SizedBox(height: 12),
 
-        // 折れ線グラフ
-        BurnRateChart(
-          dailyRates: dailyRates,
-          todayDay: todayDay,
-          daysInMonth: daysInMonth,
-          startDay: startDay,
-          previousMonthRates: prevMonthData?['rates'] as List<double>?,
-          previousMonthDays: prevMonthData?['days'] as int?,
-          previousMonthStartDay: prevMonthData?['startDay'] as int?,
-        ),
-      ],
+            // 前サイクル比較バッジ（データがある場合のみ表示）
+            if (comparisonDiff != null) _buildComparisonBadge(comparisonDiff),
+            if (comparisonDiff != null) const SizedBox(height: 12),
+
+            // 折れ線グラフ（サイクルベース）
+            BurnRateChart(
+              dailyRates: dailyRates,
+              todayDay: todayInCycle,
+              daysInMonth: daysInCycle,
+              startDay: startDay,
+              cycleStartDate: cycleStart,
+              previousMonthRates: prevRates,
+              previousMonthDays: prevDays,
+              previousMonthStartDay: prevStartDay,
+            ),
+          ],
+        );
+      },
     );
   }
 
-  /// 支出リストから最初の記録日（1-indexed）を取得
-  int _getStartDay(List<Expense> expenses) {
-    if (expenses.isEmpty) return 1;
+  /// 前サイクル比較バッジを構築
+  Widget _buildComparisonBadge(int diff) {
+    final isSaving = diff >= 0;
+    final color = isSaving ? AppColors.accentGreen : AppColors.accentOrange;
+    final icon = isSaving ? Icons.trending_down : Icons.trending_up;
+    final label = isSaving ? '節約中' : '使いすぎ';
+    final diffText = isSaving
+        ? '-¥${formatNumber(diff)}'
+        : '+¥${formatNumber(diff.abs())}';
 
-    int minDay = 31;
-    for (final expense in expenses) {
-      final day = expense.createdAt.day;
-      if (day < minDay) {
-        minDay = day;
-      }
-    }
-    return minDay;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            '前サイクル比 $diffText',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  /// 日ごとの累積支出率を計算
-  List<double> _calculateDailyBurnRates(AppState appState, int availableAmount, int daysInMonth) {
+  /// サイクル内で最初の記録日（サイクル開始日からの日数、1-indexed）を取得
+  int _getStartDayInCycle(List<Expense> expenses, DateTime cycleStart) {
+    if (expenses.isEmpty) return 1;
+
+    int minDayInCycle = 999;
+    for (final expense in expenses) {
+      final expenseDate = DateTime(
+        expense.createdAt.year,
+        expense.createdAt.month,
+        expense.createdAt.day,
+      );
+      final dayInCycle = expenseDate.difference(cycleStart).inDays + 1;
+      if (dayInCycle > 0 && dayInCycle < minDayInCycle) {
+        minDayInCycle = dayInCycle;
+      }
+    }
+    return minDayInCycle == 999 ? 1 : minDayInCycle;
+  }
+
+  /// 日ごとの累積支出率を計算（サイクルベース）
+  List<double> _calculateDailyBurnRates(
+    AppState appState,
+    int availableAmount,
+    int daysInCycle,
+    DateTime cycleStart,
+  ) {
     final expenses = appState.thisMonthExpenses;
 
-    // 日ごとの支出を集計
-    final dailyExpenses = List<int>.filled(daysInMonth, 0);
+    // サイクル内の日ごとの支出を集計
+    final dailyExpenses = List<int>.filled(daysInCycle, 0);
     for (final expense in expenses) {
-      final day = expense.createdAt.day;
-      if (day >= 1 && day <= daysInMonth) {
-        dailyExpenses[day - 1] += expense.amount;
+      final expenseDate = DateTime(
+        expense.createdAt.year,
+        expense.createdAt.month,
+        expense.createdAt.day,
+      );
+      final dayInCycle = expenseDate.difference(cycleStart).inDays + 1;
+      if (dayInCycle >= 1 && dayInCycle <= daysInCycle) {
+        dailyExpenses[dayInCycle - 1] += expense.amount;
       }
     }
 
     // 累積支出率を計算
     final dailyRates = <double>[];
     int cumulative = 0;
-    for (var i = 0; i < daysInMonth; i++) {
+    for (var i = 0; i < daysInCycle; i++) {
       cumulative += dailyExpenses[i];
       final rate = (cumulative / availableAmount) * 100;
       dailyRates.add(rate);
@@ -1224,58 +1360,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return dailyRates;
   }
 
-  /// 前月の日ごとの累積支出率を計算
-  /// 返り値: {'rates': List<double>, 'days': int, 'startDay': int} または null（データ不足時）
-  Map<String, dynamic>? _calculatePreviousMonthRates(AppState appState) {
-    final prevExpenses = appState.previousMonthExpenses;
-    final prevIncome = appState.previousMonthAvailableAmount;
-
-    // 前月データがない場合
-    if (prevExpenses.isEmpty || prevIncome == null || prevIncome <= 0) {
-      return null;
-    }
-
-    // 前月の日数を計算
-    final now = DateTime.now();
-    final prevMonth = DateTime(now.year, now.month - 1, 1);
-    final prevDaysInMonth = DateTime(prevMonth.year, prevMonth.month + 1, 0).day;
-
-    // 前月の固定費は現在と同じと仮定（履歴がないため）
-    final fixedCostsTotal = appState.fixedCostsTotal;
-    final prevDisposable = prevIncome - fixedCostsTotal;
-
-    // 可処分金額が0以下の場合は無効
-    if (prevDisposable <= 0) {
-      return null;
-    }
-
-    // 前月の記録開始日を取得
-    final prevStartDay = _getStartDay(prevExpenses);
-
-    // 日ごとの支出を集計
-    final dailyExpenses = List<int>.filled(prevDaysInMonth, 0);
-    for (final expense in prevExpenses) {
-      final day = expense.createdAt.day;
-      if (day >= 1 && day <= prevDaysInMonth) {
-        dailyExpenses[day - 1] += expense.amount;
-      }
-    }
-
-    // 累積支出率を計算（0-100%にclamp）
-    final dailyRates = <double>[];
-    int cumulative = 0;
-    for (var i = 0; i < prevDaysInMonth; i++) {
-      cumulative += dailyExpenses[i];
-      final rate = (cumulative / prevDisposable) * 100;
-      dailyRates.add(rate.clamp(0, 100));
-    }
-
-    return {
-      'rates': dailyRates,
-      'days': prevDaysInMonth,
-      'startDay': prevStartDay,
-    };
-  }
 
   /// 家計の余白セクション
   Widget _buildBudgetMarginContent(AppState appState) {

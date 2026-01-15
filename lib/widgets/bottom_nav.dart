@@ -22,32 +22,19 @@ class BottomNav extends StatelessWidget {
           top: BorderSide(color: AppColors.borderSubtle),
         ),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                icon: Icons.home_rounded,
-                label: 'ホーム',
-                index: 0,
-              ),
-              const SizedBox(width: 56),
-              _buildNavItem(
-                icon: Icons.bar_chart_rounded,
-                label: '分析',
-                index: 2,
-              ),
-            ],
+          _buildNavItem(
+            icon: Icons.home_rounded,
+            label: 'ホーム',
+            index: 0,
           ),
-          Positioned(
-            top: -22,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: _buildAddButton(),
-            ),
+          _buildAddButton(),
+          _buildNavItem(
+            icon: Icons.bar_chart_rounded,
+            label: '分析',
+            index: 2,
           ),
         ],
       ),
@@ -87,26 +74,28 @@ class BottomNav extends StatelessWidget {
   }
 
   Widget _buildAddButton() {
+    final isActive = currentIndex == 1;
+    final color = isActive ? AppColors.accentBlue : AppColors.textMuted;
+
     return GestureDetector(
       onTap: () => onTap(1),
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: AppColors.accentBlue.withOpacity(0.9),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.accentBlue.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add_rounded, color: color, size: 22),
+            const SizedBox(height: 2),
+            Text(
+              '追加',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ],
-        ),
-        child: const Icon(
-          Icons.add_rounded,
-          color: Colors.white,
-          size: 26,
         ),
       ),
     );

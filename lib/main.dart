@@ -28,6 +28,7 @@ class SaveSmartApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AppState()
+        ..loadMainSalaryDay() // 給料日設定を先にロード
         ..loadData()
         ..loadEntitlement()
         ..loadMonthlyAvailableAmount(),

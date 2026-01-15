@@ -2,16 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
+import '../../config/category_icons.dart';
 import '../../services/app_state.dart';
 
 /// カテゴリ追加モーダルを表示
 void showAddCategoryModal(BuildContext context) {
-  final controller = TextEditingController();
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => Container(
+    builder: (context) => const _AddCategoryModalContent(),
+  );
+}
+
+class _AddCategoryModalContent extends StatefulWidget {
+  const _AddCategoryModalContent();
+
+  @override
+  State<_AddCategoryModalContent> createState() => _AddCategoryModalContentState();
+}
+
+class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
+  final _controller = TextEditingController();
+  String? _selectedIcon;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
@@ -35,7 +58,7 @@ void showAddCategoryModal(BuildContext context) {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: controller,
+              controller: _controller,
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'カテゴリ名を入力',
@@ -54,6 +77,18 @@ void showAddCategoryModal(BuildContext context) {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+            // アイコン選択
+            Text(
+              'アイコン（任意）',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildIconGrid(),
             const SizedBox(height: 24),
             Row(
               children: [
@@ -83,10 +118,10 @@ void showAddCategoryModal(BuildContext context) {
                 Expanded(
                   child: GestureDetector(
                     onTap: () async {
-                      if (controller.text.isNotEmpty) {
+                      if (_controller.text.isNotEmpty) {
                         await context
                             .read<AppState>()
-                            .addCategory(controller.text);
+                            .addCategory(_controller.text, icon: _selectedIcon);
                         if (!context.mounted) return;
                         Navigator.pop(context);
                       }
@@ -115,6 +150,54 @@ void showAddCategoryModal(BuildContext context) {
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
+
+  Widget _buildIconGrid() {
+    final icons = CategoryIcons.allIcons;
+    return SizedBox(
+      height: 120,
+      child: GridView.builder(
+        scrollDirection: Axis.horizontal,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1,
+        ),
+        itemCount: icons.length,
+        itemBuilder: (context, index) {
+          final item = icons[index];
+          final isSelected = _selectedIcon == item.name;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedIcon = isSelected ? null : item.name;
+              });
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.accentBlue.withOpacity(0.1)
+                    : AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(10),
+                border: isSelected
+                    ? Border.all(color: AppColors.accentBlue, width: 2)
+                    : null,
+              ),
+              child: Center(
+                child: Icon(
+                  item.icon,
+                  size: 24,
+                  color: isSelected
+                      ? AppColors.accentBlue
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

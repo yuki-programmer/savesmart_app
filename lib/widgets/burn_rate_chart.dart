@@ -22,6 +22,9 @@ class BurnRateChart extends StatelessWidget {
   /// 今月の記録開始日（1-indexed）。この日より前は線を描画しない
   final int startDay;
 
+  /// サイクル開始日（X軸ラベル表示用）。null = カレンダー月（1日開始）
+  final DateTime? cycleStartDate;
+
   /// 前月の日ごとの累積支出率（%）。null = 前月データなし
   final List<double>? previousMonthRates;
 
@@ -37,6 +40,7 @@ class BurnRateChart extends StatelessWidget {
     required this.todayDay,
     required this.daysInMonth,
     this.startDay = 1,
+    this.cycleStartDate,
     this.previousMonthRates,
     this.previousMonthDays,
     this.previousMonthStartDay,
@@ -155,6 +159,7 @@ class BurnRateChart extends StatelessWidget {
               todayDay: todayDay,
               daysInMonth: daysInMonth,
               startDay: startDay,
+              cycleStartDate: cycleStartDate,
               comparisonRates: comparisonRates,
               comparisonStartDay: comparisonStartDay,
               comparisonType: comparisonType,
@@ -169,17 +174,17 @@ class BurnRateChart extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 今月
+        // 今サイクル
         _buildLegendItem(
           color: AppColors.accentBlue,
-          label: '今月',
+          label: '今サイクル',
           isDashed: false,
         ),
         const SizedBox(width: 16),
         // 比較線
         _buildLegendItem(
           color: AppColors.textMuted.withOpacity(0.5),
-          label: type == ComparisonLineType.previous ? '前月' : '理想',
+          label: type == ComparisonLineType.previous ? '前サイクル' : '理想',
           isDashed: true,
         ),
       ],
@@ -287,6 +292,7 @@ class _BurnRateChartPainter extends CustomPainter {
   final int todayDay;
   final int daysInMonth;
   final int startDay;
+  final DateTime? cycleStartDate;
   final List<double?> comparisonRates;
   final int comparisonStartDay;
   final ComparisonLineType comparisonType;
@@ -296,6 +302,7 @@ class _BurnRateChartPainter extends CustomPainter {
     required this.todayDay,
     required this.daysInMonth,
     required this.startDay,
+    this.cycleStartDate,
     required this.comparisonRates,
     required this.comparisonStartDay,
     required this.comparisonType,
@@ -398,11 +405,24 @@ class _BurnRateChartPainter extends CustomPainter {
       );
     }
 
-    // X軸ラベル（1日、中間日、末日）
-    final xLabels = [1, (daysInMonth / 2).round(), daysInMonth];
-    for (final day in xLabels) {
-      final x = chartLeft + (day - 1) / (daysInMonth - 1) * chartWidth;
-      final textSpan = TextSpan(text: '$day', style: textStyle);
+    // X軸ラベル（開始日、中間日、終了日）
+    // サイクル開始日が設定されている場合は、実際のカレンダー日付を表示
+    final cycleDayPositions = [1, (daysInMonth / 2).round(), daysInMonth];
+    for (final cycleDay in cycleDayPositions) {
+      final x = chartLeft + (cycleDay - 1) / (daysInMonth - 1) * chartWidth;
+
+      // ラベルテキストを決定
+      String labelText;
+      if (cycleStartDate != null) {
+        // サイクル開始日からcycleDay-1日後の日付を計算
+        final labelDate = cycleStartDate!.add(Duration(days: cycleDay - 1));
+        labelText = '${labelDate.day}';
+      } else {
+        // カレンダー月モード（従来どおり）
+        labelText = '$cycleDay';
+      }
+
+      final textSpan = TextSpan(text: labelText, style: textStyle);
       final textPainter = TextPainter(
         text: textSpan,
         textDirection: TextDirection.ltr,
@@ -574,6 +594,7 @@ class _BurnRateChartPainter extends CustomPainter {
         oldDelegate.todayDay != todayDay ||
         oldDelegate.daysInMonth != daysInMonth ||
         oldDelegate.startDay != startDay ||
+        oldDelegate.cycleStartDate != cycleStartDate ||
         oldDelegate.comparisonRates != comparisonRates ||
         oldDelegate.comparisonStartDay != comparisonStartDay ||
         oldDelegate.comparisonType != comparisonType;

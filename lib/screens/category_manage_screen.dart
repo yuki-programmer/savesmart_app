@@ -252,8 +252,8 @@ class CategoryManageScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
-                context.read<AppState>().updateCategory(
-                      category.id,
+                context.read<AppState>().updateCategoryNameAndIcon(
+                      category.id!,
                       controller.text.trim(),
                     );
                 Navigator.pop(context);
