@@ -37,9 +37,12 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 - サイクル最終日は「今月もあと1日！」と表示
 
 ### 2.3 クイック登録
-- よく使う支出パターンを事前登録
+- よく使う支出パターンを事前登録（`quick_entries`テーブル）
 - ワンタップで支出記録（タイトル/金額/カテゴリ/グレード）
+- 2行×横スクロール形式で表示
 - 長押しで編集モーダル
+- 並び替え・削除機能（QuickEntryManageScreen）
+- タイトルは任意（未入力時はカテゴリ名を表示）
 
 ### 2.4 今日の支出リスト
 - 今日登録した支出を時系列表示
@@ -65,8 +68,10 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 - カテゴリ別の分析に使用
 
 ### 3.4 スマートコンボ
-- カテゴリ選択後、過去の金額×グレードの組み合わせをチップ表示
-- タップで自動入力
+- カテゴリ選択後、過去の頻出（金額×グレード）組み合わせをチップ表示
+- SQL集計で頻度順に取得（`getSmartCombos()`）
+- タップで金額とグレードを自動入力
+- グレード別にグループ化表示
 
 ### 3.5 メモ（任意）
 - 自由テキストで詳細記録
@@ -107,8 +112,15 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 ### 5.2 消費ペースグラフ（バーンレート）
 - **Premiumのみ**
 - X軸: サイクル日数、Y軸: 消費率(%)
-- 理想ライン（均等消費）と実績を比較
+- 今サイクル線（青・実線）と比較線（グレー・破線）
+- 比較線の種類:
+  - 前サイクルデータあり（記録日数3日以上）: 前サイクルの実績線
+  - 前サイクルデータなし: 理想ライン（均等消費）
 - 100%超 = 予算オーバー
+- グラフ上部に前サイクル比較バッジ表示:
+  - 節約中（緑）: `前サイクル比 -¥5,000（節約中）`
+  - 使いすぎ（オレンジ）: `前サイクル比 +¥3,000（使いすぎ）`
+- `startDay`パラメータで記録開始前の日付はスキップ
 
 ### 5.3 日割り・週割りペース
 - **Premiumのみ**
@@ -117,13 +129,21 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 
 ### 5.4 家計の余白
 - **Premiumのみ**
-- 今のペースで月末まで使える余剰額
-- アップグレード可能なカテゴリ提案
+- ペースバッファ（余剰額）の表示
+  - 計算式: `予算ペース - 実支出`
+  - アニメーション付きカウントアップ表示
+- 格上げカテゴリ提案（最大3件）
+  - 条件: バッファ > 0 かつ 標準/ご褒美 各1件以上
+  - 全期間のご褒美上位から選択
+  - カード表示: カテゴリ名、標準平均、ご褒美平均、差額、可能回数
+  - タップでカテゴリ詳細画面へ遷移（Hero アニメーション）
 
 ### 5.5 カテゴリ別支出
 - **Premiumのみ**
-- 円グラフでカテゴリ比率を可視化
-- カテゴリ別の支出額リスト
+- 円グラフでカテゴリ比率を可視化（fl_chart使用）
+- 固定費込み/抜き切り替えトグル
+- 各セグメントタップでカテゴリ詳細画面へ遷移
+- カテゴリ別の支出額リスト（降順ソート）
 
 ---
 
@@ -161,17 +181,25 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 
 ## 8. データ管理
 
-### 8.1 ローカルDB（SQLite）
-- 支出データ: expenses テーブル
-- 固定費データ: fixed_costs テーブル
-- クイック登録: quick_entries テーブル
-- 日別予算: daily_budgets テーブル
+### 8.1 ローカルDB（SQLite） - Version 8
+- **expenses**: 支出データ（id, amount, category, grade, memo, created_at, parent_id）
+- **categories**: カテゴリマスタ（id, name, sort_order, is_default, icon）
+- **budgets**: 予算（id, amount, year, month）※ UNIQUE (year, month)
+- **fixed_cost_categories**: 固定費カテゴリマスタ
+- **fixed_costs**: 固定費データ（category_name_snapshot保存）
+- **quick_entries**: クイック登録テンプレート（title, category, amount, grade, memo, sort_order）
+- **daily_budgets**: 日別固定予算（date PK, fixed_amount）
+- **cycle_incomes**: サイクル別収入（cycle_key, main_income, sub_income, sub_income_name）
+
+インデックス:
+- `idx_expenses_created_at`: 日付範囲クエリ最適化
+- `idx_expenses_category_created_at`: カテゴリ×日付集計最適化
+- `idx_cycle_incomes_cycle_key`: サイクル別収入取得最適化
 
 ### 8.2 SharedPreferences
-- 今月の予算（monthly_amount_YYYY_MM）
 - 給料日設定（main_salary_day）
-- Premium状態
-- 開発者モード設定
+- Premium状態（store_premium）
+- 開発者モード設定（dev_premium_override）
 
 ---
 
@@ -209,30 +237,33 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 
 ---
 
-## 11. 収入管理システム（Phase 2 実装済み）
+## 11. 収入管理システム（実装済み）
 
 ### 11.1 cycle_incomes テーブル
 - `id`: 主キー
-- `cycle_key`: サイクル識別子（例: `cycle_2025_01_25`）
-- `is_main`: メイン収入フラグ（1=給料、0=サブ収入）
-- `name`: 収入名（給料、ボーナス、副業など）
-- `amount`: 金額（円）
+- `cycle_key`: サイクル識別子（例: `cycle_2025_01_25`）※給料日ベース
+- `main_income`: メイン収入（給料）
+- `sub_income`: サブ収入合計（Refill）
+- `sub_income_name`: サブ収入の名前（将来の複数対応用）
 - `created_at`: 登録日時
+- インデックス: `idx_cycle_incomes_cycle_key`
 
 ### 11.2 収入登録UI（income_sheet.dart）
 - メイン収入（給料）: 1サイクルに1件、更新可能
-- サブ収入（補填・ボーナス等）: 複数件追加可能、削除可能
+- サブ収入（補填・ボーナス等）: 追加・削除可能
 - 収入合計をリアルタイム表示
-- サイクル期間を表示
+- サイクル期間を表示（例: 2025/01/25 〜 2025/02/24）
+- AppStateから`getMainIncome()` / `getSubIncomes()`で取得
 
 ### 11.3 DB一元管理
-- SharedPreferencesからDBへ自動移行（初回起動時）
-- `thisMonthAvailableAmount`はDBの収入合計から計算
-- 収入変更時に今日の固定予算を自動再計算
+- 予算データはSharedPreferencesからDBへ移行済み
+- `thisMonthAvailableAmount`はDBの収入合計（main + sub）から計算
+- 収入変更時に今日の固定予算を自動再計算（`_recalculateTodayAllowance()`）
 
 ### 11.4 Refill機能
 - サブ収入追加時に日割り額が自動再計算
-- `_reloadCycleIncome()` → `_recalculateTodayAllowance()`
+- フロー: `addSubIncome()` → `_reloadCycleIncome()` → `_recalculateTodayAllowance()`
+- 残り日数で可処分金額を再配分
 
 ---
 
@@ -272,6 +303,14 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 - サイクル日数が異なる場合でも正確に比較
 - 進捗率ベースの補間: `prevEquivalentDay = progress * prevTotalDays`
 
+### 12.7 実装メソッド（AppState）
+- `getPreviousCycleBurnRateData()`: 前サイクルのバーンレートデータ取得
+  - 返り値: `{ rates: List<double>, startDay: int, totalDays: int, income: int, disposable: int, totalExpenses: int }`
+  - 記録日数3日未満の場合はnull
+- `getCycleComparisonDiff()`: 前サイクル同時点との差額を計算
+  - 正の値 = 今サイクルの方が支出少ない（節約中）
+  - 負の値 = 今サイクルの方が支出多い（使いすぎ）
+
 ---
 
 ## 13. 全履歴表示機能（Phase 3-B 実装済み）
@@ -310,37 +349,306 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 - 日付表示: 月初日と今日に「○月」ラベルを追加
 - ボトムシートに日付表示を追加（過去データの編集時に分かりやすく）
 - 削除・編集後は履歴リストも自動リロード
+- ヘッダーに「全 N 件」と総件数を表示
+
+### 13.7 分割機能（SplitModal）
+- 履歴から支出をタップ → 「この支出を切り出す」を選択
+- 分割先のカテゴリと金額を指定
+- 元の支出は減額、新しい支出を作成（parent_id で紐付け）
+- 分割後は履歴リストを自動更新
 
 ---
 
-## 14. Night Reflection（Phase 4 実装済み）
+## 14. カテゴリ詳細分析（Category Detail Screen）（実装済み）
+
+### 14.1 概要
+- **Premiumのみ**
+- カテゴリ別の詳細な支出分析画面
+- 円グラフのカテゴリタップまたは格上げカテゴリカードから遷移
+
+### 14.2 MBTI風3セグメントバー
+- 節約/標準/ご褒美の比率を3セグメントで可視化
+- グレードカラー（緑/青/オレンジ）で色分け
+- ラベル表示閾値: 8%以上のセグメントのみ表示
+
+### 14.3 表示モード切り替え
+- 回数モード: 各グレードの支出回数を表示
+- 金額モード: 各グレードの合計金額を表示
+- トグルボタンで切り替え可能
+
+### 14.4 今月のデータ
+- グレード別集計（金額、回数、平均）
+- 今月の合計金額・合計回数
+
+### 14.5 過去6ヶ月の平均比較
+- グレード別の6ヶ月平均（金額・回数・平均）
+- 今月と比較して増減を確認
+
+### 14.6 月別トレンドチャート
+- 12ヶ月の月別支出を横スクロール表示
+- 積み上げ棒グラフ（グレード別色分け）
+- 現在月に自動スクロール
+- 0円の月も表示（0埋め対応）
+- SQL集計による高速化（`getMonthlyGradeBreakdown()`）
+
+### 14.7 実装メソッド（AppState）
+- `getCategoryDetailAnalysis(categoryName)`: カテゴリ詳細分析データ取得
+  - 返り値: `{ thisMonth: {...}, last6MonthsAvg: {...}, totalAmount: int, totalCount: int }`
+- `getCategoryMonthlyTrend(categoryName, {months: 12})`: 月別トレンド取得
+  - 0埋め対応（`generateMonthKeys()`で月キー生成）
+  - 返り値: `[{ month: 'YYYY-MM', monthLabel: 'M月', saving: int, standard: int, reward: int, total: int }, ...]`
+
+---
+
+## 15. Night Reflection（実装済み）
 
 ### 14.1 概要
 - 夜の時間帯に「今日のふりかえり」体験を提供
-- 今日の支出と明日の予算（日割り）を確認できる
+- 今日の支出と明日の予算（日割り）を確認
+- ウィジェット: `NightReflectionDialog` (`lib/widgets/night_reflection_dialog.dart`)
 
 ### 14.2 表示条件（時間ベース切り替え）
-- **19:00〜23:59**: 常に夜カード表示（支出があっても維持）
+- **19:00〜23:59**: 常に夜カード表示（新規支出登録後も維持）
 - **00:00〜03:59**: 今日の支出が0円の場合のみ夜カード表示
 - **04:00〜18:59**: 常に日中カード表示
 - 条件判定: `NightReflectionDialog.shouldShowNightCard(hasTodayExpense: bool)`
+- HomeScreenで時間帯判定を行い、カード表示を切り替え
 
 ### 14.3 夜の振り返りカード（HomeScreen）
 - ダークネイビー系背景（#1E2340）
 - 🌙 アイコン + 「今日のふりかえり」タイトル
-- 今日の支出と明日の予算（日割り）を並列表示
+- 今日の支出と明日の予算（日割り）を2カラム表示
 - 「タップして振り返る」ヒント表示
 - タップでフルスクリーンダイアログを表示（回数制限なし）
 
 ### 14.4 振り返りダイアログ（NightReflectionDialog）
-- `showGeneralDialog`で表示
+- `showGeneralDialog`で表示（モーダル）
 - 背景: 0.85暗転（ダークネイビー #1A1F3C）
-- アニメーション: 300msのフェード + 下から上への微細スライド
+- アニメーション: 300msのフェード + 下から上への微細スライド（offsetY: 0.02）
 - コンテンツ:
+  - 🌙 アイコン + 「今日のふりかえり」タイトル
   - 今日の総支出（`appState.todayTotal`）
-  - 明日の予算（日割り）（`dynamicTomorrowForecast`）大きく表示
-  - メッセージ:
-    - 支出0: 「今日はお金を使わない日でした。素晴らしい！」
+  - 明日の予算（日割り）（`dynamicTomorrowForecast`）を大きく表示
+  - 条件別メッセージ:
+    - 支出0円: 「今日はお金を使わない日でした。素晴らしい！」
     - 支出あり: 「今日もお疲れさま。明日はこの金額を目安にいこう。」
 - 閉じるボタンのみ（戻るボタン/×ボタンなし）
 - 何度でも表示可能（1日1回制限なし）
+
+---
+
+## 16. AppState 主要メソッド一覧
+
+### 16.1 支出・固定費 CRUD（全て Future<bool> を返す）
+```dart
+addExpense(Expense)              // 支出追加
+updateExpense(Expense)           // 支出更新
+deleteExpense(int id)            // 支出削除
+splitExpense(int id, int splitAmount, String newCategory, {String? grade})  // 支出分割
+
+addFixedCost(FixedCost)          // 固定費追加
+updateFixedCost(FixedCost)       // 固定費更新
+removeFixedCost(int id)          // 固定費削除
+
+addQuickEntry(QuickEntry)        // クイック登録追加
+updateQuickEntry(QuickEntry)     // クイック登録更新
+deleteQuickEntry(int id)         // クイック登録削除
+executeQuickEntry(QuickEntry)    // クイック登録実行（支出作成）
+```
+
+### 16.2 収入管理
+```dart
+Future<Map<String, dynamic>?> getMainIncome()
+  // 返り値: { 'amount': int, 'cycleKey': String }
+
+Future<List<Map<String, dynamic>>> getSubIncomes()
+  // 返り値: [{ 'name': String, 'amount': int }, ...]
+
+Future<void> setMainIncome(int amount)      // メイン収入設定
+Future<void> addSubIncome(String name, int amount)   // サブ収入追加
+Future<void> removeSubIncome(String name)   // サブ収入削除
+```
+
+### 16.3 カテゴリ分析
+```dart
+// カテゴリ別グレード内訳（今月）
+Map<String, Map<String, int>> getCategoryGradeBreakdown(String categoryName)
+  // 返り値: { 'saving': {'amount': int, 'count': int, 'avg': int}, 'standard': {...}, 'reward': {...} }
+
+// カテゴリ詳細分析（今月 + 6ヶ月平均）
+Map<String, dynamic> getCategoryDetailAnalysis(String categoryName)
+  // 返り値: { 'thisMonth': {...}, 'last6MonthsAvg': {...}, 'totalAmount': int, 'totalCount': int }
+
+// 月別トレンド（12ヶ月、0埋め対応）
+Future<List<Map<String, dynamic>>> getCategoryMonthlyTrend(String categoryName, {int months = 12})
+  // 返り値: [{ 'month': 'YYYY-MM', 'monthLabel': 'M月', 'saving': int, 'standard': int, 'reward': int, 'total': int }, ...]
+
+// 格上げ可能カテゴリ（最大3件）
+List<Map<String, dynamic>> getUpgradeCategories()
+  // 返り値: [{ 'category': String, 'diff': int, 'possibleCount': int, 'standardAvg': int, 'rewardAvg': int }, ...]
+  // 条件: buffer > 0 && 標準1件以上 && ご褒美1件以上
+```
+
+### 16.4 サイクル・予算系ゲッター
+```dart
+DateTime get cycleStartDate           // サイクル開始日
+DateTime get cycleEndDate             // サイクル終了日
+String get currentCycleKey            // 'cycle_YYYY_MM_DD'
+List<DateTime> get cycleAllDates      // サイクル開始〜今日の全日程（降順）
+
+int? get thisMonthAvailableAmount     // 今月の使える金額（収入合計）
+int? get disposableAmount             // 可処分金額（収入 - 固定費）
+int? get fixedTodayAllowance          // 今日の固定額（日割り、日中不変）
+int? get dynamicTomorrowForecast      // 明日の予測（支出で変動）
+int? get paceBuffer                   // 余裕額（予算ペース - 実支出）
+
+int get thisMonthTotal                // 変動費合計
+int get todayTotal                    // 今日の支出合計
+int get thisWeekTotal                 // 今週の支出合計
+int get fixedCostsTotal               // 固定費合計
+bool get isLastDayOfMonth             // サイクル最終日判定
+int get remainingDaysInMonth          // 残り日数（今日含む）
+```
+
+### 16.5 バーンレート・前サイクル比較
+```dart
+Future<Map<String, dynamic>?> getPreviousCycleBurnRateData()
+  // 返り値: { 'rates': List<double>, 'startDay': int, 'totalDays': int, 'income': int, 'disposable': int, 'totalExpenses': int }
+  // 記録日数3日未満の場合はnull
+
+Future<int?> getCycleComparisonDiff()
+  // 返り値: 前サイクル比較差額（正=節約中, 負=使いすぎ）
+```
+
+### 16.6 スマートコンボ予測
+```dart
+Future<List<Map<String, dynamic>>> getSmartCombos(String category)
+  // 返り値: [{ 'amount': int, 'grade': String, 'frequency': int }, ...]
+  // SQL集計で頻度順に取得
+```
+
+### 16.7 タブ・UI制御
+```dart
+void requestTabChange(int tabIndex)           // タブ切り替えリクエスト
+void requestOpenIncomeSheet()                 // 分析タブ + IncomeSheet自動起動
+
+int? consumeRequestedTabIndex()               // タブリクエスト消費
+bool consumeOpenIncomeSheetRequest()          // IncomeSheetリクエスト消費
+```
+
+### 16.8 部分リロード（パフォーマンス最適化）
+```dart
+_reloadExpenses()               // 支出のみリロード
+_reloadCategories()             // カテゴリのみリロード
+_reloadFixedCosts()             // 固定費のみリロード
+_reloadFixedCostCategories()    // 固定費カテゴリのみリロード
+_reloadBudget()                 // 予算のみリロード
+_reloadQuickEntries()           // クイック登録のみリロード
+_reloadCycleIncome()            // 収入のみリロード
+```
+
+---
+
+## 17. 主要な実装パターン
+
+### 17.1 エラーハンドリング
+```dart
+final success = await appState.addExpense(expense);
+if (!success) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('保存に失敗しました'), backgroundColor: AppColors.accentRed),
+  );
+}
+```
+
+### 17.2 FinancialCycle の使用
+```dart
+// サイクル内判定
+final inCycle = _financialCycle.isDateInCurrentCycle(expense.createdAt, DateTime.now());
+
+// サイクルキー取得
+final cycleKey = _financialCycle.getCycleKey(DateTime.now());
+```
+
+### 17.3 Hero アニメーション（カテゴリ遷移）
+```dart
+Hero(
+  tag: 'category_$categoryName',
+  flightShuttleBuilder: (context, animation, direction, fromContext, toContext) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: categoryColor,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    );
+  },
+  child: /* カテゴリカード */,
+)
+```
+
+### 17.4 FutureBuilder の活用
+```dart
+// バーンレートチャートで前サイクルデータ取得
+FutureBuilder<Map<String, dynamic>?>(
+  future: appState.getPreviousCycleBurnRateData(),
+  builder: (context, snapshot) {
+    if (snapshot.hasData && snapshot.data != null) {
+      // 前サイクルデータを使用
+    }
+    // ...
+  },
+)
+```
+
+---
+
+## 18. Premium機能と制限
+
+### 18.1 Premium判定
+- ロジック: `context.watch<AppState>().isPremium`
+- 優先順位: `_devPremiumOverride ?? _storePremium`
+- 開発者モード: バージョン10回タップで解放（DEV_TOOLS=true時のみ）
+
+### 18.2 Free版で使える機能
+- ホーム画面の全表示（今日使えるお金、明日の予測、クイック登録、固定費）
+- 支出登録（グレード/カテゴリ/メモ）
+- 履歴閲覧・検索（全期間）
+- 支出編集・分割・削除
+- 固定費管理
+- クイック登録管理
+- 収入管理（メイン + Refill）
+- Night Reflection
+- 今サイクルのまとめ（支出合計のみ）
+
+### 18.3 Premium専用機能
+- AnalyticsScreen の全セクション（展開可能）
+  - カテゴリ別支出（円グラフ）
+  - 日割り・週割りペース分析
+  - 支出ペース（バーンレートチャート）
+  - 家計の余白（格上げカテゴリ提案）
+- CategoryDetailScreen（カテゴリ詳細分析）
+  - MBTI風3セグメントバー
+  - 月別トレンドチャート（12ヶ月）
+
+---
+
+## 19. 既知の制限事項 / 未実装項目
+
+### 19.1 AnalyticsScreen の「詳細」セクション
+- ダミーコンテンツのみ
+- 今後の拡張予定
+
+### 19.2 複数の Refill（副収入）管理
+- テーブル構造は対応（`sub_income_name`）
+- UI は現在 1 つのみ表示（拡張可能）
+
+### 19.3 カスタム期間選択
+- 固定で給料日ベースのサイクル
+- カスタム期間選択は未実装
+
+### 19.4 高度な支出予測
+- 基本的な日割り計算のみ
+- 機械学習ベースの予測は未実装
