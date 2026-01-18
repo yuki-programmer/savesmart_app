@@ -68,7 +68,7 @@ Indices:
 
 ```
 lib/
-├── config/          # AppColors (theme.dart), category_icons.dart
+├── config/          # AppColors (theme.dart), category_icons.dart, home_constants.dart
 ├── core/            # DevConfig, FinancialCycle (給料日ベースのサイクル計算)
 ├── models/          # Data models (Expense, Category, Budget, FixedCost, QuickEntry)
 ├── services/        # DatabaseService (singleton), AppState (ChangeNotifier)
@@ -76,7 +76,7 @@ lib/
 ├── widgets/
 │   ├── expense/     # add_breakdown_modal.dart, split_modal.dart
 │   ├── analytics/   # burn_rate_chart.dart, income_sheet.dart
-│   ├── home/        # hero_card.dart, quick_entry widgets
+│   ├── home/        # hero_card.dart (時間別テーマ対応), quick_entry widgets
 │   └── night_reflection_dialog.dart
 └── utils/           # formatters.dart (formatNumber utility)
 ```
@@ -161,12 +161,19 @@ Text('¥${formatNumber(amount)}')  // ¥1,234
 - Falls back to ideal line if no previous cycle data (< 3 days of records)
 - Comparison badge shows savings/overspending vs previous cycle
 
+### Home Screen Time Modes (時間別テーマ)
+HeroCard (`lib/widgets/home/hero_card.dart`) has three visual modes based on time:
+- **Day mode** (4:00〜5:59, 10:00〜18:59): Standard white card
+- **Morning mode** (6:00〜9:59): Warm gradient background (orange/yellow)
+- **Night mode** (19:00〜3:59): Dark navy card with adjusted typography
+
+Time mode is purely visual theming. Night reflection dialog is a separate feature (1x/day prompt).
+
 ### Night Reflection (夜の振り返り)
-- Time-based display conditions:
-  - 19:00〜23:59: Always show night card
-  - 00:00〜03:59: Show only if no expenses today
-  - 04:00〜18:59: Always show day card
-- Night card shows: today's total + tomorrow's budget
+- Triggered via HeroCard tap when `canOpenReflection` is true
+- SharedPreferences tracks if reflection was opened today (`reflection_opened_YYYY-MM-DD`)
+- Shows today's total spending and tomorrow's forecasted budget
+- Night mode display does NOT equal reflection availability
 
 ## Desktop Support
 
@@ -225,6 +232,15 @@ Hero(
   child: /* Complex widget */,
 )
 ```
+
+## Wheel Picker (金額入力)
+
+Add screen uses a wheel picker for amount input (`lib/screens/add_screen.dart`):
+- Units: 10円, 100円, 1000円, 1万, 10万, 100万
+- Max amount: 1000万円 (unified across all units)
+- Reset button (↻) on the left resets amount to 0
+- Unit switching preserves the current amount (does not reset)
+- Smart combo auto-select adjusts unit based on selected quick entry amount
 
 ## Reference Documentation
 
