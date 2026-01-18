@@ -105,7 +105,11 @@ class _AddScreenState extends State<AddScreen> {
       _expenseAmount = combo['amount'] as int;
       _selectedGrade = combo['grade'] as String;
       // 適切な単位を自動選択
-      if (_expenseAmount >= 10000) {
+      if (_expenseAmount >= 1000000) {
+        _expenseUnit = 1000000;
+      } else if (_expenseAmount >= 100000) {
+        _expenseUnit = 100000;
+      } else if (_expenseAmount >= 10000) {
         _expenseUnit = 10000;
       } else if (_expenseAmount >= 1000) {
         _expenseUnit = 1000;
@@ -433,7 +437,7 @@ class _AddScreenState extends State<AddScreen> {
         WheelPicker(
           key: ValueKey('expense_${_expenseUnit}_$_expenseAmount'),
           unit: _expenseUnit,
-          maxMultiplier: _expenseUnit >= 1000 ? 100 : 99,
+          maxMultiplier: 10000000 ~/ _expenseUnit, // 上限1000万円で統一
           initialValue: _expenseAmount,
           highlightColor: AppColors.bgPrimary,
           onChanged: (value) {
@@ -448,45 +452,78 @@ class _AddScreenState extends State<AddScreen> {
 
   /// 単位選択UI
   Widget _buildUnitSelector() {
-    final units = [10, 100, 1000, 10000];
-    final labels = ['10円', '100円', '1000円', '1万円'];
+    final units = [10, 100, 1000, 10000, 100000, 1000000];
+    final labels = ['10円', '100円', '1000円', '1万', '10万', '100万'];
 
     return Container(
-      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.black.withOpacity(0.04)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(units.length, (index) {
-          final unit = units[index];
-          final isSelected = _expenseUnit == unit;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _expenseUnit = unit;
-                _expenseAmount = 0;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.bgPrimary : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                labels[index],
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // リセットボタン（0円に戻す）
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _expenseAmount = 0;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.refresh,
+                  size: 16,
+                  color: AppColors.textMuted,
                 ),
               ),
             ),
-          );
-        }),
+            // 区切り線
+            Container(
+              width: 1,
+              height: 20,
+              color: Colors.black.withOpacity(0.08),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+            ),
+            // 単位ボタン
+            ...List.generate(units.length, (index) {
+              final unit = units[index];
+              final isSelected = _expenseUnit == unit;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _expenseUnit = unit;
+                    // 金額はリセットしない（そのまま維持）
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.bgPrimary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    labels[index],
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
