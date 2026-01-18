@@ -29,6 +29,8 @@ class SaveSmartApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppState()
         ..loadMainSalaryDay() // 給料日設定を先にロード
+        ..loadDefaultExpenseGrade() // デフォルト支出タイプを先にロード
+        ..loadCurrencyFormat() // 通貨表示形式を先にロード
         ..loadData()
         ..loadEntitlement()
         ..loadMonthlyAvailableAmount(),

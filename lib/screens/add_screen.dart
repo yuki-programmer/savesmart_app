@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../config/category_icons.dart';
 import '../utils/formatters.dart';
 import '../widgets/wheel_picker.dart';
+import '../widgets/expense/add_breakdown_modal.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
 import 'fixed_cost_screen.dart';
@@ -24,8 +25,12 @@ class _AddScreenState extends State<AddScreen> {
   String? _selectedCategory;
   int _expenseAmount = 0;
   int _expenseUnit = 100;
-  String _selectedGrade = 'standard'; // デフォルト: 標準
+  late String _selectedGrade; // 設定から初期化
   final TextEditingController _memoController = TextEditingController();
+  bool _isInitialized = false;
+
+  // 内訳リスト
+  List<Map<String, dynamic>> _breakdowns = [];
 
   // スマート・コンボ予測
   List<Map<String, dynamic>> _smartCombos = [];
@@ -113,6 +118,16 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      final appState = context.read<AppState>();
+      _selectedGrade = appState.defaultExpenseGrade;
+      _isInitialized = true;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
@@ -145,6 +160,9 @@ class _AddScreenState extends State<AddScreen> {
                     const SizedBox(height: 24),
                     // ④ メモ（任意）
                     _buildMemoSection(),
+                    const SizedBox(height: 24),
+                    // ⑤ 内訳（任意）
+                    _buildBreakdownSection(),
                   ],
                 ),
               ),
@@ -616,6 +634,298 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
+  /// ⑤ 内訳セクション
+  Widget _buildBreakdownSection() {
+    final remainingAmount = _expenseAmount - _breakdownsTotal;
+    final hasOverflow = remainingAmount < 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ヘッダー
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '内訳（任意）',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            // 追加ボタン（残り金額がある場合のみ有効）
+            GestureDetector(
+              onTap: remainingAmount > 0 ? _showAddBreakdownModal : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: remainingAmount > 0
+                      ? AppColors.accentBlueLight.withOpacity(0.5)
+                      : AppColors.bgPrimary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add,
+                      size: 16,
+                      color: remainingAmount > 0
+                          ? AppColors.accentBlue
+                          : AppColors.textMuted,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '追加',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: remainingAmount > 0
+                            ? AppColors.accentBlue
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // 説明テキスト（金額未入力 or 内訳なし）
+        if (_expenseAmount == 0)
+          Text(
+            '先に金額を入力してください',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textMuted,
+            ),
+          )
+        else if (_breakdowns.isEmpty)
+          Text(
+            '¥${formatNumber(_expenseAmount)}の内訳を追加できます',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textMuted,
+            ),
+          ),
+        // 内訳リスト
+        if (_breakdowns.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          ..._breakdowns.asMap().entries.map((entry) {
+            final index = entry.key;
+            final breakdown = entry.value;
+            final gradeData = _getGradeData(breakdown['type'] as String);
+            final color = gradeData['color'] as Color;
+            final lightColor = gradeData['lightColor'] as Color;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: lightColor.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  // 金額
+                  Text(
+                    '¥${formatNumber(breakdown['amount'] as int)}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // カテゴリ
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      breakdown['category'] as String,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // 支出タイプ
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      gradeData['label'] as String,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  // 削除ボタン
+                  GestureDetector(
+                    onTap: () => _removeBreakdown(index),
+                    child: Icon(
+                      Icons.close,
+                      size: 18,
+                      color: AppColors.textMuted.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          // 残り（メインカテゴリ分）
+          if (remainingAmount > 0) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: _selectedGradeData['lightColor'] as Color,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: (_selectedGradeData['color'] as Color).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    '¥${formatNumber(remainingAmount)}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _selectedCategory ?? '',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '(残り)',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          // エラー表示（オーバーフロー）
+          if (hasOverflow)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: AppColors.accentRed,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '内訳の合計が支出額を超えています',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.accentRed,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          // 合計表示
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: AppColors.borderSubtle.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '合計',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  '¥${formatNumber(_expenseAmount)}',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// 内訳合計
+  int get _breakdownsTotal =>
+      _breakdowns.fold(0, (sum, b) => sum + (b['amount'] as int));
+
+  /// 内訳追加モーダルを表示
+  void _showAddBreakdownModal() {
+    final categories = context.read<AppState>().categories;
+    showAddBreakdownModal(
+      context: context,
+      availableCategories: categories.map((c) => c.name).toList(),
+      onAdd: (breakdown) {
+        setState(() {
+          _breakdowns.add(breakdown);
+        });
+      },
+    );
+  }
+
+  /// 内訳を削除
+  void _removeBreakdown(int index) {
+    setState(() {
+      _breakdowns.removeAt(index);
+    });
+  }
+
   /// 固定費リンク
   Widget _buildFixedCostLink() {
     return GestureDetector(
@@ -714,12 +1024,14 @@ class _AddScreenState extends State<AddScreen> {
 
   /// 入力をリセット
   void _resetInput() {
+    final appState = context.read<AppState>();
     setState(() {
       _selectedCategory = null;
       _expenseAmount = 0;
       _expenseUnit = 100;
-      _selectedGrade = 'standard';
+      _selectedGrade = appState.defaultExpenseGrade;
       _smartCombos = [];
+      _breakdowns = [];
       _memoController.clear();
     });
   }
@@ -729,16 +1041,57 @@ class _AddScreenState extends State<AddScreen> {
     if (!_canSubmit) return;
 
     final appState = context.read<AppState>();
+    final now = DateTime.now();
 
-    final expense = Expense(
-      amount: _expenseAmount,
-      category: _selectedCategory!,
-      grade: _selectedGrade,
-      memo: _memoController.text.isEmpty ? null : _memoController.text,
-      createdAt: DateTime.now(),
-    );
+    bool success;
+    int savedCount = 0;
 
-    final success = await appState.addExpense(expense);
+    if (_breakdowns.isEmpty) {
+      // 内訳がない場合は通常の登録
+      final expense = Expense(
+        amount: _expenseAmount,
+        category: _selectedCategory!,
+        grade: _selectedGrade,
+        memo: _memoController.text.isEmpty ? null : _memoController.text,
+        createdAt: now,
+      );
+      success = await appState.addExpense(expense);
+      savedCount = 1;
+    } else {
+      // 内訳がある場合：親は保存せず、内訳のみ独立した支出として保存
+      // 合計金額は_expenseAmountのまま（内訳の合計 + 残り = _expenseAmount）
+      try {
+        // 内訳を個別の支出として保存
+        for (final breakdown in _breakdowns) {
+          final breakdownExpense = Expense(
+            amount: breakdown['amount'] as int,
+            category: breakdown['category'] as String,
+            grade: breakdown['type'] as String? ?? _selectedGrade,
+            createdAt: now,
+          );
+          await appState.addExpense(breakdownExpense);
+          savedCount++;
+        }
+
+        // 残り金額があればメインカテゴリで保存
+        final remainingAmount = _expenseAmount - _breakdownsTotal;
+        if (remainingAmount > 0) {
+          final remainingExpense = Expense(
+            amount: remainingAmount,
+            category: _selectedCategory!,
+            grade: _selectedGrade,
+            memo: _memoController.text.isEmpty ? null : _memoController.text,
+            createdAt: now,
+          );
+          await appState.addExpense(remainingExpense);
+          savedCount++;
+        }
+
+        success = true;
+      } catch (e) {
+        success = false;
+      }
+    }
 
     if (!mounted) return;
 
@@ -765,7 +1118,9 @@ class _AddScreenState extends State<AddScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '¥${formatNumber(expense.amount)} を記録しました',
+          _breakdowns.isEmpty
+              ? '¥${formatNumber(_expenseAmount)} を記録しました'
+              : '¥${formatNumber(_expenseAmount)} を記録しました（$savedCount件に分割）',
           style: GoogleFonts.inter(),
         ),
         backgroundColor: gradeColor,

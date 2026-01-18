@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
 import '../models/budget.dart';
@@ -1006,5 +1009,111 @@ class DatabaseService {
       [searchQuery, searchQuery],
     );
     return result.first['count'] as int;
+  }
+
+  // ========================================
+  // バックアップ/リストア機能
+  // ========================================
+
+  /// データベースファイルのパスを取得
+  Future<String> getDatabasePath() async {
+    final dbPath = await getDatabasesPath();
+    return join(dbPath, 'savesmart.db');
+  }
+
+  /// データベースをエクスポート（共有シートを開く）
+  ///
+  /// 返り値: true=成功, false=失敗
+  Future<bool> exportDatabase() async {
+    try {
+      // 現在のDBを閉じる（書き込み中のデータを確定）
+      if (_database != null) {
+        await _database!.close();
+        _database = null;
+      }
+
+      final dbPath = await getDatabasePath();
+      final dbFile = File(dbPath);
+
+      if (!await dbFile.exists()) {
+        return false;
+      }
+
+      // ファイル名に日付を付与
+      final now = DateTime.now();
+      final fileName = 'savesmart_backup_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.db';
+
+      // 共有シートを開く
+      await Share.shareXFiles(
+        [XFile(dbPath, name: fileName)],
+        subject: 'SaveSmart バックアップ',
+        text: 'SaveSmartのデータバックアップファイルです。',
+      );
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// データベースをインポート（ファイル選択→置換）
+  ///
+  /// 返り値: true=成功, false=失敗/キャンセル
+  Future<bool> importDatabase() async {
+    try {
+      // ファイル選択ダイアログを開く
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return false; // キャンセル
+      }
+
+      final pickedFile = result.files.first;
+      if (pickedFile.path == null) {
+        return false;
+      }
+
+      // .db ファイルかチェック（簡易）
+      if (!pickedFile.name.endsWith('.db')) {
+        return false;
+      }
+
+      final importFile = File(pickedFile.path!);
+      if (!await importFile.exists()) {
+        return false;
+      }
+
+      // 現在のDBを閉じる
+      if (_database != null) {
+        await _database!.close();
+        _database = null;
+      }
+
+      // 既存DBを削除して置換
+      final dbPath = await getDatabasePath();
+      final existingDb = File(dbPath);
+
+      if (await existingDb.exists()) {
+        await existingDb.delete();
+      }
+
+      // インポートファイルをコピー
+      await importFile.copy(dbPath);
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// データベースを閉じる（リストア後のリロード用）
+  Future<void> closeDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
   }
 }

@@ -6,3 +6,15 @@ String formatNumber(int number) {
     (Match m) => '${m[1]},',
   );
 }
+
+/// 通貨形式で金額をフォーマットする
+/// [format]: 'prefix' → ¥1,234 / 'suffix' → 1,234円
+/// 例: formatCurrency(1234, 'prefix') → "¥1,234"
+/// 例: formatCurrency(1234, 'suffix') → "1,234円"
+String formatCurrency(int amount, String format) {
+  final formatted = formatNumber(amount);
+  if (format == 'suffix') {
+    return '$formatted円';
+  }
+  return '¥$formatted';
+}

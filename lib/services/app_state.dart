@@ -54,6 +54,15 @@ class AppState extends ChangeNotifier {
   static const String _keyMainSalaryDay = 'main_salary_day';
   FinancialCycle _financialCycle = const FinancialCycle(mainSalaryDay: 1);
 
+  // === デフォルト支出タイプ ===
+  String _defaultExpenseGrade = 'standard'; // デフォルト: 標準
+  static const String _keyDefaultExpenseGrade = 'default_expense_grade';
+
+  // === 通貨表示形式 ===
+  // 'prefix': ¥1,234 / 'suffix': 1,234円
+  String _currencyFormat = 'prefix'; // デフォルト: ¥記号前置
+  static const String _keyCurrencyFormat = 'currency_format';
+
   // === タブ切り替え & incomeSheet自動起動 ===
   int? _requestedTabIndex;
   bool _openIncomeSheetRequested = false;
@@ -87,6 +96,12 @@ class AppState extends ChangeNotifier {
 
   /// FinancialCycleインスタンス
   FinancialCycle get financialCycle => _financialCycle;
+
+  /// デフォルト支出タイプ（saving/standard/reward）
+  String get defaultExpenseGrade => _defaultExpenseGrade;
+
+  /// 通貨表示形式（prefix: ¥1,234 / suffix: 1,234円）
+  String get currencyFormat => _currencyFormat;
 
   List<Expense> get todayExpenses {
     final now = DateTime.now();
@@ -867,6 +882,60 @@ class AppState extends ChangeNotifier {
       _financialCycle = FinancialCycle(mainSalaryDay: _mainSalaryDay);
     } catch (e) {
       debugPrint('Error loading main salary day: $e');
+    }
+  }
+
+  /// デフォルト支出タイプを読み込み
+  Future<void> loadDefaultExpenseGrade() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_keyDefaultExpenseGrade);
+      if (saved != null && ['saving', 'standard', 'reward'].contains(saved)) {
+        _defaultExpenseGrade = saved;
+      }
+    } catch (e) {
+      debugPrint('Error loading default expense grade: $e');
+    }
+  }
+
+  /// デフォルト支出タイプを設定
+  Future<void> setDefaultExpenseGrade(String grade) async {
+    if (!['saving', 'standard', 'reward'].contains(grade)) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyDefaultExpenseGrade, grade);
+      _defaultExpenseGrade = grade;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error setting default expense grade: $e');
+    }
+  }
+
+  /// 通貨表示形式を読み込み
+  Future<void> loadCurrencyFormat() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_keyCurrencyFormat);
+      if (saved != null && ['prefix', 'suffix'].contains(saved)) {
+        _currencyFormat = saved;
+      }
+    } catch (e) {
+      debugPrint('Error loading currency format: $e');
+    }
+  }
+
+  /// 通貨表示形式を設定
+  Future<void> setCurrencyFormat(String format) async {
+    if (!['prefix', 'suffix'].contains(format)) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyCurrencyFormat, format);
+      _currencyFormat = format;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error setting currency format: $e');
     }
   }
 

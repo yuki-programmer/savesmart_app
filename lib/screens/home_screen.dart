@@ -123,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           todayTotal: appState.todayTotal,
                           hasOpenedReflection: _hasOpenedReflectionToday,
                           onTapReflection: () => _showNightReflectionDialog(appState),
+                          currencyFormat: appState.currencyFormat,
                         ),
                         const SizedBox(height: 16),
                         // 今月サマリーカード
@@ -224,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Text(
-                '¥${formatNumber(remaining)}',
+                formatCurrency(remaining, appState.currencyFormat),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: HomeConstants.summaryMainSize,
                   fontWeight: FontWeight.w600,
@@ -233,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const Spacer(),
               Text(
-                'あと ${remainingDays}日',
+                'あと $remainingDays日',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: Colors.grey[600],
@@ -245,9 +246,9 @@ class _HomeScreenState extends State<HomeScreen> {
           // 収入/出費（サブ）
           Row(
             children: [
-              _buildMetric('収入', usableAmount ?? 0, AppColors.accentBlue),
+              _buildMetric('収入', usableAmount ?? 0, AppColors.accentBlue, appState.currencyFormat),
               const SizedBox(width: 24),
-              _buildMetric('出費', monthlyExpenseTotal, Colors.grey[700]!),
+              _buildMetric('出費', monthlyExpenseTotal, Colors.grey[700]!, appState.currencyFormat),
             ],
           ),
           const SizedBox(height: 8),
@@ -264,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMetric(String label, int value, Color color) {
+  Widget _buildMetric(String label, int value, Color color, String currencyFormat) {
     return Row(
       children: [
         Text(
@@ -276,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(width: 6),
         Text(
-          '¥${formatNumber(value)}',
+          formatCurrency(value, currencyFormat),
           style: GoogleFonts.ibmPlexSans(
             fontSize: HomeConstants.summaryMetricSize,
             fontWeight: FontWeight.w600,
@@ -485,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Text(
-                  '¥${formatNumber(entry.amount)}',
+                  formatCurrency(entry.amount, appState.currencyFormat),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -567,54 +568,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// 今月の使える金額リンク（評価カード直下）
-  Widget _buildAvailableAmountLink(AppState appState) {
-    final availableAmount = appState.thisMonthAvailableAmount;
-
-    return GestureDetector(
-      onTap: () {
-        // 分析タブへ切り替え + incomeSheet自動起動
-        appState.requestOpenIncomeSheet();
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '今月の使える金額：',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-                color: AppColors.textMuted.withOpacity(0.6),
-              ),
-            ),
-            Text(
-              availableAmount != null
-                  ? '¥${formatNumber(availableAmount)}'
-                  : '未設定',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: availableAmount != null
-                    ? AppColors.textSecondary.withOpacity(0.7)
-                    : AppColors.textMuted.withOpacity(0.5),
-              ),
-            ),
-            Text(
-              availableAmount != null ? '（変更）' : '（追加）',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: AppColors.accentBlue.withOpacity(0.7),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildRecentExpenses(AppState appState) {
     final recentExpenses = appState.thisMonthExpenses.take(3).toList();
 
@@ -672,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         else
-          ...recentExpenses.map((expense) => _buildExpenseItem(expense)),
+          ...recentExpenses.map((expense) => _buildExpenseItem(expense, appState)),
       ],
     );
   }
@@ -733,7 +686,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              '¥${formatNumber(totalFixedCosts)}',
+                              formatCurrency(totalFixedCosts, appState.currencyFormat),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -782,7 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                       Text(
-                                        '¥${formatNumber(fc.amount)}',
+                                        formatCurrency(fc.amount, appState.currencyFormat),
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
@@ -846,7 +799,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExpenseItem(Expense expense) {
+  Widget _buildExpenseItem(Expense expense, AppState appState) {
     // カテゴリが「その他」の場合は非表示
     final showCategory = expense.category != 'その他';
     final dateLabel = _getDateLabel(expense.createdAt);
@@ -903,7 +856,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '¥${formatNumber(expense.amount)}',
+                formatCurrency(expense.amount, appState.currencyFormat),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,

@@ -313,7 +313,7 @@ class _QuickEntryListItem extends StatelessWidget {
                 value: 'edit',
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.edit_outlined,
                       size: 18,
                       color: AppColors.textSecondary,
@@ -334,7 +334,7 @@ class _QuickEntryListItem extends StatelessWidget {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.delete_outline,
                       size: 18,
                       color: AppColors.accentRed,

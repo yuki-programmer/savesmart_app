@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../core/dev_config.dart';
 import '../services/app_state.dart';
+import '../services/database_service.dart';
 import 'category_manage_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -106,6 +108,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSectionHeader('家計設定'),
               const SizedBox(height: 12),
               _buildFinancialSettingsCard(appState),
+              const SizedBox(height: 24),
+
+              // データ管理セクション
+              _buildSectionHeader('データ管理'),
+              const SizedBox(height: 12),
+              _buildDataManagementCard(appState),
+              const SizedBox(height: 24),
+
+              // 有料プランセクション
+              _buildPremiumPlanCard(appState),
               const SizedBox(height: 24),
 
               // アプリ情報セクション
@@ -218,6 +230,141 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+          // デフォルト支出タイプ
+          GestureDetector(
+            onTap: () => _showDefaultGradePicker(appState),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.bgPrimary,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'デフォルト支出タイプ',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textPrimary.withOpacity(0.9),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '支出登録時の初期選択タイプ',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textMuted.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getGradeColor(appState.defaultExpenseGrade).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _getGradeLabel(appState.defaultExpenseGrade),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: _getGradeColor(appState.defaultExpenseGrade),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: AppColors.textMuted.withOpacity(0.5),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // 通貨表示形式
+          GestureDetector(
+            onTap: () => _showCurrencyFormatPicker(appState),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.bgPrimary,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '通貨表示形式',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textPrimary.withOpacity(0.9),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '金額の表示形式を選択',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textMuted.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        _getCurrencyFormatLabel(appState.currencyFormat),
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.accentBlue,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: AppColors.textMuted.withOpacity(0.5),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
           // カテゴリ管理
           GestureDetector(
             onTap: () {
@@ -253,6 +400,306 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _getCurrencyFormatLabel(String format) {
+    switch (format) {
+      case 'prefix':
+        return '¥1,234';
+      case 'suffix':
+        return '1,234円';
+      default:
+        return '¥1,234';
+    }
+  }
+
+  void _showCurrencyFormatPicker(AppState appState) {
+    final formats = [
+      {'value': 'prefix', 'label': '¥1,234', 'description': '¥記号を先頭に表示'},
+      {'value': 'suffix', 'label': '1,234円', 'description': '円を末尾に表示'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ハンドル
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // タイトル
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                child: Text(
+                  '通貨表示形式を選択',
+                  style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'アプリ全体の金額表示に適用されます。',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // 形式選択
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: formats.map((format) {
+                    final isSelected = appState.currencyFormat == format['value'];
+
+                    return GestureDetector(
+                      onTap: () {
+                        appState.setCurrencyFormat(format['value'] as String);
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '通貨表示形式を「${format['label']}」に設定しました',
+                              style: GoogleFonts.inter(),
+                            ),
+                            backgroundColor: AppColors.accentBlue,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.accentBlue.withOpacity(0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? AppColors.accentBlue : AppColors.borderSubtle.withOpacity(0.3),
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    format['label'] as String,
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: isSelected ? AppColors.accentBlue : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    format['description'] as String,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check_circle,
+                                size: 22,
+                                color: AppColors.accentBlue,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getGradeLabel(String grade) {
+    switch (grade) {
+      case 'saving':
+        return '節約';
+      case 'standard':
+        return '標準';
+      case 'reward':
+        return 'ご褒美';
+      default:
+        return '標準';
+    }
+  }
+
+  Color _getGradeColor(String grade) {
+    switch (grade) {
+      case 'saving':
+        return AppColors.accentGreen;
+      case 'standard':
+        return AppColors.accentBlue;
+      case 'reward':
+        return AppColors.accentOrange;
+      default:
+        return AppColors.accentBlue;
+    }
+  }
+
+  void _showDefaultGradePicker(AppState appState) {
+    final grades = [
+      {'value': 'saving', 'label': '節約', 'color': AppColors.accentGreen, 'icon': Icons.savings_outlined},
+      {'value': 'standard', 'label': '標準', 'color': AppColors.accentBlue, 'icon': Icons.balance_outlined},
+      {'value': 'reward', 'label': 'ご褒美', 'color': AppColors.accentOrange, 'icon': Icons.star_outline},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ハンドル
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // タイトル
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                child: Text(
+                  'デフォルト支出タイプを選択',
+                  style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  '支出を登録するときに最初に選択されているタイプです。',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // グレード選択
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: grades.map((grade) {
+                    final isSelected = appState.defaultExpenseGrade == grade['value'];
+                    final color = grade['color'] as Color;
+
+                    return GestureDetector(
+                      onTap: () {
+                        appState.setDefaultExpenseGrade(grade['value'] as String);
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'デフォルト支出タイプを「${grade['label']}」に設定しました',
+                              style: GoogleFonts.inter(),
+                            ),
+                            backgroundColor: color,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? color : AppColors.borderSubtle.withOpacity(0.3),
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              grade['icon'] as IconData,
+                              size: 22,
+                              color: isSelected ? color : AppColors.textMuted,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                grade['label'] as String,
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  color: isSelected ? color : AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle,
+                                size: 22,
+                                color: color,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -328,7 +775,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              '家計の開始日を毎月${day}日に設定しました',
+                              '家計の開始日を毎月$day日に設定しました',
                               style: GoogleFonts.inter(),
                             ),
                             backgroundColor: AppColors.accentGreen,
@@ -374,6 +821,363 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPremiumPlanCard(AppState appState) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: 有料プラン詳細画面へ遷移
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '準備中です',
+              style: GoogleFonts.inter(),
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.accentOrange.withOpacity(0.1),
+              AppColors.accentOrange.withOpacity(0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.accentOrange.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.accentOrange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.workspace_premium_outlined,
+                size: 24,
+                color: AppColors.accentOrange,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '有料プランについて',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary.withOpacity(0.9),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Plusプランで全ての機能をアンロック',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AppColors.accentOrange.withOpacity(0.7),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataManagementCard(AppState appState) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // エクスポート
+          GestureDetector(
+            onTap: () => _handleExport(appState),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.bgPrimary,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.upload_file_outlined,
+                    size: 20,
+                    color: AppColors.accentBlue.withOpacity(0.8),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'データをエクスポート',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textPrimary.withOpacity(0.9),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'バックアップファイルを保存・共有',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textMuted.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: AppColors.textMuted.withOpacity(0.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // インポート
+          GestureDetector(
+            onTap: () => _showImportConfirmDialog(appState),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.download_outlined,
+                    size: 20,
+                    color: AppColors.accentOrange.withOpacity(0.8),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'データをインポート',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textPrimary.withOpacity(0.9),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'バックアップファイルから復元',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textMuted.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: AppColors.textMuted.withOpacity(0.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleExport(AppState appState) async {
+    final dbService = DatabaseService();
+    final success = await dbService.exportDatabase();
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'バックアップファイルを共有しました',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: AppColors.accentGreen,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'エクスポートに失敗しました',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: AppColors.accentRed,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showImportConfirmDialog(AppState appState) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.accentOrange,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'データの復元',
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          '現在のデータはすべて上書きされます。\nこの操作は取り消せません。\n\n続行しますか？',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'キャンセル',
+              style: GoogleFonts.inter(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _handleImport(appState);
+            },
+            child: Text(
+              '復元する',
+              style: GoogleFonts.inter(
+                color: AppColors.accentOrange,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleImport(AppState appState) async {
+    final dbService = DatabaseService();
+    final success = await dbService.importDatabase();
+
+    if (!mounted) return;
+
+    if (success) {
+      // データを再読み込み
+      await appState.loadData();
+      await appState.loadEntitlement();
+      await appState.loadMonthlyAvailableAmount();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'データを復元しました。アプリを再起動してください。',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: AppColors.accentGreen,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          action: SnackBarAction(
+            label: '再起動',
+            textColor: Colors.white,
+            onPressed: () {
+              SystemNavigator.pop();
+            },
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'インポートに失敗しました。.dbファイルを選択してください。',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: AppColors.accentRed,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildInfoCard(AppState appState) {

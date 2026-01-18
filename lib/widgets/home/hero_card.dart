@@ -52,6 +52,7 @@ class HeroCard extends StatelessWidget {
   final int todayTotal;
   final bool hasOpenedReflection;
   final VoidCallback? onTapReflection;
+  final String currencyFormat;
 
   const HeroCard({
     super.key,
@@ -60,6 +61,7 @@ class HeroCard extends StatelessWidget {
     required this.todayTotal,
     required this.hasOpenedReflection,
     this.onTapReflection,
+    this.currencyFormat = 'prefix',
   });
 
   @override
@@ -115,6 +117,7 @@ class HeroCard extends StatelessWidget {
           dynamicTomorrowForecast: dynamicTomorrowForecast,
           todayTotal: todayTotal,
           canOpenReflection: state.canOpenReflection,
+          currencyFormat: currencyFormat,
         );
 
       case HeroCardTimeMode.morning:
@@ -123,6 +126,7 @@ class HeroCard extends StatelessWidget {
           fixedTodayAllowance: fixedTodayAllowance,
           dynamicTomorrowForecast: dynamicTomorrowForecast,
           isMorningGlow: state.timeMode == HeroCardTimeMode.morning,
+          currencyFormat: currencyFormat,
         );
     }
   }
@@ -133,11 +137,13 @@ class _DayContent extends StatelessWidget {
   final int? fixedTodayAllowance;
   final int? dynamicTomorrowForecast;
   final bool isMorningGlow;
+  final String currencyFormat;
 
   const _DayContent({
     required this.fixedTodayAllowance,
     required this.dynamicTomorrowForecast,
     required this.isMorningGlow,
+    required this.currencyFormat,
   });
 
   @override
@@ -160,7 +166,7 @@ class _DayContent extends StatelessWidget {
 
         // 金額（主役）
         Text(
-          '¥${formatNumber(fixedTodayAllowance ?? 0)}',
+          formatCurrency(fixedTodayAllowance ?? 0, currencyFormat),
           style: const TextStyle(
             fontFamily: 'IBMPlexSans',
             fontSize: HomeConstants.heroAmountSize,
@@ -183,7 +189,7 @@ class _DayContent extends StatelessWidget {
               ),
             ),
             Text(
-              '¥${formatNumber(dynamicTomorrowForecast ?? 0)}',
+              formatCurrency(dynamicTomorrowForecast ?? 0, currencyFormat),
               style: TextStyle(
                 fontFamily: 'IBMPlexSans',
                 fontSize: 15,
@@ -210,12 +216,14 @@ class _NightContent extends StatelessWidget {
   final int? dynamicTomorrowForecast;
   final int todayTotal;
   final bool canOpenReflection;
+  final String currencyFormat;
 
   const _NightContent({
     required this.fixedTodayAllowance,
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
     required this.canOpenReflection,
+    required this.currencyFormat,
   });
 
   @override
@@ -232,7 +240,7 @@ class _NightContent extends StatelessWidget {
               '今日のふりかえり',
               style: TextStyle(
                 fontSize: 14,
-                color: HomeConstants.nightPrimaryText.withValues(alpha: 0.9),
+                color: HomeConstants.nightPrimaryText.withOpacity(0.9),
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.5,
               ),
@@ -248,13 +256,13 @@ class _NightContent extends StatelessWidget {
               '今日使えるお金',
               style: TextStyle(
                 fontSize: 12,
-                color: HomeConstants.nightPrimaryText.withValues(alpha: 0.7),
+                color: HomeConstants.nightPrimaryText.withOpacity(0.7),
                 letterSpacing: 0.5,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '¥${formatNumber(fixedTodayAllowance ?? 0)}',
+              formatCurrency(fixedTodayAllowance ?? 0, currencyFormat),
               style: const TextStyle(
                 fontFamily: 'IBMPlexSans',
                 fontSize: HomeConstants.heroAmountSizeNight,
@@ -272,7 +280,7 @@ class _NightContent extends StatelessWidget {
         Container(
           width: 120,
           height: 1,
-          color: HomeConstants.nightPrimaryText.withValues(alpha: 0.2),
+          color: HomeConstants.nightPrimaryText.withOpacity(0.2),
         ),
 
         const SizedBox(height: 16),
@@ -281,7 +289,7 @@ class _NightContent extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildMetric('今日', todayTotal, HomeConstants.nightPrimaryText.withValues(alpha: 0.75)),
+            _buildMetric('今日', todayTotal, HomeConstants.nightPrimaryText.withOpacity(0.75)),
             const SizedBox(width: 32),
             _buildMetric('明日', dynamicTomorrowForecast ?? 0, HomeConstants.nightPrimaryText),
           ],
@@ -296,14 +304,14 @@ class _NightContent extends StatelessWidget {
               Icon(
                 Icons.touch_app_outlined,
                 size: 14,
-                color: HomeConstants.nightPrimaryText.withValues(alpha: 0.6),
+                color: HomeConstants.nightPrimaryText.withOpacity(0.6),
               ),
               const SizedBox(width: 6),
               Text(
                 'タップして振り返る',
                 style: TextStyle(
                   fontSize: 12,
-                  color: HomeConstants.nightPrimaryText.withValues(alpha: 0.6),
+                  color: HomeConstants.nightPrimaryText.withOpacity(0.6),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -321,13 +329,13 @@ class _NightContent extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: textColor.withValues(alpha: textColor.a * 0.7),
+            color: textColor.withOpacity(textColor.opacity * 0.7),
             letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 6),
         Text(
-          '¥${formatNumber(amount)}',
+          formatCurrency(amount, currencyFormat),
           style: TextStyle(
             fontFamily: 'IBMPlexSans',
             fontSize: 18,

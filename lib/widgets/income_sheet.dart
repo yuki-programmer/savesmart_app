@@ -367,7 +367,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.add,
                         size: 14,
                         color: AppColors.accentGreen,
@@ -458,7 +458,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 color: AppColors.accentRed.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.close,
                 size: 16,
                 color: AppColors.accentRed,

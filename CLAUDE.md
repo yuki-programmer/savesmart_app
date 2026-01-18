@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SaveSmart is a Japanese expense management app that categorizes spending into three grades (節約/標準/ご褒美) and calculates savings by comparing against a "standard" baseline.
+SaveSmart is a Japanese expense management app focused on "今日使えるお金" (daily allowance). It uses salary-date-based financial cycles, categorizes spending into three grades (節約/標準/ご褒美), and visualizes budget pace.
 
 ## Build Commands
 
@@ -13,6 +13,8 @@ flutter pub get                           # Install dependencies
 flutter run                               # Run the app
 flutter run --dart-define=DEV_TOOLS=true  # Run with developer tools enabled
 flutter analyze                           # Analyze code for issues
+flutter test                              # Run all tests
+flutter test test/financial_cycle_test.dart  # Run specific test file
 flutter build apk                         # Build for Android
 flutter build ios                         # Build for iOS
 flutter build windows                     # Build for Windows
@@ -31,8 +33,8 @@ Premium判定は必ず `context.watch<AppState>().isPremium` を参照する。
 ### State Management
 Provider with ChangeNotifier pattern. `AppState` (`lib/services/app_state.dart`) is the central state manager that:
 - Holds all expenses, categories, fixed costs, and budget data
-- Provides computed getters for filtered views (today/week/month/previous month expenses)
-- Calculates savings using grade-based formulas
+- Provides computed getters for filtered views (today/week/month expenses)
+- Calculates daily allowance using FinancialCycle
 - All CRUD methods return `Future<bool>` for error handling
 
 ### Data Flow
@@ -46,8 +48,8 @@ DatabaseService (Singleton)
 SQLite Database (savesmart.db)
 ```
 
-### Database Schema (Version 7)
-Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`, `quick_entries`, `daily_budgets`, `incomes`
+### Database Schema (Version 8)
+Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`, `quick_entries`, `daily_budgets`, `cycle_incomes`
 
 Key fields:
 - `expenses.grade`: 'saving' | 'standard' | 'reward'
@@ -55,30 +57,27 @@ Key fields:
 - `fixed_costs.category_name_snapshot`: Preserves category name at creation time
 - `quick_entries`: Quick entry templates (title, category, amount, grade, sort_order)
 - `daily_budgets`: Fixed daily allowance per date (date PK, fixed_amount)
+- `cycle_incomes`: Cycle-based income (cycle_key, main_income, sub_income, sub_income_name)
 
 Indices:
 - `idx_expenses_created_at`: Optimizes date-range queries
 - `idx_expenses_category_created_at`: Optimizes category+date aggregation
-
-### Savings Calculation Logic
-- **Saving grade:** savings = amount / 0.7 - amount (assumes 30% discount)
-- **Standard grade:** no adjustment
-- **Reward grade:** loss = amount - amount / 1.3 (assumes 30% premium)
+- `idx_cycle_incomes_cycle_key`: Optimizes cycle income lookup
 
 ## Key Directories
 
 ```
 lib/
-├── config/          # AppColors (theme.dart), AppConstants (constants.dart)
+├── config/          # AppColors (theme.dart), category_icons.dart
 ├── core/            # DevConfig, FinancialCycle (給料日ベースのサイクル計算)
-├── models/          # Data models (Expense, Category, Budget, FixedCost, FixedCostCategory, QuickEntry)
+├── models/          # Data models (Expense, Category, Budget, FixedCost, QuickEntry)
 ├── services/        # DatabaseService (singleton), AppState (ChangeNotifier)
-├── screens/         # Main screens (home, add, history, analytics, settings, fixed_cost, quick_entry_manage)
+├── screens/         # Main screens (home, add, history, analytics, settings, category_manage)
 ├── widgets/
-│   ├── expense/     # Add expense related widgets
-│   ├── analytics/   # Analytics charts and sheets
-│   ├── fixed_cost/  # Fixed cost management widgets
-│   └── quick_entry/ # Quick entry edit modal
+│   ├── expense/     # add_breakdown_modal.dart, split_modal.dart
+│   ├── analytics/   # burn_rate_chart.dart, income_sheet.dart
+│   ├── home/        # hero_card.dart, quick_entry widgets
+│   └── night_reflection_dialog.dart
 └── utils/           # formatters.dart (formatNumber utility)
 ```
 
@@ -93,7 +92,8 @@ lib/
 
 - Bottom tab navigation with `IndexedStack` (preserves screen state)
 - Three main tabs: Home (0), Add (1), Analytics (2)
-- Modals via `showModalBottomSheet` for split, edit, and category management
+- Modals via `showModalBottomSheet` for split, edit, and income management
+- Category management accessible from Settings and Add screen
 
 ## Error Handling Pattern
 
@@ -120,50 +120,18 @@ Text('¥${formatNumber(amount)}')  // ¥1,234
 
 ### Financial Cycle System (給料日ベース)
 - `FinancialCycle` class at `lib/core/financial_cycle.dart`
-- Custom 1-month cycle based on salary date (1-31) instead of calendar month
+- Custom 1-month cycle based on salary date (1-28) instead of calendar month
 - Auto-normalizes for shorter months (31日設定 → 2月は28/29日に調整)
 - Key methods: `getStartDate()`, `getEndDate()`, `getDaysRemaining()`, `getCycleKey()`
 - Backward compatible with calendar month when salary day = 1
+- Previous cycle methods: `getPreviousCycleKey()`, `getPreviousCycleStartDate()`, `getPreviousCycleEndDate()`
 
 ### Income Management (収入管理)
-- `incomes` table stores main income and sub-income (Refill)
+- `cycle_incomes` table stores main income and sub-income (Refill)
 - Cycle key format: `cycle_YYYY_MM_DD` (based on salary date)
 - Main income: Primary salary, used for budget calculation
 - Sub-income (Refill): Additional income added to remaining budget
-
-### Monthly Available Amount
-- Budget stored in DB with cycle key
-- `thisMonthAvailableAmount` / `previousMonthAvailableAmount` getters
-- Disposable amount = Total income - Fixed costs total
-
-### Burn Rate Chart (`lib/widgets/burn_rate_chart.dart`)
-- Shows cumulative spending percentage over the month
-- Supports comparison line (ideal line for first month, previous month line thereafter)
-- Handles mid-month start: `startDay` parameter skips drawing before first record day
-- Lines drawn with CustomPainter, dashed lines for comparison
-
-### Category Breakdown (`analytics_screen.dart`)
-- Toggle between "固定費抜き" (excluding fixed costs) and "固定費込み" (including fixed costs)
-- Pie chart using fl_chart package
-
-### Category Detail Analysis (`category_detail_screen.dart`)
-- MBTI-style 3-segment bar showing saving/standard/reward ratios
-- Toggle between count and amount display modes
-- 6-month average comparison per grade
-- Monthly trend stacked bar chart (12 months, horizontal scroll, auto-scroll to current month)
-- SQL aggregation via `getMonthlyGradeBreakdown()` for performance
-- Label visibility threshold: 8% minimum to prevent unreadable text
-
-### Fixed Costs
-- Stored separately from variable expenses
-- Has its own category system (`fixed_cost_categories`)
-- `categoryNameSnapshot` preserves category name at creation time
-
-### Quick Entry (クイック登録)
-- Templates for frequently used expenses stored in `quick_entries` table
-- Home screen displays tiles that record expense with 1-tap
-- Managed via QuickEntryManageScreen (list with 3-dot menu for edit/delete)
-- Title is optional (defaults to category name if empty)
+- Income changes trigger automatic daily allowance recalculation
 
 ### Daily Budget (今日使えるお金)
 - **fixedTodayAllowance**: Fixed at day start, stored in `daily_budgets` table
@@ -174,27 +142,31 @@ Text('¥${formatNumber(amount)}')  // ¥1,234
   - Shows green if better than today's allowance (節約成功)
 - Month-end edge case: Shows "今月もあと1日！" instead of tomorrow forecast
 
-### Smart Combo Prediction (スマート・コンボ)
-- SQL aggregation of frequently used amount+grade combinations per category
-- Displayed as chips after category selection in AddScreen
-- Tapping auto-fills amount and grade
+### Breakdown Feature (内訳機能)
+- Split one expense into multiple categories at registration time
+- Example: 700円「買い物」→ 130円「コーヒー」+ 80円「食料品」+ 490円「買い物」(残り)
+- Total stays fixed (breakdowns + remaining = original amount)
+- Validation: Cannot exceed parent amount
+- Saves as independent expenses (no parent_id used for new breakdowns)
 
-### History Screen (履歴)
-- Vertical timeline format with 2-column layout (date | content)
-- Shows all dates from month start to today (descending), including empty days
-- Tap expense row to open action bottom sheet (edit, split, delete)
-- Search mode shows flat list filtered by category/memo
+### History Screen (全履歴)
+- Infinite scroll with lazy loading (50 items per page)
+- Cycle boundary headers showing date ranges
+- Full-text search across all time (category + memo)
+- Split feature: Extract portion to different category
+
+### Burn Rate Chart
+- Shows cumulative spending percentage over the cycle
+- Current cycle (blue solid) vs previous cycle (gray dashed)
+- Falls back to ideal line if no previous cycle data (< 3 days of records)
+- Comparison badge shows savings/overspending vs previous cycle
 
 ### Night Reflection (夜の振り返り)
-- `NightReflectionDialog` at `lib/widgets/night_reflection_dialog.dart`
-- Home screen switches between day card and night card based on time
 - Time-based display conditions:
-  - 19:00〜23:59: Always show night card (even with new expenses)
-  - 00:00〜03:59: Show night card only if no expenses registered today
+  - 19:00〜23:59: Always show night card
+  - 00:00〜03:59: Show only if no expenses today
   - 04:00〜18:59: Always show day card
-- Night card shows: today's total spending + tomorrow's budget (日割り)
-- Tap night card to open fullscreen reflection dialog (can be viewed multiple times)
-- Logic via `NightReflectionDialog.shouldShowNightCard(hasTodayExpense: bool)`
+- Night card shows: today's total + tomorrow's budget
 
 ## Desktop Support
 
@@ -207,62 +179,37 @@ All user-facing text is in Japanese. Common terms:
 - 標準 (hyoujun) = standard grade
 - ご褒美 (gohoubi) = reward grade
 - 固定費 (koteihi) = fixed costs
-- 変動費 (hendouhi) = variable costs
-- 使える金額 (tsukaeru kingaku) = available amount
-- 可処分金額 (kashobun kingaku) = disposable amount
-- 家計の余裕 (kakei no yoyuu) = budget margin
-- 格上げカテゴリ (kakuage category) = upgrade recommendation category
+- 内訳 (uchiwake) = breakdown
+- 家計の開始日 (kakei no kaishi bi) = financial cycle start date (salary day)
 
 ## AppState Key Methods
-
-### Time-series Data
-```dart
-// Generate month keys for 0-padding
-static List<String> generateMonthKeys(int months)  // Returns ['2024-01', '2024-02', ...]
-
-// Get category monthly trend with 0-padding for missing months
-Future<List<Map<String, dynamic>>> getCategoryMonthlyTrend(String categoryName, {int months = 12})
-```
-
-### Category Analysis
-```dart
-// Full category detail analysis (this month + 6-month avg)
-Map<String, dynamic> getCategoryDetailAnalysis(String categoryName)
-
-// Upgrade recommendation categories (1+ reward records, max 3)
-List<Map<String, dynamic>> getUpgradeCategories()
-```
 
 ### Partial Reload (Performance)
 ```dart
 _reloadExpenses()           // Reload only expenses
 _reloadCategories()         // Reload only categories
 _reloadFixedCosts()         // Reload only fixed costs
-_reloadFixedCostCategories() // Reload only fixed cost categories
-_reloadBudget()             // Reload only budget
 _reloadQuickEntries()       // Reload only quick entries
+_reloadCycleIncome()        // Reload only cycle income
 ```
 
-### Quick Entry Methods
+### Income Methods
 ```dart
-addQuickEntry(QuickEntry)    // Add new template
-updateQuickEntry(QuickEntry) // Update existing template
-deleteQuickEntry(int id)     // Delete template
-executeQuickEntry(QuickEntry) // Create expense from template and save
-getSmartCombos(String category) // Get frequent amount+grade combos for category
+Future<Map<String, dynamic>?> getMainIncome()
+Future<List<Map<String, dynamic>>> getSubIncomes()
+Future<void> setMainIncome(int amount)
+Future<void> addSubIncome(String name, int amount)
 ```
 
-### Daily Budget Methods
+### Previous Cycle Comparison
 ```dart
-fixedTodayAllowance          // Getter: today's fixed allowance (from DB)
-dynamicTomorrowForecast      // Getter: tomorrow's forecast (calculated)
-isLastDayOfMonth             // Getter: bool for month-end edge case
-_loadOrCreateTodayAllowance() // Load from DB or calculate and save
+Future<Map<String, dynamic>?> getPreviousCycleBurnRateData()
+Future<int?> getCycleComparisonDiff()  // Positive = saving, Negative = overspending
 ```
 
 ## Hero Animation Pattern
 
-When using Hero widgets with complex content, add `flightShuttleBuilder` to prevent overflow during animation:
+When using Hero widgets with complex content, add `flightShuttleBuilder` to prevent overflow:
 
 ```dart
 Hero(
@@ -278,3 +225,7 @@ Hero(
   child: /* Complex widget */,
 )
 ```
+
+## Reference Documentation
+
+See `function.md` for detailed feature specifications in Japanese.
