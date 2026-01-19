@@ -9,6 +9,7 @@ import '../utils/formatters.dart';
 import '../widgets/income_sheet.dart';
 import '../widgets/burn_rate_chart.dart';
 import '../widgets/analytics/category_pace_sheet.dart';
+import '../widgets/analytics/monthly_expense_trend_chart.dart';
 import 'category_detail_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -73,6 +74,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                   // 今月のまとめ（Free でも表示）
                   _buildMonthlySummary(appState),
+                  const SizedBox(height: 20),
+
+                  // 月間の支出推移（Free でも表示）
+                  MonthlyExpenseTrendChart(appState: appState),
                   const SizedBox(height: 20),
 
                   // アコーディオン A: カテゴリ別の支出割合

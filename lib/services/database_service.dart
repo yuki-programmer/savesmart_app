@@ -9,6 +9,7 @@ import '../models/budget.dart';
 import '../models/fixed_cost.dart';
 import '../models/fixed_cost_category.dart';
 import '../models/quick_entry.dart';
+import 'performance_monitor.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -185,6 +186,7 @@ class DatabaseService {
 
   // Expense CRUD
   Future<List<Expense>> getExpenses({DateTime? from, DateTime? to}) async {
+    perfMonitor.startTimer('DB.getExpenses');
     final db = await database;
     String? whereClause;
     List<dynamic>? whereArgs;
@@ -207,7 +209,9 @@ class DatabaseService {
       orderBy: 'created_at DESC, id DESC',
     );
 
-    return maps.map((map) => Expense.fromMap(map)).toList();
+    final result = maps.map((map) => Expense.fromMap(map)).toList();
+    perfMonitor.stopTimer('DB.getExpenses');
+    return result;
   }
 
   Future<int> insertExpense(Expense expense) async {
@@ -690,6 +694,38 @@ class DatabaseService {
     }).toList();
   }
 
+  /// 全カテゴリの月別グレード集計を取得（月間支出推移用）
+  /// 返り値: List<{ 'month': String, 'grade': String, 'total': int, 'count': int }>
+  Future<List<Map<String, dynamic>>> getMonthlyGradeBreakdownAll({
+    required int months,
+  }) async {
+    final db = await database;
+
+    // 開始月を計算（months ヶ月前の月初）
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month - months + 1, 1);
+    final startDateStr = startDate.toIso8601String().substring(0, 10);
+
+    final results = await db.rawQuery('''
+      SELECT
+        strftime('%Y-%m', created_at) as month,
+        grade,
+        SUM(amount) as total,
+        COUNT(*) as count
+      FROM expenses
+      WHERE created_at >= ?
+      GROUP BY strftime('%Y-%m', created_at), grade
+      ORDER BY month ASC, grade ASC
+    ''', [startDateStr]);
+
+    return results.map((row) => {
+      'month': row['month'] as String,
+      'grade': row['grade'] as String,
+      'total': row['total'] as int,
+      'count': row['count'] as int,
+    }).toList();
+  }
+
   /// スマート・コンボ予測: カテゴリ別に頻出の「金額×支出タイプ」組み合わせを取得
   /// 返り値: List<{ 'amount': int, 'grade': String, 'freq': int, 'lastUsed': String }>
   /// 優先順位: 頻度 DESC → 最終利用日 DESC
@@ -987,6 +1023,7 @@ class DatabaseService {
     required int limit,
     required int offset,
   }) async {
+    perfMonitor.startTimer('DB.searchExpensesPaged');
     final db = await database;
     final searchQuery = '%$query%';
     final maps = await db.query(
@@ -997,7 +1034,9 @@ class DatabaseService {
       limit: limit,
       offset: offset,
     );
-    return maps.map((map) => Expense.fromMap(map)).toList();
+    final result = maps.map((map) => Expense.fromMap(map)).toList();
+    perfMonitor.stopTimer('DB.searchExpensesPaged');
+    return result;
   }
 
   /// 検索結果の総件数を取得
@@ -1115,5 +1154,133 @@ class DatabaseService {
       await _database!.close();
       _database = null;
     }
+  }
+
+  // ========================================
+  // SQL集計メソッド（パフォーマンス最適化）
+  // ========================================
+
+  /// 今日の支出合計を取得（SQL集計）
+  Future<int> getTodayTotal() async {
+    final db = await database;
+    final today = _formatDateOnly(DateTime.now());
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM expenses
+      WHERE date(created_at) = ?
+    ''', [today]);
+
+    return result.first['total'] as int;
+  }
+
+  /// 今日の支出一覧を取得
+  Future<List<Expense>> getTodayExpenses() async {
+    final db = await database;
+    final today = _formatDateOnly(DateTime.now());
+
+    final maps = await db.query(
+      'expenses',
+      where: "date(created_at) = ?",
+      whereArgs: [today],
+      orderBy: 'created_at DESC, id DESC',
+    );
+
+    return maps.map((map) => Expense.fromMap(map)).toList();
+  }
+
+  /// サイクル内の昨日までの支出合計を取得（SQL集計）
+  ///
+  /// [cycleStartDate] サイクル開始日
+  /// 返り値: サイクル開始日から昨日までの支出合計
+  Future<int> getExpenseTotalUntilYesterday({
+    required DateTime cycleStartDate,
+  }) async {
+    final db = await database;
+    final now = DateTime.now();
+    final today = _formatDateOnly(now);
+    final startStr = _formatDateOnly(cycleStartDate);
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM expenses
+      WHERE date(created_at) >= ? AND date(created_at) < ?
+    ''', [startStr, today]);
+
+    return result.first['total'] as int;
+  }
+
+  /// サイクル内の支出合計を取得（SQL集計）
+  ///
+  /// [cycleStartDate] サイクル開始日
+  /// [cycleEndDate] サイクル終了日
+  Future<int> getCycleTotalExpenses({
+    required DateTime cycleStartDate,
+    required DateTime cycleEndDate,
+  }) async {
+    final db = await database;
+    final startStr = _formatDateOnly(cycleStartDate);
+    // endDateは当日を含むため、翌日未満とする
+    final endDate = cycleEndDate.add(const Duration(days: 1));
+    final endStr = _formatDateOnly(endDate);
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM expenses
+      WHERE date(created_at) >= ? AND date(created_at) < ?
+    ''', [startStr, endStr]);
+
+    return result.first['total'] as int;
+  }
+
+  /// カテゴリ別統計を取得（SQL集計）
+  ///
+  /// 「その他」カテゴリは除外
+  /// 返り値: List<{
+  ///   'category': String,
+  ///   'total_amount': int,
+  ///   'expense_count': int,
+  ///   'saving_amount': int,
+  ///   'standard_amount': int,
+  ///   'reward_amount': int,
+  /// }>
+  Future<List<Map<String, dynamic>>> getCategoryStats({
+    required DateTime cycleStartDate,
+    required DateTime cycleEndDate,
+  }) async {
+    final db = await database;
+    final startStr = _formatDateOnly(cycleStartDate);
+    final endDate = cycleEndDate.add(const Duration(days: 1));
+    final endStr = _formatDateOnly(endDate);
+
+    final results = await db.rawQuery('''
+      SELECT
+        category,
+        SUM(amount) as total_amount,
+        COUNT(*) as expense_count,
+        SUM(CASE WHEN grade = 'saving' THEN amount ELSE 0 END) as saving_amount,
+        SUM(CASE WHEN grade = 'standard' THEN amount ELSE 0 END) as standard_amount,
+        SUM(CASE WHEN grade = 'reward' THEN amount ELSE 0 END) as reward_amount,
+        SUM(CASE WHEN grade = 'saving' THEN 1 ELSE 0 END) as saving_count,
+        SUM(CASE WHEN grade = 'standard' THEN 1 ELSE 0 END) as standard_count,
+        SUM(CASE WHEN grade = 'reward' THEN 1 ELSE 0 END) as reward_count
+      FROM expenses
+      WHERE date(created_at) >= ? AND date(created_at) < ?
+        AND category != 'その他'
+      GROUP BY category
+      ORDER BY total_amount DESC
+    ''', [startStr, endStr]);
+
+    return results.map((row) => {
+      'category': row['category'] as String,
+      'total_amount': row['total_amount'] as int,
+      'expense_count': row['expense_count'] as int,
+      'saving_amount': row['saving_amount'] as int,
+      'standard_amount': row['standard_amount'] as int,
+      'reward_amount': row['reward_amount'] as int,
+      'saving_count': row['saving_count'] as int,
+      'standard_count': row['standard_count'] as int,
+      'reward_count': row['reward_count'] as int,
+    }).toList();
   }
 }

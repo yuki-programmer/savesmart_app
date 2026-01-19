@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../core/dev_config.dart';
 import '../services/app_state.dart';
 import '../services/database_service.dart';
+import '../services/performance_monitor.dart';
 import 'category_manage_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -1395,6 +1396,188 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          // パフォーマンス計測セクション
+          const Divider(height: 1),
+          SwitchListTile(
+            title: Text(
+              'パフォーマンス計測',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary.withOpacity(0.9),
+              ),
+            ),
+            subtitle: Text(
+              perfMonitor.isEnabled ? '計測中' : '無効',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary.withOpacity(0.7),
+              ),
+            ),
+            value: perfMonitor.isEnabled,
+            activeColor: AppColors.accentBlue,
+            onChanged: (value) {
+              setState(() {
+                if (value) {
+                  perfMonitor.enable();
+                } else {
+                  perfMonitor.disable();
+                }
+              });
+            },
+          ),
+          // 計測結果表示ボタン
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => _showPerformanceReport(context),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.accentBlue.withOpacity(0.1),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      '計測結果を表示',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accentBlue,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      perfMonitor.reset();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '計測データをリセットしました',
+                            style: GoogleFonts.inter(fontSize: 13),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.bgPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'リセット',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPerformanceReport(BuildContext context) {
+    final stats = perfMonitor.getAllStats();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'パフォーマンスレポート',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: stats.isEmpty
+              ? Text(
+                  '計測データがありません。\n計測を有効にしてアプリを操作してください。',
+                  style: GoogleFonts.inter(fontSize: 14),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: stats.length,
+                  itemBuilder: (context, index) {
+                    final stat = stats[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            stat['name'] as String,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.accentBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '回数: ${stat['count']}  平均: ${stat['avg']}ms  最大: ${stat['max']}ms',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final report = perfMonitor.getReport();
+              Clipboard.setData(ClipboardData(text: report));
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'レポートをコピーしました',
+                    style: GoogleFonts.inter(fontSize: 13),
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              );
+            },
+            child: Text(
+              'コピー',
+              style: GoogleFonts.inter(color: AppColors.accentBlue),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '閉じる',
+              style: GoogleFonts.inter(),
             ),
           ),
         ],

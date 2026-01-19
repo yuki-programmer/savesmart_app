@@ -10,6 +10,7 @@ import '../config/constants.dart';
 import '../core/dev_config.dart';
 import '../core/financial_cycle.dart';
 import 'database_service.dart';
+import 'performance_monitor.dart';
 
 class CategoryStats {
   final String category;
@@ -73,6 +74,17 @@ class AppState extends ChangeNotifier {
   // === サイクル収入（DB一元管理） ===
   int? _currentCycleIncomeTotal; // 現在サイクルの収入合計（キャッシュ）
 
+  // === 計算キャッシュ（メモ化） ===
+  List<Expense>? _cachedThisMonthExpenses;
+  String? _cachedThisMonthExpensesCycleKey;
+  int? _cachedThisMonthExpensesCount;
+
+  List<Expense>? _cachedLast6MonthsExpenses;
+  String? _cachedLast6MonthsKey; // YYYY-MM format
+
+  Map<String, Map<String, Map<String, int>>>? _cachedCategoryGradeAverages;
+  String? _cachedCategoryGradeAveragesKey;
+
   // Getters
   List<Expense> get expenses => _expenses;
   List<Category> get categories => _categories;
@@ -103,17 +115,36 @@ class AppState extends ChangeNotifier {
   /// 通貨表示形式（prefix: ¥1,234 / suffix: 1,234円）
   String get currencyFormat => _currencyFormat;
 
+  // === 今日の支出キャッシュ ===
+  List<Expense>? _cachedTodayExpenses;
+  String? _cachedTodayExpensesDate;
+  int? _cachedTodayTotal;
+  String? _cachedTodayTotalDate;
+
   List<Expense> get todayExpenses {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return _expenses.where((e) {
+    final today = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    // キャッシュが有効かチェック
+    if (_cachedTodayExpenses != null && _cachedTodayExpensesDate == today) {
+      return _cachedTodayExpenses!;
+    }
+
+    // メモリ内の_expensesからフィルタリング（同期的に返すため）
+    final todayDate = DateTime(now.year, now.month, now.day);
+    final result = _expenses.where((e) {
       final expenseDate = DateTime(
         e.createdAt.year,
         e.createdAt.month,
         e.createdAt.day,
       );
-      return expenseDate == today;
+      return expenseDate == todayDate;
     }).toList();
+
+    _cachedTodayExpenses = result;
+    _cachedTodayExpensesDate = today;
+
+    return result;
   }
 
   List<Expense> get thisWeekExpenses {
@@ -124,11 +155,29 @@ class AppState extends ChangeNotifier {
   }
 
   List<Expense> get thisMonthExpenses {
-    final now = DateTime.now();
-    // FinancialCycleを使用してサイクル内の支出をフィルタ
-    return _expenses.where((e) {
-      return _financialCycle.isDateInCurrentCycle(e.createdAt, now);
-    }).toList();
+    return perfMonitor.measure('AppState.thisMonthExpenses', () {
+      final now = DateTime.now();
+      final cycleKey = _financialCycle.getCycleKey(now);
+
+      // キャッシュが有効かチェック（同一サイクル & 同一件数）
+      if (_cachedThisMonthExpenses != null &&
+          _cachedThisMonthExpensesCycleKey == cycleKey &&
+          _cachedThisMonthExpensesCount == _expenses.length) {
+        return _cachedThisMonthExpenses!;
+      }
+
+      // FinancialCycleを使用してサイクル内の支出をフィルタ
+      final result = _expenses.where((e) {
+        return _financialCycle.isDateInCurrentCycle(e.createdAt, now);
+      }).toList();
+
+      // キャッシュを更新
+      _cachedThisMonthExpenses = result;
+      _cachedThisMonthExpensesCycleKey = cycleKey;
+      _cachedThisMonthExpensesCount = _expenses.length;
+
+      return result;
+    });
   }
 
   /// 前月の支出リストを取得
@@ -147,7 +196,21 @@ class AppState extends ChangeNotifier {
     return getMonthlyAvailableAmount(prevMonth);
   }
 
-  int get todayTotal => todayExpenses.fold(0, (sum, e) => sum + e.amount);
+  int get todayTotal {
+    final now = DateTime.now();
+    final today = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    // キャッシュが有効かチェック
+    if (_cachedTodayTotal != null && _cachedTodayTotalDate == today) {
+      return _cachedTodayTotal!;
+    }
+
+    final result = todayExpenses.fold(0, (sum, e) => sum + e.amount);
+    _cachedTodayTotal = result;
+    _cachedTodayTotalDate = today;
+
+    return result;
+  }
   int get thisWeekTotal => thisWeekExpenses.fold(0, (sum, e) => sum + e.amount);
   int get thisMonthTotal => thisMonthExpenses.fold(0, (sum, e) => sum + e.amount);
 
@@ -203,7 +266,7 @@ class AppState extends ChangeNotifier {
     return _financialCycle.getDaysRemaining(now);
   }
 
-  /// 昨日までの支出合計を取得（サイクル内）
+  /// 昨日までの支出合計を取得（サイクル内、同期版 - メモリ内データ使用）
   int get _expenseTotalUntilYesterday {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -221,6 +284,13 @@ class AppState extends ChangeNotifier {
               expenseDate.isBefore(today);
         })
         .fold(0, (sum, e) => sum + e.amount);
+  }
+
+  /// 昨日までの支出合計を取得（サイクル内、非同期版 - SQL集計）
+  Future<int> getExpenseTotalUntilYesterdayAsync() async {
+    final now = DateTime.now();
+    final cycleStart = _financialCycle.getStartDate(now);
+    return await _db.getExpenseTotalUntilYesterday(cycleStartDate: cycleStart);
   }
 
   /// 今日の固定予算を計算（DBに保存用）
@@ -307,8 +377,53 @@ class AppState extends ChangeNotifier {
     return stats;
   }
 
+  /// カテゴリ別統計を取得（非同期版 - SQL集計）
+  /// standardAverageの計算はSQL結果から行う
+  Future<Map<String, CategoryStats>> getCategoryStatsAsync() async {
+    final now = DateTime.now();
+    final cycleStart = _financialCycle.getStartDate(now);
+    final cycleEnd = _financialCycle.getEndDate(now);
+
+    final sqlStats = await _db.getCategoryStats(
+      cycleStartDate: cycleStart,
+      cycleEndDate: cycleEnd,
+    );
+
+    final Map<String, CategoryStats> stats = {};
+
+    for (final row in sqlStats) {
+      final category = row['category'] as String;
+      final totalAmount = row['total_amount'] as int;
+      final expenseCount = row['expense_count'] as int;
+      final savingAmount = row['saving_amount'] as int;
+      final standardAmount = row['standard_amount'] as int;
+      final rewardAmount = row['reward_amount'] as int;
+      final savingCount = row['saving_count'] as int;
+      final rewardCount = row['reward_count'] as int;
+
+      // スタンダード平均を計算（全支出をスタンダードと仮定した場合）
+      // saving は 0.7倍、reward は 1.3倍で換算
+      final standardTotal = (savingCount > 0 ? (savingAmount / 0.7).round() : 0) +
+          standardAmount +
+          (rewardCount > 0 ? (rewardAmount / 1.3).round() : 0);
+      final standardAverage = expenseCount > 0
+          ? (standardTotal / expenseCount).round()
+          : 0;
+
+      stats[category] = CategoryStats(
+        category: category,
+        totalAmount: totalAmount,
+        standardAverage: standardAverage,
+        expenseCount: expenseCount,
+      );
+    }
+
+    return stats;
+  }
+
   // Actions
   Future<void> loadData() async {
+    perfMonitor.startTimer('AppState.loadData');
     _isLoading = true;
     notifyListeners();
 
@@ -317,6 +432,7 @@ class AppState extends ChangeNotifier {
       await _db.ensureDefaultFixedCostCategories();
 
       // 並列で取得（高速化）
+      perfMonitor.startTimer('AppState.loadData.queries');
       final results = await Future.wait([
         _db.getExpenses(),
         _db.getCategories(),
@@ -325,6 +441,7 @@ class AppState extends ChangeNotifier {
         _db.getCurrentBudget(),
         _db.getQuickEntries(),
       ]);
+      perfMonitor.stopTimer('AppState.loadData.queries');
 
       _expenses = results[0] as List<Expense>;
       _categories = results[1] as List<Category>;
@@ -344,13 +461,31 @@ class AppState extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+    perfMonitor.stopTimer('AppState.loadData');
   }
 
   // === 部分リロードメソッド（パフォーマンス最適化） ===
 
   Future<void> _reloadExpenses() async {
     _expenses = await _db.getExpenses();
+    _invalidateExpensesCaches();
     notifyListeners();
+  }
+
+  /// 支出関連のキャッシュを無効化
+  void _invalidateExpensesCaches() {
+    _cachedThisMonthExpenses = null;
+    _cachedThisMonthExpensesCycleKey = null;
+    _cachedThisMonthExpensesCount = null;
+    _cachedLast6MonthsExpenses = null;
+    _cachedLast6MonthsKey = null;
+    _cachedCategoryGradeAverages = null;
+    _cachedCategoryGradeAveragesKey = null;
+    // 今日の支出キャッシュもクリア
+    _cachedTodayExpenses = null;
+    _cachedTodayExpensesDate = null;
+    _cachedTodayTotal = null;
+    _cachedTodayTotalDate = null;
   }
 
   Future<void> _reloadCategories() async {
@@ -541,6 +676,7 @@ class AppState extends ChangeNotifier {
   ///   'totalCount': int,
   /// }
   Map<String, dynamic> getCategoryDetailAnalysis(String categoryName) {
+    perfMonitor.startTimer('AppState.getCategoryDetailAnalysis');
     final now = DateTime.now();
 
     // 今月のデータ
@@ -619,6 +755,7 @@ class AppState extends ChangeNotifier {
       totalCount += data['count']!;
     }
 
+    perfMonitor.stopTimer('AppState.getCategoryDetailAnalysis');
     return {
       'thisMonth': thisMonthWithAvg,
       'last6MonthsAvg': last6MonthsAvg,
@@ -657,6 +794,53 @@ class AppState extends ChangeNotifier {
       categoryName: categoryName,
       months: months,
     );
+
+    // 月キーを生成（0埋め用）
+    final monthKeys = generateMonthKeys(months);
+
+    // 月別にデータを整理
+    final monthlyData = <String, Map<String, int>>{};
+    for (final key in monthKeys) {
+      monthlyData[key] = {
+        'saving': 0,
+        'standard': 0,
+        'reward': 0,
+      };
+    }
+
+    // SQLの結果をマージ
+    for (final row in rawData) {
+      final month = row['month'] as String;
+      final grade = row['grade'] as String;
+      final total = row['total'] as int;
+
+      if (monthlyData.containsKey(month) && monthlyData[month]!.containsKey(grade)) {
+        monthlyData[month]![grade] = total;
+      }
+    }
+
+    // 結果をリスト形式に変換
+    return monthKeys.map((month) {
+      final data = monthlyData[month]!;
+      final monthInt = int.parse(month.split('-')[1]);
+      return {
+        'month': month,
+        'monthLabel': '$monthInt月',
+        'saving': data['saving']!,
+        'standard': data['standard']!,
+        'reward': data['reward']!,
+        'total': data['saving']! + data['standard']! + data['reward']!,
+      };
+    }).toList();
+  }
+
+  /// 月間支出推移を取得（全カテゴリ合計、グレード別積み上げ）
+  /// カテゴリ詳細のgetCategoryMonthlyTrendと同じ構成
+  Future<List<Map<String, dynamic>>> getMonthlyExpenseTrend({
+    int months = 12,
+  }) async {
+    // SQLで集計データを取得
+    final rawData = await _db.getMonthlyGradeBreakdownAll(months: months);
 
     // 月キーを生成（0埋め用）
     final monthKeys = generateMonthKeys(months);
@@ -1114,16 +1298,42 @@ class AppState extends ChangeNotifier {
     return expectedBudget - thisMonthTotal;
   }
 
-  /// 直近6ヶ月の支出を取得
+  /// 直近6ヶ月の支出を取得（メモ化）
   List<Expense> get _last6MonthsExpenses {
     final now = DateTime.now();
+    final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+
+    // キャッシュが有効かチェック（同一月 & 同一件数）
+    if (_cachedLast6MonthsExpenses != null &&
+        _cachedLast6MonthsKey == monthKey &&
+        _cachedLast6MonthsExpenses!.length <= _expenses.length) {
+      // 件数が増えていなければキャッシュを返す
+      // 注: 厳密な検証ではないが、パフォーマンス優先
+      return _cachedLast6MonthsExpenses!;
+    }
+
     final sixMonthsAgo = DateTime(now.year, now.month - 6, 1);
-    return _expenses.where((e) => e.createdAt.isAfter(sixMonthsAgo)).toList();
+    final result = _expenses.where((e) => e.createdAt.isAfter(sixMonthsAgo)).toList();
+
+    // キャッシュを更新
+    _cachedLast6MonthsExpenses = result;
+    _cachedLast6MonthsKey = monthKey;
+
+    return result;
   }
 
-  /// カテゴリ別・グレード別の平均単価を計算（直近6ヶ月）
+  /// カテゴリ別・グレード別の平均単価を計算（直近6ヶ月、メモ化）
   /// 返り値: { 'カテゴリ名': { 'standard': {'avg': int, 'count': int}, 'reward': {...} } }
   Map<String, Map<String, Map<String, int>>> get _categoryGradeAverages {
+    final now = DateTime.now();
+    final cacheKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${_expenses.length}';
+
+    // キャッシュが有効かチェック
+    if (_cachedCategoryGradeAverages != null &&
+        _cachedCategoryGradeAveragesKey == cacheKey) {
+      return _cachedCategoryGradeAverages!;
+    }
+
     final result = <String, Map<String, Map<String, int>>>{};
     final recentExpenses = _last6MonthsExpenses;
 
@@ -1156,6 +1366,10 @@ class AppState extends ChangeNotifier {
         };
       }
     }
+
+    // キャッシュを更新
+    _cachedCategoryGradeAverages = averages;
+    _cachedCategoryGradeAveragesKey = cacheKey;
 
     return averages;
   }

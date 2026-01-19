@@ -7,6 +7,7 @@ import '../config/constants.dart';
 import '../config/home_constants.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
+import '../models/fixed_cost.dart';
 import '../models/quick_entry.dart';
 import '../utils/formatters.dart';
 import '../widgets/quick_entry/quick_entry_edit_modal.dart';
@@ -102,12 +103,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(
-      builder: (context, appState, child) {
+    // isLoading のみを監視するSelector
+    return Selector<AppState, bool>(
+      selector: (_, appState) => appState.isLoading,
+      builder: (context, isLoading, child) {
         return Scaffold(
           backgroundColor: HomeConstants.screenBackground,
           body: SafeArea(
-            child: appState.isLoading
+            child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -116,31 +119,105 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         _buildHeader(),
                         const SizedBox(height: 20),
-                        // ヒーローカード（今日使えるお金）
-                        HeroCard(
-                          fixedTodayAllowance: appState.fixedTodayAllowance,
-                          dynamicTomorrowForecast: appState.dynamicTomorrowForecast,
-                          todayTotal: appState.todayTotal,
-                          hasOpenedReflection: _hasOpenedReflectionToday,
-                          onTapReflection: () => _showNightReflectionDialog(appState),
-                          currencyFormat: appState.currencyFormat,
-                        ),
+                        // ヒーローカード（今日使えるお金）- Selector化
+                        _buildHeroCardSection(),
                         const SizedBox(height: 16),
-                        // 今月サマリーカード
-                        _buildMonthlySummaryCard(appState),
+                        // 今月サマリーカード - Selector化
+                        _buildMonthlySummarySection(),
                         const SizedBox(height: 16),
-                        // クイック登録セクション
-                        _buildQuickEntrySection(appState),
+                        // クイック登録セクション - Selector化
+                        _buildQuickEntrySectionWithSelector(),
                         const SizedBox(height: 16),
-                        _buildRecentExpenses(appState),
+                        // 日々の出費 - Selector化
+                        _buildRecentExpensesSection(),
                         const SizedBox(height: 28),
-                        _buildFixedCostsSection(appState),
+                        // 固定費 - Selector化
+                        _buildFixedCostsSectionWithSelector(),
                         const SizedBox(height: 100),
                       ],
                     ),
                   ),
           ),
         );
+      },
+    );
+  }
+
+  /// ヒーローカードセクション（Selector使用）
+  Widget _buildHeroCardSection() {
+    return Selector<AppState, _HeroCardData>(
+      selector: (_, appState) => _HeroCardData(
+        fixedTodayAllowance: appState.fixedTodayAllowance,
+        dynamicTomorrowForecast: appState.dynamicTomorrowForecast,
+        todayTotal: appState.todayTotal,
+        currencyFormat: appState.currencyFormat,
+      ),
+      builder: (context, data, child) {
+        final appState = context.read<AppState>();
+        return HeroCard(
+          fixedTodayAllowance: data.fixedTodayAllowance,
+          dynamicTomorrowForecast: data.dynamicTomorrowForecast,
+          todayTotal: data.todayTotal,
+          hasOpenedReflection: _hasOpenedReflectionToday,
+          onTapReflection: () => _showNightReflectionDialog(appState),
+          currencyFormat: data.currencyFormat,
+        );
+      },
+    );
+  }
+
+  /// 今月サマリーセクション（Selector使用）
+  Widget _buildMonthlySummarySection() {
+    return Selector<AppState, _MonthlySummaryData>(
+      selector: (_, appState) => _MonthlySummaryData(
+        usableAmount: appState.thisMonthAvailableAmount,
+        fixedCostsTotal: appState.fixedCostsTotal,
+        thisMonthTotal: appState.thisMonthTotal,
+        remainingDays: appState.remainingDaysInMonth,
+        currencyFormat: appState.currencyFormat,
+      ),
+      builder: (context, data, child) {
+        return _buildMonthlySummaryCard(data);
+      },
+    );
+  }
+
+  /// クイック登録セクション（Selector使用）
+  Widget _buildQuickEntrySectionWithSelector() {
+    return Selector<AppState, _QuickEntryData>(
+      selector: (_, appState) => _QuickEntryData(
+        quickEntries: appState.quickEntries,
+        currencyFormat: appState.currencyFormat,
+      ),
+      builder: (context, data, child) {
+        return _buildQuickEntrySection(data);
+      },
+    );
+  }
+
+  /// 日々の出費セクション（Selector使用）
+  Widget _buildRecentExpensesSection() {
+    return Selector<AppState, _RecentExpensesData>(
+      selector: (_, appState) => _RecentExpensesData(
+        recentExpenses: appState.thisMonthExpenses.take(3).toList(),
+        currencyFormat: appState.currencyFormat,
+      ),
+      builder: (context, data, child) {
+        return _buildRecentExpenses(data);
+      },
+    );
+  }
+
+  /// 固定費セクション（Selector使用）
+  Widget _buildFixedCostsSectionWithSelector() {
+    return Selector<AppState, _FixedCostsData>(
+      selector: (_, appState) => _FixedCostsData(
+        fixedCosts: appState.fixedCosts,
+        totalFixedCosts: appState.fixedCostsTotal,
+        currencyFormat: appState.currencyFormat,
+      ),
+      builder: (context, data, child) {
+        return _buildFixedCostsSection(data);
       },
     );
   }
@@ -187,12 +264,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// 今月サマリーカード（リファクタ版）
-  Widget _buildMonthlySummaryCard(AppState appState) {
-    final usableAmount = appState.thisMonthAvailableAmount;
-    final fixedCostsTotal = appState.fixedCostsTotal;
-    final monthlyExpenseTotal = appState.thisMonthTotal + fixedCostsTotal;
-    final remaining = (usableAmount ?? 0) - monthlyExpenseTotal;
-    final remainingDays = appState.remainingDaysInMonth;
+  Widget _buildMonthlySummaryCard(_MonthlySummaryData data) {
+    final monthlyExpenseTotal = data.thisMonthTotal + data.fixedCostsTotal;
+    final remaining = (data.usableAmount ?? 0) - monthlyExpenseTotal;
 
     return Container(
       width: double.infinity,
@@ -225,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Text(
-                formatCurrency(remaining, appState.currencyFormat),
+                formatCurrency(remaining, data.currencyFormat),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: HomeConstants.summaryMainSize,
                   fontWeight: FontWeight.w600,
@@ -234,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const Spacer(),
               Text(
-                'あと $remainingDays日',
+                'あと ${data.remainingDays}日',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: Colors.grey[600],
@@ -246,9 +320,9 @@ class _HomeScreenState extends State<HomeScreen> {
           // 収入/出費（サブ）
           Row(
             children: [
-              _buildMetric('収入', usableAmount ?? 0, AppColors.accentBlue, appState.currencyFormat),
+              _buildMetric('収入', data.usableAmount ?? 0, AppColors.accentBlue, data.currencyFormat),
               const SizedBox(width: 24),
-              _buildMetric('出費', monthlyExpenseTotal, Colors.grey[700]!, appState.currencyFormat),
+              _buildMetric('出費', monthlyExpenseTotal, Colors.grey[700]!, data.currencyFormat),
             ],
           ),
           const SizedBox(height: 8),
@@ -289,9 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// クイック登録セクション（2カラムグリッド）
-  Widget _buildQuickEntrySection(AppState appState) {
-    final quickEntries = appState.quickEntries;
-
+  Widget _buildQuickEntrySection(_QuickEntryData data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -326,16 +398,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        if (quickEntries.isEmpty)
+        if (data.quickEntries.isEmpty)
           _buildEmptyQuickEntryHint()
         else
-          _buildQuickEntryGrid(quickEntries, appState),
+          _buildQuickEntryGrid(data.quickEntries, data.currencyFormat),
       ],
     );
   }
 
   /// クイック登録グリッド（2行×横スクロール）
-  Widget _buildQuickEntryGrid(List<QuickEntry> entries, AppState appState) {
+  Widget _buildQuickEntryGrid(List<QuickEntry> entries, String currencyFormat) {
     // 2行に分割（奇数インデックスは上段、偶数インデックスは下段）
     final topRow = <QuickEntry>[];
     final bottomRow = <QuickEntry>[];
@@ -357,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: topRow
                 .map((entry) => Padding(
                       padding: const EdgeInsets.only(right: 10),
-                      child: _buildQuickEntryTile(entry, appState),
+                      child: _buildQuickEntryTile(entry, currencyFormat),
                     ))
                 .toList(),
           ),
@@ -368,7 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: bottomRow
                   .map((entry) => Padding(
                         padding: const EdgeInsets.only(right: 10),
-                        child: _buildQuickEntryTile(entry, appState),
+                        child: _buildQuickEntryTile(entry, currencyFormat),
                       ))
                   .toList(),
             ),
@@ -423,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 今日使えるお金セクション（夜時間帯は振り返りカードに切り替え）
 
   /// クイック登録タイル（コンパクト・縦並びレイアウト）
-  Widget _buildQuickEntryTile(QuickEntry entry, AppState appState) {
+  Widget _buildQuickEntryTile(QuickEntry entry, String currencyFormat) {
     // グレードに対応する色を取得
     Color gradeColor;
     Color gradeLightColor;
@@ -447,7 +519,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return GestureDetector(
-      onTap: () => _executeQuickEntry(entry, appState),
+      onTap: () => _executeQuickEntry(entry),
       onLongPress: () => showQuickEntryEditModal(context, entry: entry),
       child: Container(
         width: 130,
@@ -486,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Text(
-                  formatCurrency(entry.amount, appState.currencyFormat),
+                  formatCurrency(entry.amount, currencyFormat),
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -518,7 +590,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// クイック登録を実行
-  Future<void> _executeQuickEntry(QuickEntry entry, AppState appState) async {
+  Future<void> _executeQuickEntry(QuickEntry entry) async {
+    final appState = context.read<AppState>();
     final success = await appState.executeQuickEntry(entry);
 
     if (!mounted) return;
@@ -568,9 +641,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildRecentExpenses(AppState appState) {
-    final recentExpenses = appState.thisMonthExpenses.take(3).toList();
-
+  Widget _buildRecentExpenses(_RecentExpensesData data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -605,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 14),
-        if (recentExpenses.isEmpty)
+        if (data.recentExpenses.isEmpty)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             decoration: BoxDecoration(
@@ -625,15 +696,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
         else
-          ...recentExpenses.map((expense) => _buildExpenseItem(expense, appState)),
+          ...data.recentExpenses.map((expense) => _buildExpenseItem(expense, data.currencyFormat)),
       ],
     );
   }
 
-  Widget _buildFixedCostsSection(AppState appState) {
-    final fixedCosts = appState.fixedCosts;
-    final totalFixedCosts = appState.fixedCostsTotal;
-
+  Widget _buildFixedCostsSection(_FixedCostsData data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -686,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              formatCurrency(totalFixedCosts, appState.currencyFormat),
+                              formatCurrency(data.totalFixedCosts, data.currencyFormat),
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -720,8 +788,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          if (fixedCosts.isNotEmpty)
-                            ...fixedCosts.map((fc) => Padding(
+                          if (data.fixedCosts.isNotEmpty)
+                            ...data.fixedCosts.map((fc) => Padding(
                                   padding: const EdgeInsets.only(bottom: 8),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -735,7 +803,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                       Text(
-                                        formatCurrency(fc.amount, appState.currencyFormat),
+                                        formatCurrency(fc.amount, data.currencyFormat),
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
@@ -745,7 +813,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ],
                                   ),
                                 )),
-                          if (fixedCosts.isEmpty)
+                          if (data.fixedCosts.isEmpty)
                             Text(
                               '固定費が登録されていません',
                               style: GoogleFonts.inter(
@@ -799,7 +867,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExpenseItem(Expense expense, AppState appState) {
+  Widget _buildExpenseItem(Expense expense, String currencyFormat) {
     // カテゴリが「その他」の場合は非表示
     final showCategory = expense.category != 'その他';
     final dateLabel = _getDateLabel(expense.createdAt);
@@ -856,7 +924,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                formatCurrency(expense.amount, appState.currencyFormat),
+                formatCurrency(expense.amount, currencyFormat),
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -925,5 +993,171 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+}
+
+// === Selector用データクラス ===
+
+/// HeroCard用データ
+class _HeroCardData {
+  final int? fixedTodayAllowance;
+  final int? dynamicTomorrowForecast;
+  final int todayTotal;
+  final String currencyFormat;
+
+  const _HeroCardData({
+    required this.fixedTodayAllowance,
+    required this.dynamicTomorrowForecast,
+    required this.todayTotal,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _HeroCardData &&
+          runtimeType == other.runtimeType &&
+          fixedTodayAllowance == other.fixedTodayAllowance &&
+          dynamicTomorrowForecast == other.dynamicTomorrowForecast &&
+          todayTotal == other.todayTotal &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode =>
+      fixedTodayAllowance.hashCode ^
+      dynamicTomorrowForecast.hashCode ^
+      todayTotal.hashCode ^
+      currencyFormat.hashCode;
+}
+
+/// 今月サマリー用データ
+class _MonthlySummaryData {
+  final int? usableAmount;
+  final int fixedCostsTotal;
+  final int thisMonthTotal;
+  final int remainingDays;
+  final String currencyFormat;
+
+  const _MonthlySummaryData({
+    required this.usableAmount,
+    required this.fixedCostsTotal,
+    required this.thisMonthTotal,
+    required this.remainingDays,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _MonthlySummaryData &&
+          runtimeType == other.runtimeType &&
+          usableAmount == other.usableAmount &&
+          fixedCostsTotal == other.fixedCostsTotal &&
+          thisMonthTotal == other.thisMonthTotal &&
+          remainingDays == other.remainingDays &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode =>
+      usableAmount.hashCode ^
+      fixedCostsTotal.hashCode ^
+      thisMonthTotal.hashCode ^
+      remainingDays.hashCode ^
+      currencyFormat.hashCode;
+}
+
+/// クイック登録用データ
+class _QuickEntryData {
+  final List<QuickEntry> quickEntries;
+  final String currencyFormat;
+
+  const _QuickEntryData({
+    required this.quickEntries,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _QuickEntryData &&
+          runtimeType == other.runtimeType &&
+          _listEquals(quickEntries, other.quickEntries) &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode => quickEntries.length.hashCode ^ currencyFormat.hashCode;
+
+  bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
+/// 日々の出費用データ
+class _RecentExpensesData {
+  final List<Expense> recentExpenses;
+  final String currencyFormat;
+
+  const _RecentExpensesData({
+    required this.recentExpenses,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _RecentExpensesData &&
+          runtimeType == other.runtimeType &&
+          _listEquals(recentExpenses, other.recentExpenses) &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode => recentExpenses.length.hashCode ^ currencyFormat.hashCode;
+
+  bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
+/// 固定費用データ
+class _FixedCostsData {
+  final List<FixedCost> fixedCosts;
+  final int totalFixedCosts;
+  final String currencyFormat;
+
+  const _FixedCostsData({
+    required this.fixedCosts,
+    required this.totalFixedCosts,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _FixedCostsData &&
+          runtimeType == other.runtimeType &&
+          _listEquals(fixedCosts, other.fixedCosts) &&
+          totalFixedCosts == other.totalFixedCosts &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode =>
+      fixedCosts.length.hashCode ^
+      totalFixedCosts.hashCode ^
+      currencyFormat.hashCode;
+
+  bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 }
