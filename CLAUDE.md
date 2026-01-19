@@ -110,11 +110,14 @@ if (!success) {
 
 ## Utility Functions
 
-Use `formatNumber()` from `lib/utils/formatters.dart` for displaying amounts with thousand separators:
+Use `formatNumber()` and `formatCurrency()` from `lib/utils/formatters.dart`:
 ```dart
 import '../utils/formatters.dart';
 Text('¥${formatNumber(amount)}')  // ¥1,234
+Text(formatCurrency(amount, currencyFormat))  // prefix: ¥1,234 / suffix: 1,234円
 ```
+
+Currency format is stored in `AppState.currencyFormat` ('prefix' or 'suffix').
 
 ## Key Features
 
@@ -160,6 +163,14 @@ Text('¥${formatNumber(amount)}')  // ¥1,234
 - Current cycle (blue solid) vs previous cycle (gray dashed)
 - Falls back to ideal line if no previous cycle data (< 3 days of records)
 - Comparison badge shows savings/overspending vs previous cycle
+
+### Monthly Expense Trend (月間の支出推移)
+- 12-month grade-based stacked bar chart (`MonthlyExpenseTrendChart`)
+- Free feature (no subscription required)
+- Horizontal scroll with fixed Y-axis
+- Auto-scrolls to latest month
+- Variable expenses only (fixed costs excluded)
+- SQL aggregation: `DatabaseService.getMonthlyGradeBreakdownAll()`
 
 ### Home Screen Time Modes (時間別テーマ)
 HeroCard (`lib/widgets/home/hero_card.dart`) has three visual modes based on time:
@@ -241,6 +252,44 @@ Add screen uses a wheel picker for amount input (`lib/screens/add_screen.dart`):
 - Reset button (↻) on the left resets amount to 0
 - Unit switching preserves the current amount (does not reset)
 - Smart combo auto-select adjusts unit based on selected quick entry amount
+
+## Performance Optimization
+
+### Selector Pattern (HomeScreen)
+Use `Selector<AppState, T>` instead of `Consumer<AppState>` to minimize rebuilds:
+```dart
+Selector<AppState, _HeroCardData>(
+  selector: (_, appState) => _HeroCardData(
+    fixedTodayAllowance: appState.fixedTodayAllowance,
+    dynamicTomorrowForecast: appState.dynamicTomorrowForecast,
+  ),
+  builder: (context, data, child) => HeroCard(...),
+)
+```
+Data classes must implement `==` and `hashCode` for proper comparison.
+
+### SQL Aggregation (DatabaseService)
+Prefer SQL aggregation over in-memory filtering for large datasets:
+```dart
+// Good: SQL aggregation
+await _db.getCategoryStats(cycleStartDate: start, cycleEndDate: end);
+
+// Avoid: In-memory filtering for aggregation
+_expenses.where(...).fold(0, (sum, e) => sum + e.amount);
+```
+
+Key SQL methods:
+- `getTodayTotal()`, `getTodayExpenses()`
+- `getExpenseTotalUntilYesterday(cycleStartDate:)`
+- `getCycleTotalExpenses(cycleStartDate:, cycleEndDate:)`
+- `getCategoryStats(cycleStartDate:, cycleEndDate:)`
+- `getMonthlyGradeBreakdownAll(months:)`
+
+### Caching (AppState)
+AppState caches frequently accessed data with date-based invalidation:
+- `_cachedTodayExpenses`, `_cachedTodayTotal` (invalidated daily)
+- `_cachedThisMonthExpenses` (invalidated on cycle change)
+- Call `_invalidateExpensesCaches()` after expense modifications
 
 ## Reference Documentation
 

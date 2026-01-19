@@ -134,12 +134,25 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
   - 使いすぎ（オレンジ）: `前サイクル比 +¥3,000（使いすぎ）`
 - `startDay`パラメータで記録開始前の日付はスキップ
 
-### 5.3 日割り・週割りペース
+### 5.3 月間の支出推移
+- **Freeで利用可能**
+- 12ヶ月の月別支出をグレード別積み上げ棒グラフで表示
+- 横スクロール対応（左固定Y軸）
+- 最新月に自動スクロール
+- 凡例: 節約（緑）/ 標準（青グレー）/ ご褒美（ゴールド）
+- タップでツールチップ（月名 + 合計金額）
+- 固定費は含まない（変動費のみ）
+- 実装メソッド:
+  - `AppState.getMonthlyExpenseTrend({months: 12})`: 月別グレード集計取得
+  - `DatabaseService.getMonthlyGradeBreakdownAll({months})`: SQL集計
+- ウィジェット: `MonthlyExpenseTrendChart` (`lib/widgets/analytics/monthly_expense_trend_chart.dart`)
+
+### 5.4 日割り・週割りペース
 - **Premiumのみ**
 - カテゴリ別の日割り/週割り支出額
 - 支出総額降順でソート
 
-### 5.4 家計の余白
+### 5.5 家計の余白
 - **Premiumのみ**
 - ペースバッファ（余剰額）の表示
   - 計算式: `予算ペース - 実支出`
@@ -150,7 +163,7 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
   - カード表示: カテゴリ名、標準平均、ご褒美平均、差額、可能回数
   - タップでカテゴリ詳細画面へ遷移（Hero アニメーション）
 
-### 5.5 カテゴリ別支出
+### 5.6 カテゴリ別支出
 - **Premiumのみ**
 - 円グラフでカテゴリ比率を可視化（fl_chart使用）
 - 固定費込み/抜き切り替えトグル
@@ -520,6 +533,10 @@ Map<String, dynamic> getCategoryDetailAnalysis(String categoryName)
 
 // 月別トレンド（12ヶ月、0埋め対応）
 Future<List<Map<String, dynamic>>> getCategoryMonthlyTrend(String categoryName, {int months = 12})
+  // 返り値: [{ 'month': 'YYYY-MM', 'monthLabel': 'M月', 'saving': int, 'standard': int, 'reward': int, 'total': int }, ...]
+
+// 月間支出推移（全カテゴリ、グレード別積み上げ）
+Future<List<Map<String, dynamic>>> getMonthlyExpenseTrend({int months = 12})
   // 返り値: [{ 'month': 'YYYY-MM', 'monthLabel': 'M月', 'saving': int, 'standard': int, 'reward': int, 'total': int }, ...]
 
 // 格上げ可能カテゴリ（最大3件）
