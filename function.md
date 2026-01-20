@@ -147,9 +147,11 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
   - `DatabaseService.getMonthlyGradeBreakdownAll({months})`: SQL集計
 - ウィジェット: `MonthlyExpenseTrendChart` (`lib/widgets/analytics/monthly_expense_trend_chart.dart`)
 
-### 5.4 日割り・週割りペース
+### 5.4 1日あたりの支出
 - **Premiumのみ**
-- カテゴリ別の日割り/週割り支出額
+- タイトル: 「1日あたりの支出」/ サブタイトル: 「今の使い方を数字で見る」
+- 経過日数ベースの日割り/週割り支出額（サイクル開始日〜今日）
+- カテゴリ別 + 全体の日割り・週割りを表示
 - 支出総額降順でソート
 
 ### 5.5 家計の余白

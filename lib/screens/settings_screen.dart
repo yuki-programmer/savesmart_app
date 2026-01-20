@@ -8,6 +8,7 @@ import '../services/app_state.dart';
 import '../services/database_service.dart';
 import '../services/performance_monitor.dart';
 import 'category_manage_screen.dart';
+import 'premium_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -827,18 +828,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildPremiumPlanCard(AppState appState) {
     return GestureDetector(
       onTap: () {
-        // TODO: 有料プラン詳細画面へ遷移
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '準備中です',
-              style: GoogleFonts.inter(),
-            ),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PremiumScreen()),
         );
       },
       child: Container(

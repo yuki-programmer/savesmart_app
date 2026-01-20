@@ -172,6 +172,15 @@ Currency format is stored in `AppState.currencyFormat` ('prefix' or 'suffix').
 - Variable expenses only (fixed costs excluded)
 - SQL aggregation: `DatabaseService.getMonthlyGradeBreakdownAll()`
 
+### Analytics Accordion Sections (分析画面アコーディオン)
+Premium-only accordion sections with icon + 1-line summary:
+- **カテゴリ別の支出割合**: Pie chart + category list (top category summary)
+- **1日あたりの支出**: Daily/weekly pace based on elapsed days (cycle start to today)
+- **支出ペース**: Burn rate chart with previous cycle comparison
+- **家計の余裕**: Pace buffer and upgrade suggestions
+
+Free users see masked summaries (e.g., "●●が最多", "¥---")
+
 ### Home Screen Time Modes (時間別テーマ)
 HeroCard (`lib/widgets/home/hero_card.dart`) has three visual modes based on time:
 - **Day mode** (4:00〜5:59, 10:00〜18:59): Standard white card

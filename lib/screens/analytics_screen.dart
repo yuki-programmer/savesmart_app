@@ -11,6 +11,7 @@ import '../widgets/burn_rate_chart.dart';
 import '../widgets/analytics/category_pace_sheet.dart';
 import '../widgets/analytics/monthly_expense_trend_chart.dart';
 import 'category_detail_screen.dart';
+import 'premium_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -25,7 +26,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   bool _paceExpanded = false;
   bool _burnRateExpanded = false;
   bool _budgetMarginExpanded = false;
-  bool _detailExpanded = false;
 
   // カテゴリ別グラフで固定費を含めるかどうか（デフォルト: false = 固定費抜き）
   bool _includeFixedCosts = false;
@@ -92,13 +92,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       }
                     },
                     content: _buildCategoryContent(isPremium),
+                    icon: Icons.pie_chart_outline,
+                    summary: _getCategorySummary(appState),
+                    maskedSummary: _getCategoryMaskedSummary(appState),
                   ),
                   const SizedBox(height: 12),
 
-                  // アコーディオン B: 日割り・ペース
+                  // アコーディオン B: 1日あたりの支出
                   _buildAccordionCard(
-                    title: '日割り・ペース',
-                    subtitle: '月末の着地が見えてきます',
+                    title: '1日あたりの支出',
+                    subtitle: '今の使い方を数字で見る',
                     isExpanded: _paceExpanded,
                     isPremium: isPremium,
                     onExpansionChanged: (expanded) {
@@ -107,6 +110,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       }
                     },
                     content: _buildPaceContent(appState),
+                    icon: Icons.speed,
+                    summary: _getPaceSummary(appState),
+                    maskedSummary: '1日 約¥--- / 週 約¥---',
                   ),
                   const SizedBox(height: 12),
 
@@ -122,6 +128,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       }
                     },
                     content: _buildBurnRateContent(appState),
+                    icon: Icons.show_chart,
+                    summary: _getBurnRateSummary(appState),
+                    maskedSummary: '消化率 --%',
                   ),
                   const SizedBox(height: 12),
 
@@ -137,21 +146,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       }
                     },
                     content: _buildBudgetMarginContent(appState),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // アコーディオン E: 詳細
-                  _buildAccordionCard(
-                    title: '詳細',
-                    subtitle: '自分の"賢い使い方"が見えてきます',
-                    isExpanded: _detailExpanded,
-                    isPremium: isPremium,
-                    onExpansionChanged: (expanded) {
-                      if (isPremium) {
-                        setState(() => _detailExpanded = expanded);
-                      }
-                    },
-                    content: _buildDetailContent(),
+                    icon: Icons.savings_outlined,
+                    summary: _getBudgetMarginSummary(appState),
+                    maskedSummary: '¥--- の余裕',
                   ),
                   const SizedBox(height: 100),
                 ],
@@ -161,6 +158,88 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
       ),
     );
+  }
+
+  // ============================================
+  // サマリー計算メソッド
+  // ============================================
+
+  /// カテゴリ別サマリー: 最大カテゴリ名と割合
+  String _getCategorySummary(AppState appState) {
+    final categoryStats = appState.categoryStats;
+    if (categoryStats.isEmpty) return '-';
+
+    // 最大カテゴリを取得
+    String? topCategory;
+    int topAmount = 0;
+    int total = 0;
+
+    for (final entry in categoryStats.entries) {
+      final amount = entry.value.totalAmount;
+      total += amount;
+      if (amount > topAmount) {
+        topAmount = amount;
+        topCategory = entry.key;
+      }
+    }
+
+    if (topCategory == null || total == 0) return '-';
+
+    final percentage = ((topAmount / total) * 100).round();
+    return '$topCategoryが最多（$percentage%）';
+  }
+
+  /// カテゴリ別マスクサマリー（Free用）
+  String _getCategoryMaskedSummary(AppState appState) {
+    final categoryStats = appState.categoryStats;
+    if (categoryStats.isEmpty) return '-';
+    return '●●が最多';
+  }
+
+  /// 日割り・ペースサマリー（経過日数ベース）
+  String _getPaceSummary(AppState appState) {
+    final totalThisMonth = appState.thisMonthTotal;
+    if (totalThisMonth == 0) return '-';
+
+    final elapsedDays = _getElapsedDays(appState);
+    if (elapsedDays <= 0) return '-';
+
+    final dailyPace = totalThisMonth / elapsedDays;
+    final weeklyPace = dailyPace * 7;
+
+    return '1日 約¥${formatNumber(_roundToHundred(dailyPace))} / 週 約¥${formatNumber(_roundToHundred(weeklyPace))}';
+  }
+
+  /// 経過日数を計算（サイクル開始日〜今日、今日を含む）
+  int _getElapsedDays(AppState appState) {
+    final cycleStart = appState.cycleStartDate;
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final cycleStartDate = DateTime(cycleStart.year, cycleStart.month, cycleStart.day);
+    return todayDate.difference(cycleStartDate).inDays + 1;
+  }
+
+  /// 支出ペースサマリー: 消化率を表示
+  String _getBurnRateSummary(AppState appState) {
+    final income = appState.thisMonthAvailableAmount;
+    final disposable = appState.disposableAmount;
+    final variableSpending = appState.thisMonthTotal;
+
+    if (income == null) return '収入を設定してください';
+    if (disposable == null || disposable <= 0) return '可処分金額なし';
+
+    final rate = (variableSpending / disposable) * 100;
+    return '消化率 ${rate.toStringAsFixed(0)}%';
+  }
+
+  /// 家計の余裕サマリー
+  String _getBudgetMarginSummary(AppState appState) {
+    final paceBuffer = appState.paceBuffer;
+
+    if (paceBuffer == null) return '収入を設定してください';
+    if (paceBuffer <= 0) return 'ペースオーバー気味';
+
+    return '+¥${formatNumber(paceBuffer)} の余裕';
   }
 
   Widget _buildHeader() {
@@ -309,7 +388,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  /// アコーディオンカード
+  /// アコーディオンカード（アイコン+サマリー付き）
   Widget _buildAccordionCard({
     required String title,
     required String subtitle,
@@ -317,6 +396,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     required bool isPremium,
     required ValueChanged<bool> onExpansionChanged,
     required Widget content,
+    required IconData icon,
+    required String summary,
+    required String maskedSummary,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -337,32 +419,58 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               isExpanded: isExpanded,
               onExpansionChanged: onExpansionChanged,
               content: content,
+              icon: icon,
+              summary: summary,
             )
           : _buildLockedAccordion(
               title: title,
               subtitle: subtitle,
+              icon: icon,
+              maskedSummary: maskedSummary,
             ),
     );
   }
 
-  /// Premium ユーザー用: 開閉可能なアコーディオン
+  /// Premium ユーザー用: 開閉可能なアコーディオン（アイコン+サマリー付き）
   Widget _buildPremiumAccordion({
     required String title,
     required bool isExpanded,
     required ValueChanged<bool> onExpansionChanged,
     required Widget content,
+    required IconData icon,
+    required String summary,
   }) {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        title: Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withOpacity(0.9),
-            height: 1.4,
-          ),
+        leading: Icon(
+          icon,
+          size: 20,
+          color: AppColors.accentBlue.withOpacity(0.8),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary.withOpacity(0.9),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              summary,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary.withOpacity(0.8),
+                height: 1.3,
+              ),
+            ),
+          ],
         ),
         trailing: AnimatedRotation(
           turns: isExpanded ? 0.5 : 0,
@@ -375,52 +483,95 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         initiallyExpanded: isExpanded,
         onExpansionChanged: onExpansionChanged,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: [content],
       ),
     );
   }
 
-  /// Free ユーザー用: ロック表示（完全に非インタラクティブ）
+  /// Free ユーザー用: ロック表示（アイコン+マスクサマリー付き、タップでPremium画面へ）
   Widget _buildLockedAccordion({
     required String title,
     required String subtitle,
+    required IconData icon,
+    required String maskedSummary,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted.withOpacity(0.9),
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withOpacity(0.7),
-                    height: 1.4,
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PremiumScreen()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: AppColors.textMuted.withOpacity(0.5),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textMuted.withOpacity(0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    maskedSummary,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary.withOpacity(0.6),
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Plus バッジ
+            _buildPlusBadge(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Plus バッジ（ロックセクション用）
+  Widget _buildPlusBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Icon(
-            Icons.lock_open_outlined,
-            size: 17,
-            color: AppColors.textSecondary.withOpacity(0.4),
+            Icons.lock_outline,
+            size: 12,
+            color: AppColors.textMuted.withOpacity(0.7),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Plus',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textMuted.withOpacity(0.7),
+            ),
           ),
         ],
       ),
@@ -780,23 +931,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return ((value / 100).round() * 100);
   }
 
-  /// 日割り・ペース（実データ - 2段表示）
+  /// 日割り・ペース（実データ - 2段表示、経過日数ベース）
   Widget _buildPaceContent(AppState appState) {
     final categoryStats = appState.categoryStats;
     final totalThisMonth = appState.thisMonthTotal;
 
-    // サイクルの総日数を取得（開始日から終了日まで）
-    final cycleStart = appState.cycleStartDate;
-    final cycleEnd = appState.cycleEndDate;
-    final cycleDays = cycleEnd.difference(cycleStart).inDays + 1;
+    // 経過日数を取得（サイクル開始日〜今日、今日を含む）
+    final elapsedDays = _getElapsedDays(appState);
 
-    // カテゴリ別の日割り・週割りを計算
+    // カテゴリ別の日割り・週割りを計算（経過日数ベース）
     final items = <Map<String, dynamic>>[];
     for (final entry in categoryStats.entries) {
       final total = entry.value.totalAmount;
       if (total <= 0) continue; // 0円カテゴリは表示しない
 
-      final dailyPace = total / cycleDays;
+      final dailyPace = elapsedDays > 0 ? total / elapsedDays : 0.0;
       final weeklyPace = dailyPace * 7;
       items.add({
         'label': entry.key,
@@ -809,8 +958,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     // 合計降順でソート
     items.sort((a, b) => (b['total'] as int).compareTo(a['total'] as int));
 
-    // 全体の日割り・週割り
-    final totalDailyPace = totalThisMonth / cycleDays;
+    // 全体の日割り・週割り（経過日数ベース）
+    final totalDailyPace = elapsedDays > 0 ? totalThisMonth / elapsedDays : 0.0;
     final totalWeeklyPace = totalDailyPace * 7;
 
     // データがない場合
@@ -845,7 +994,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         // 4件以上ある場合は「すべて見る」ボタン
         if (items.length > 3)
           GestureDetector(
-            onTap: () => showAllCategoriesPaceSheet(context, items: items, monthDays: cycleDays),
+            onTap: () => showAllCategoriesPaceSheet(context, items: items, monthDays: elapsedDays),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
@@ -1737,32 +1886,4 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  /// 詳細（ダミーコンテンツ）
-  Widget _buildDetailContent() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.pie_chart_outline,
-            size: 48,
-            color: AppColors.textMuted.withOpacity(0.5),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'ここに円グラフや統計が入ります',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.textMuted,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
 }
