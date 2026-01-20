@@ -172,6 +172,14 @@ Currency format is stored in `AppState.currencyFormat` ('prefix' or 'suffix').
 - Variable expenses only (fixed costs excluded)
 - SQL aggregation: `DatabaseService.getMonthlyGradeBreakdownAll()`
 
+### Weekly Budget Card (今週あと使える)
+- Premium-only feature on home screen (`lib/widgets/home/weekly_budget_card.dart`)
+- Shows remaining budget for the week (today to Sunday) or until payday
+- Calculation: `(remainingBudget) × (periodDays / cycleRemainingDays)`
+- Over-budget state shows warning with orange styling
+- Free users see locked card that navigates to PremiumScreen on tap
+- AppState getter: `weeklyBudgetInfo` returns `{ amount, daysRemaining, endDate, isWeekMode, isOverBudget }`
+
 ### Analytics Accordion Sections (分析画面アコーディオン)
 Premium-only accordion sections with icon + 1-line summary:
 - **カテゴリ別の支出割合**: Pie chart + category list (top category summary)
@@ -180,6 +188,13 @@ Premium-only accordion sections with icon + 1-line summary:
 - **家計の余裕**: Pace buffer and upgrade suggestions
 
 Free users see masked summaries (e.g., "●●が最多", "¥---")
+Locked sections are tappable and navigate to PremiumScreen
+
+### Premium Screen (有料プランについて)
+- Access: Settings → 有料プランについて, or tap locked features
+- Non-subscribed view: Hero section, feature cards (horizontal scroll), plan selection, trial info, CTA
+- Subscribed view: Status card (green), current plan info, renewal date, upgrade option (monthly→yearly), subscription management link
+- Widget: `PremiumScreen` (`lib/screens/premium_screen.dart`)
 
 ### Home Screen Time Modes (時間別テーマ)
 HeroCard (`lib/widgets/home/hero_card.dart`) has three visual modes based on time:

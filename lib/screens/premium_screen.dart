@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../services/app_state.dart';
 
 /// プラン種別
 enum PlanType { monthly, yearly }
@@ -38,6 +40,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isPremium = context.watch<AppState>().isPremium;
+
     return Scaffold(
       backgroundColor: _screenBackground,
       body: SafeArea(
@@ -47,13 +51,306 @@ class _PremiumScreenState extends State<PremiumScreen> {
               _buildHeader(),
               _buildHeroSection(),
               _buildFeaturesSection(),
-              _buildPlanSection(),
-              _buildTrialInfo(),
-              _buildCtaButton(),
-              _buildFooter(),
+              if (!isPremium) ...[
+                _buildPlanSection(),
+                _buildTrialInfo(),
+                _buildCtaButton(),
+                _buildFooter(),
+              ] else ...[
+                _buildSubscribedSection(),
+              ],
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 加入中セクション
+  Widget _buildSubscribedSection() {
+    // TODO: 実際のサブスク情報はRevenueCat等から取得
+    // 仮データ（開発者モード用）
+    // ignore: dead_code を避けるためDateTime.now()を使用
+    final isYearlyPlan = DateTime.now().millisecondsSinceEpoch % 2 == 0
+        ? false  // 偶数秒: 月額プラン表示（アップグレードカードあり）
+        : true;  // 奇数秒: 年額プラン表示
+    final renewalDate = DateTime.now().add(const Duration(days: 30));
+    final renewalDateStr =
+        '${renewalDate.year}/${renewalDate.month.toString().padLeft(2, '0')}/${renewalDate.day.toString().padLeft(2, '0')}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          // 加入中ステータスカード
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _accentGreen.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _accentGreen.withOpacity(0.25),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                // チェックアイコン
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _accentGreen.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    size: 28,
+                    color: _accentGreen,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // タイトル
+                Text(
+                  'Plus に加入中',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _accentGreen,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // プラン情報
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                        label: '現在のプラン',
+                        value: isYearlyPlan ? '年額プラン（¥3,000/年）' : '月額プラン（¥300/月）',
+                      ),
+                      const SizedBox(height: 10),
+                      _buildInfoRow(
+                        label: '次回更新日',
+                        value: renewalDateStr,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 月額→年額へのアップグレードカード（月額プランの場合のみ）
+          if (!isYearlyPlan) ...[
+            const SizedBox(height: 16),
+            _buildUpgradeCard(),
+          ],
+
+          // サブスクリプション管理リンク
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: _openSubscriptionManagement,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _borderLight),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.settings_outlined,
+                        size: 20,
+                        color: _textSecondary,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'サブスクリプションを管理',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: _textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: _textMuted,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  /// プラン情報の行
+  Widget _buildInfoRow({required String label, required String value}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: _textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: _textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 年額プランへのアップグレードカード
+  Widget _buildUpgradeCard() {
+    return GestureDetector(
+      onTap: _handleUpgradeToYearly,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _accentGold.withOpacity(0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: _accentGold.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // アイコン
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_heroIconBgStart, _heroIconBgEnd],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.arrow_upward_rounded,
+                size: 24,
+                color: _accentGoldDark,
+              ),
+            ),
+            const SizedBox(width: 14),
+
+            // テキスト
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '年額プランに変更',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_accentGold, _accentGoldDark],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'おすすめ',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '2ヶ月分おトク（¥3,000/年）',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: _accentGreen,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 矢印
+            Icon(
+              Icons.chevron_right,
+              size: 22,
+              color: _textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 年額プランへのアップグレード処理
+  void _handleUpgradeToYearly() {
+    // TODO: RevenueCat / StoreKit 連携
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('年額プランへの変更処理を開始します'),
+        backgroundColor: _accentGold,
+      ),
+    );
+  }
+
+  /// サブスクリプション管理画面を開く
+  void _openSubscriptionManagement() {
+    // TODO: App Store / Google Play のサブスクリプション管理画面を開く
+    // iOS: App Store → アカウント → サブスクリプション
+    // Android: Google Play → 支払いと定期購入 → 定期購入
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('サブスクリプション管理画面を開きます'),
+        backgroundColor: _accentBlue,
       ),
     );
   }
@@ -158,32 +455,32 @@ class _PremiumScreenState extends State<PremiumScreen> {
   Widget _buildFeaturesSection() {
     final features = [
       _FeatureItem(
-        icon: Icons.pie_chart_outline,
+        icon: Icons.date_range_outlined,
         iconBgColor: _iconBgBlue,
         iconColor: _accentBlue,
+        title: '今週どれくらい\n使える？',
+        desc: '週単位で予算を把握',
+      ),
+      _FeatureItem(
+        icon: Icons.pie_chart_outline,
+        iconBgColor: _iconBgGreen,
+        iconColor: _accentGreen,
         title: 'カテゴリ別\n支出割合',
         desc: 'どこにお金を使ってる？',
       ),
       _FeatureItem(
         icon: Icons.show_chart,
-        iconBgColor: _iconBgGreen,
-        iconColor: _accentGreen,
+        iconBgColor: _iconBgOrange,
+        iconColor: _accentGold,
         title: '支出ペース\nグラフ',
         desc: '予算のペースを可視化',
       ),
       _FeatureItem(
         icon: Icons.account_balance_wallet_outlined,
-        iconBgColor: _iconBgOrange,
-        iconColor: _accentGold,
-        title: '家計の\n余裕',
-        desc: 'あといくら使える？',
-      ),
-      _FeatureItem(
-        icon: Icons.bar_chart,
         iconBgColor: _iconBgPurple,
         iconColor: _accentPurple,
-        title: 'カテゴリ\n詳細分析',
-        desc: '12ヶ月のトレンド',
+        title: '家計の\n余裕',
+        desc: 'あといくら使える？',
       ),
     ];
 

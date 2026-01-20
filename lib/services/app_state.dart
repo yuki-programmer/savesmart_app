@@ -266,6 +266,69 @@ class AppState extends ChangeNotifier {
     return _financialCycle.getDaysRemaining(now);
   }
 
+  /// 週間バジェット情報を取得（Premium機能）
+  /// 返り値: { 'amount': int?, 'daysRemaining': int, 'endDate': DateTime, 'isWeekMode': bool, 'isOverBudget': bool }
+  Map<String, dynamic> get weeklyBudgetInfo {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final cycleEnd = cycleEndDate;
+    final remainingDays = remainingDaysInMonth;
+
+    // 今週の日曜日を計算（今日が日曜なら今日、それ以外は次の日曜）
+    final daysUntilSunday = DateTime.sunday - today.weekday;
+    final nextSunday = daysUntilSunday <= 0
+        ? today.add(Duration(days: daysUntilSunday + 7))
+        : today.add(Duration(days: daysUntilSunday));
+
+    // 対象終了日: 「今週日曜」と「サイクル終了日」の早い方
+    final targetEndDate = nextSunday.isBefore(cycleEnd) ? nextSunday : cycleEnd;
+    final isWeekMode = nextSunday.isBefore(cycleEnd) || nextSunday.isAtSameMomentAs(cycleEnd);
+
+    // 今日から対象終了日までの日数（今日を含む）
+    final daysToTarget = targetEndDate.difference(today).inDays + 1;
+
+    // 日割り額の計算（dynamicTomorrowForecast と同様のロジック）
+    final income = thisMonthAvailableAmount;
+    if (income == null) {
+      return {
+        'amount': null,
+        'daysRemaining': daysToTarget,
+        'endDate': targetEndDate,
+        'isWeekMode': isWeekMode,
+        'isOverBudget': false,
+      };
+    }
+
+    // 今日までの支出合計
+    final variableExpenseTotal = thisMonthTotal;
+
+    // 現在の残り予算 = 予算 - 今日までの支出 - 固定費
+    final remainingBudget = income - variableExpenseTotal - fixedCostsTotal;
+
+    // 予算オーバー判定
+    if (remainingBudget <= 0) {
+      return {
+        'amount': null,
+        'daysRemaining': daysToTarget,
+        'endDate': targetEndDate,
+        'isWeekMode': isWeekMode,
+        'isOverBudget': true,
+      };
+    }
+
+    // 日割り額 × 対象日数
+    final dailyAllowance = remainingBudget / remainingDays;
+    final weeklyAmount = (dailyAllowance * daysToTarget).round();
+
+    return {
+      'amount': weeklyAmount,
+      'daysRemaining': daysToTarget,
+      'endDate': targetEndDate,
+      'isWeekMode': isWeekMode,
+      'isOverBudget': false,
+    };
+  }
+
   /// 昨日までの支出合計を取得（サイクル内、同期版 - メモリ内データ使用）
   int get _expenseTotalUntilYesterday {
     final now = DateTime.now();

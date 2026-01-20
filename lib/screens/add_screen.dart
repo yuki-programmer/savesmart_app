@@ -433,18 +433,21 @@ class _AddScreenState extends State<AddScreen> {
         // 単位切替チップ
         _buildUnitSelector(),
         const SizedBox(height: 8),
-        // ホイールピッカー
-        WheelPicker(
-          key: ValueKey('expense_${_expenseUnit}_$_expenseAmount'),
-          unit: _expenseUnit,
-          maxMultiplier: 10000000 ~/ _expenseUnit, // 上限1000万円で統一
-          initialValue: _expenseAmount,
-          highlightColor: AppColors.bgPrimary,
-          onChanged: (value) {
-            setState(() {
-              _expenseAmount = value;
-            });
-          },
+        // ホイールピッカー（クイック登録と同じ高さ100に統一）
+        SizedBox(
+          height: 100,
+          child: WheelPicker(
+            key: ValueKey('expense_${_expenseUnit}_$_expenseAmount'),
+            unit: _expenseUnit,
+            maxMultiplier: 10000000 ~/ _expenseUnit, // 上限1000万円で統一
+            initialValue: _expenseAmount,
+            highlightColor: AppColors.bgPrimary,
+            onChanged: (value) {
+              setState(() {
+                _expenseAmount = value;
+              });
+            },
+          ),
         ),
       ],
     );

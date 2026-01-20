@@ -13,6 +13,8 @@ import '../utils/formatters.dart';
 import '../widgets/quick_entry/quick_entry_edit_modal.dart';
 import '../widgets/night_reflection_dialog.dart';
 import '../widgets/home/hero_card.dart';
+import '../widgets/home/weekly_budget_card.dart';
+import 'premium_screen.dart';
 import 'quick_entry_manage_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
@@ -121,6 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 20),
                         // ヒーローカード（今日使えるお金）- Selector化
                         _buildHeroCardSection(),
+                        const SizedBox(height: 12),
+                        // 週間バジェットカード（Premium機能）
+                        _buildWeeklyBudgetSection(),
                         const SizedBox(height: 16),
                         // 今月サマリーカード - Selector化
                         _buildMonthlySummarySection(),
@@ -161,6 +166,41 @@ class _HomeScreenState extends State<HomeScreen> {
           hasOpenedReflection: _hasOpenedReflectionToday,
           onTapReflection: () => _showNightReflectionDialog(appState),
           currencyFormat: data.currencyFormat,
+        );
+      },
+    );
+  }
+
+  /// 週間バジェットセクション（Premium機能）
+  Widget _buildWeeklyBudgetSection() {
+    return Selector<AppState, _WeeklyBudgetData>(
+      selector: (_, appState) {
+        final info = appState.weeklyBudgetInfo;
+        return _WeeklyBudgetData(
+          amount: info['amount'] as int?,
+          daysRemaining: info['daysRemaining'] as int,
+          endDate: info['endDate'] as DateTime,
+          isWeekMode: info['isWeekMode'] as bool,
+          isOverBudget: info['isOverBudget'] as bool,
+          isPremium: appState.isPremium,
+          currencyFormat: appState.currencyFormat,
+        );
+      },
+      builder: (context, data, child) {
+        return WeeklyBudgetCard(
+          amount: data.amount,
+          daysRemaining: data.daysRemaining,
+          endDate: data.endDate,
+          isWeekMode: data.isWeekMode,
+          isOverBudget: data.isOverBudget,
+          isPremium: data.isPremium,
+          currencyFormat: data.currencyFormat,
+          onTapLocked: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PremiumScreen()),
+            );
+          },
         );
       },
     );
@@ -1027,6 +1067,50 @@ class _HeroCardData {
       fixedTodayAllowance.hashCode ^
       dynamicTomorrowForecast.hashCode ^
       todayTotal.hashCode ^
+      currencyFormat.hashCode;
+}
+
+/// 週間バジェット用データ
+class _WeeklyBudgetData {
+  final int? amount;
+  final int daysRemaining;
+  final DateTime endDate;
+  final bool isWeekMode;
+  final bool isOverBudget;
+  final bool isPremium;
+  final String currencyFormat;
+
+  const _WeeklyBudgetData({
+    required this.amount,
+    required this.daysRemaining,
+    required this.endDate,
+    required this.isWeekMode,
+    required this.isOverBudget,
+    required this.isPremium,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _WeeklyBudgetData &&
+          runtimeType == other.runtimeType &&
+          amount == other.amount &&
+          daysRemaining == other.daysRemaining &&
+          endDate == other.endDate &&
+          isWeekMode == other.isWeekMode &&
+          isOverBudget == other.isOverBudget &&
+          isPremium == other.isPremium &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode =>
+      amount.hashCode ^
+      daysRemaining.hashCode ^
+      endDate.hashCode ^
+      isWeekMode.hashCode ^
+      isOverBudget.hashCode ^
+      isPremium.hashCode ^
       currencyFormat.hashCode;
 }
 
