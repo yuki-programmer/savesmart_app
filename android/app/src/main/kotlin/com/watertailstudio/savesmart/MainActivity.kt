@@ -1,4 +1,4 @@
-package com.example.save_smart_app
+package com.watertailstudio.savesmart
 
 import io.flutter.embedding.android.FlutterActivity
 

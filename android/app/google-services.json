@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "913035158911",
+    "project_id": "savesmart-69d72",
+    "storage_bucket": "savesmart-69d72.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913035158911:android:59281b96b1c03eb5ab664a",
+        "android_client_info": {
+          "package_name": "com.watertailstudio.savesmart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmf_ezEXu6WM6Gsr6n9O0fzh1DRrgKhU8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

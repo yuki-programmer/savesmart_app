@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'config/theme.dart';
+import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_screen.dart';
 import 'screens/analytics_screen.dart';
@@ -12,7 +15,7 @@ import 'widgets/bottom_nav.dart';
 import 'widgets/scheduled_expense_confirmation_dialog.dart';
 import 'services/app_state.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Windows/Linux/macOSデスクトップではFFI初期化が必要
@@ -20,7 +23,22 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await _ensureAnonymousAuth();
   runApp(const SaveSmartApp());
+}
+
+Future<void> _ensureAnonymousAuth() async {
+  try {
+    final auth = FirebaseAuth.instance;
+    if (auth.currentUser == null) {
+      await auth.signInAnonymously();
+    }
+  } catch (_) {
+    // Allow app to continue even if auth is unavailable.
+  }
 }
 
 class SaveSmartApp extends StatelessWidget {

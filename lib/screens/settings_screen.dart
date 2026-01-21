@@ -9,6 +9,7 @@ import '../services/database_service.dart';
 import '../services/performance_monitor.dart';
 import 'category_manage_screen.dart';
 import 'premium_screen.dart';
+import 'referral_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -120,6 +121,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // 有料プランセクション
               _buildPremiumPlanCard(appState),
+              const SizedBox(height: 24),
+
+              // 友達紹介セクション
+              _buildSectionHeader('友達紹介'),
+              const SizedBox(height: 12),
+              _buildReferralCard(),
               const SizedBox(height: 24),
 
               // アプリ情報セクション
@@ -1019,6 +1026,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReferralCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ReferralScreen(),
+            ),
+          );
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          child: Row(
+            children: [
+              Icon(
+                Icons.card_giftcard_outlined,
+                size: 20,
+                color: AppColors.accentGreen.withOpacity(0.8),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '友達紹介でPremium延長',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textPrimary.withOpacity(0.9),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '紹介コードの発行・入力はこちら',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textMuted.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: AppColors.textMuted.withOpacity(0.5),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
