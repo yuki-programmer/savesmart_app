@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -8,6 +9,7 @@ import 'screens/home_screen.dart';
 import 'screens/add_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'widgets/bottom_nav.dart';
+import 'widgets/scheduled_expense_confirmation_dialog.dart';
 import 'services/app_state.dart';
 
 void main() {
@@ -37,6 +39,16 @@ class SaveSmartApp extends StatelessWidget {
       child: MaterialApp(
         title: 'SaveSmart',
         debugShowCheckedModeBanner: false,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('ja', 'JP'),
+          Locale('en', 'US'),
+        ],
+        locale: const Locale('ja', 'JP'),
         theme: ThemeData(
           scaffoldBackgroundColor: AppColors.bgPrimary,
           textTheme: GoogleFonts.interTextTheme(),
@@ -59,6 +71,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  bool _hasCheckedOverdueExpenses = false;
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -70,6 +83,24 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _currentIndex = index;
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkOverdueScheduledExpenses();
+  }
+
+  Future<void> _checkOverdueScheduledExpenses() async {
+    if (_hasCheckedOverdueExpenses) return;
+    _hasCheckedOverdueExpenses = true;
+
+    // AppStateの初期化完了を待つ
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted) return;
+
+    await ScheduledExpenseConfirmationDialog.showIfNeeded(context);
   }
 
   @override

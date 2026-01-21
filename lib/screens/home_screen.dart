@@ -3,12 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/theme.dart';
-import '../config/constants.dart';
 import '../config/home_constants.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
 import '../models/fixed_cost.dart';
 import '../models/quick_entry.dart';
+import '../models/scheduled_expense.dart';
+import 'add_scheduled_expense_screen.dart';
+import 'scheduled_expenses_list_screen.dart';
 import '../utils/formatters.dart';
 import '../widgets/quick_entry/quick_entry_edit_modal.dart';
 import '../widgets/night_reflection_dialog.dart';
@@ -133,6 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         // クイック登録セクション - Selector化
                         _buildQuickEntrySectionWithSelector(),
                         const SizedBox(height: 16),
+                        // 予定支出セクション（Premium機能）
+                        _buildScheduledExpensesSection(),
                         // 日々の出費 - Selector化
                         _buildRecentExpensesSection(),
                         const SizedBox(height: 28),
@@ -201,6 +205,310 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(builder: (_) => const PremiumScreen()),
             );
           },
+        );
+      },
+    );
+  }
+
+  /// 予定支出セクション（Premium機能）
+  Widget _buildScheduledExpensesSection() {
+    return Selector<AppState, _ScheduledExpensesData>(
+      selector: (_, appState) => _ScheduledExpensesData(
+        scheduledExpenses: appState.unconfirmedScheduledExpenses,
+        isPremium: appState.isPremium,
+        currencyFormat: appState.currencyFormat,
+      ),
+      builder: (context, data, child) {
+        // Premiumでない場合、または予定支出がない場合は非表示
+        if (!data.isPremium || data.scheduledExpenses.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final allExpenses = data.scheduledExpenses;
+        final hasMore = allExpenses.length > 2;
+        final displayExpenses = hasMore ? allExpenses.take(2).toList() : allExpenses;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // セクションヘッダー
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '予定している支出',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                if (hasMore)
+                  GestureDetector(
+                    onTap: () => _showAllScheduledExpenses(allExpenses, data.currencyFormat),
+                    child: Text(
+                      'すべて見る',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accentBlue,
+                      ),
+                    ),
+                  )
+                else
+                  Text(
+                    '${allExpenses.length}件',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // 予定支出リスト
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.bgCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Column(
+                children: displayExpenses.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final scheduled = entry.value;
+                  final isLast = index == displayExpenses.length - 1;
+
+                  return _buildScheduledExpenseItem(
+                    scheduled,
+                    data.currencyFormat,
+                    isLast: isLast,
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
+    );
+  }
+
+  /// すべての予定支出を表示
+  void _showAllScheduledExpenses(List<ScheduledExpense> expenses, String currencyFormat) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ScheduledExpensesListScreen(
+          expenses: expenses,
+          currencyFormat: currencyFormat,
+        ),
+      ),
+    );
+  }
+
+  /// 予定支出アイテム
+  Widget _buildScheduledExpenseItem(
+    ScheduledExpense scheduled,
+    String currencyFormat, {
+    bool isLast = false,
+  }) {
+    final weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    final date = scheduled.scheduledDate;
+    final weekday = weekdays[date.weekday - 1];
+    final dateStr = '${date.month}/${date.day}（$weekday）';
+
+    // グレードの色、ラベル、アイコン
+    Color gradeColor;
+    String gradeLabel;
+    IconData gradeIcon;
+    switch (scheduled.grade) {
+      case 'saving':
+        gradeColor = AppColors.accentGreen;
+        gradeLabel = '節約';
+        gradeIcon = Icons.savings_outlined;
+        break;
+      case 'reward':
+        gradeColor = AppColors.accentOrange;
+        gradeLabel = 'ご褒美';
+        gradeIcon = Icons.star_outline;
+        break;
+      default:
+        gradeColor = AppColors.accentBlue;
+        gradeLabel = '標準';
+        gradeIcon = Icons.balance_outlined;
+    }
+
+    return GestureDetector(
+      onTap: () => _showScheduledExpenseActionSheet(scheduled),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(color: AppColors.borderSubtle),
+                ),
+        ),
+        child: Row(
+          children: [
+            // カテゴリアイコン
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: gradeColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                gradeIcon,
+                size: 18,
+                color: gradeColor,
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // カテゴリ名と日付
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          scheduled.memo?.isNotEmpty == true
+                              ? scheduled.memo!
+                              : scheduled.category,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      // グレードバッジ
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: gradeColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          gradeLabel,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: gradeColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dateStr,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 金額
+            Text(
+              formatCurrency(scheduled.amount, currencyFormat),
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 予定支出アクションシート
+  void _showScheduledExpenseActionSheet(ScheduledExpense scheduled) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ハンドル
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textMuted.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 編集
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+                  title: Text(
+                    '編集',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddScheduledExpenseScreen(
+                          editingExpense: scheduled,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // 削除
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: AppColors.accentRed),
+                  title: Text(
+                    '削除',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: AppColors.accentRed,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final appState = context.read<AppState>();
+                    await appState.deleteScheduledExpense(scheduled.id!);
+                  },
+                ),
+
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -357,12 +665,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          // 収入/出費（サブ）
+          // 収入/支出（サブ）
           Row(
             children: [
               _buildMetric('収入', data.usableAmount ?? 0, AppColors.accentBlue, data.currencyFormat),
               const SizedBox(width: 24),
-              _buildMetric('出費', monthlyExpenseTotal, Colors.grey[700]!, data.currencyFormat),
+              _buildMetric('支出', monthlyExpenseTotal, Colors.grey[700]!, data.currencyFormat),
             ],
           ),
           const SizedBox(height: 8),
@@ -689,7 +997,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '日々の出費',
+              '日々の支出',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -912,6 +1220,23 @@ class _HomeScreenState extends State<HomeScreen> {
     final showCategory = expense.category != 'その他';
     final dateLabel = _getDateLabel(expense.createdAt);
 
+    // グレードの色とアイコン
+    Color gradeColor;
+    IconData gradeIcon;
+    switch (expense.grade) {
+      case 'saving':
+        gradeColor = AppColors.accentGreen;
+        gradeIcon = Icons.savings_outlined;
+        break;
+      case 'reward':
+        gradeColor = AppColors.accentOrange;
+        gradeIcon = Icons.star_outline;
+        break;
+      default:
+        gradeColor = AppColors.accentBlue;
+        gradeIcon = Icons.balance_outlined;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
@@ -928,6 +1253,21 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
+          // グレードアイコン
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: gradeColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              gradeIcon,
+              size: 18,
+              color: gradeColor,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -960,20 +1300,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                formatCurrency(expense.amount, currencyFormat),
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary.withOpacity(0.9),
-                ),
-              ),
-              const SizedBox(height: 3),
-              _buildTypeBadge(expense.grade),
-            ],
+          Text(
+            formatCurrency(expense.amount, currencyFormat),
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary.withOpacity(0.9),
+            ),
           ),
         ],
       ),
@@ -993,46 +1326,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       return '${date.month}/${date.day}';
     }
-  }
-
-  Widget _buildTypeBadge(String type) {
-    Color bgColor;
-    Color textColor;
-    String label = AppConstants.typeLabels[type] ?? type;
-
-    switch (type) {
-      case 'saving':
-        bgColor = AppColors.accentGreenLight.withOpacity(0.7);
-        textColor = AppColors.accentGreen;
-        break;
-      case 'standard':
-        bgColor = AppColors.accentBlueLight.withOpacity(0.7);
-        textColor = AppColors.accentBlue;
-        break;
-      case 'reward':
-        bgColor = AppColors.accentPurpleLight.withOpacity(0.7);
-        textColor = AppColors.accentPurple;
-        break;
-      default:
-        bgColor = AppColors.textMuted.withOpacity(0.08);
-        textColor = AppColors.textMuted;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: textColor,
-        ),
-      ),
-    );
   }
 }
 
@@ -1235,6 +1528,42 @@ class _FixedCostsData {
   int get hashCode =>
       fixedCosts.length.hashCode ^
       totalFixedCosts.hashCode ^
+      currencyFormat.hashCode;
+
+  bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
+/// 予定支出用データ
+class _ScheduledExpensesData {
+  final List<ScheduledExpense> scheduledExpenses;
+  final bool isPremium;
+  final String currencyFormat;
+
+  const _ScheduledExpensesData({
+    required this.scheduledExpenses,
+    required this.isPremium,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _ScheduledExpensesData &&
+          runtimeType == other.runtimeType &&
+          _listEquals(scheduledExpenses, other.scheduledExpenses) &&
+          isPremium == other.isPremium &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode =>
+      scheduledExpenses.length.hashCode ^
+      isPremium.hashCode ^
       currencyFormat.hashCode;
 
   bool _listEquals<T>(List<T> a, List<T> b) {

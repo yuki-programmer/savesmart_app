@@ -6,6 +6,7 @@ import '../models/budget.dart';
 import '../models/fixed_cost.dart';
 import '../models/fixed_cost_category.dart';
 import '../models/quick_entry.dart';
+import '../models/scheduled_expense.dart';
 import '../config/constants.dart';
 import '../core/dev_config.dart';
 import '../core/financial_cycle.dart';
@@ -34,6 +35,7 @@ class AppState extends ChangeNotifier {
   List<FixedCost> _fixedCosts = [];
   List<FixedCostCategory> _fixedCostCategories = [];
   List<QuickEntry> _quickEntries = [];
+  List<ScheduledExpense> _scheduledExpenses = [];
   Budget? _currentBudget;
   bool _isLoading = true;
 
@@ -91,6 +93,7 @@ class AppState extends ChangeNotifier {
   List<FixedCost> get fixedCosts => _fixedCosts;
   List<FixedCostCategory> get fixedCostCategories => _fixedCostCategories;
   List<QuickEntry> get quickEntries => _quickEntries;
+  List<ScheduledExpense> get scheduledExpenses => _scheduledExpenses;
   Budget? get currentBudget => _currentBudget;
   bool get isLoading => _isLoading;
 
@@ -243,8 +246,11 @@ class AppState extends ChangeNotifier {
     // 今日までの支出合計
     final variableExpenseTotal = thisMonthTotal;
 
-    // 現在の残り予算 = 予算 - 今日までの支出 - 固定費
-    final remainingBudget = income - variableExpenseTotal - fixedCostsTotal;
+    // 現在サイクル内の未確定予定支出合計
+    final scheduledTotal = _scheduledExpensesTotalInCurrentCycle;
+
+    // 現在の残り予算 = 予算 - 今日までの支出 - 固定費 - 予定支出
+    final remainingBudget = income - variableExpenseTotal - fixedCostsTotal - scheduledTotal;
 
     // 明日からサイクル終了日までの日数
     final remainingDaysFromTomorrow = _financialCycle.getDaysRemaining(now) - 1;
@@ -302,8 +308,11 @@ class AppState extends ChangeNotifier {
     // 今日までの支出合計
     final variableExpenseTotal = thisMonthTotal;
 
-    // 現在の残り予算 = 予算 - 今日までの支出 - 固定費
-    final remainingBudget = income - variableExpenseTotal - fixedCostsTotal;
+    // 現在サイクル内の未確定予定支出合計
+    final scheduledTotal = _scheduledExpensesTotalInCurrentCycle;
+
+    // 現在の残り予算 = 予算 - 今日までの支出 - 固定費 - 予定支出
+    final remainingBudget = income - variableExpenseTotal - fixedCostsTotal - scheduledTotal;
 
     // 予算オーバー判定
     if (remainingBudget <= 0) {
@@ -364,13 +373,30 @@ class AppState extends ChangeNotifier {
     // 昨日までの支出
     final expensesUntilYesterday = _expenseTotalUntilYesterday;
 
-    // 残り予算 = 予算 - 昨日までの支出 - 固定費
-    final remainingBudget = income - expensesUntilYesterday - fixedCostsTotal;
+    // 現在サイクル内の未確定予定支出合計（同期計算）
+    final scheduledTotal = _scheduledExpensesTotalInCurrentCycle;
+
+    // 残り予算 = 予算 - 昨日までの支出 - 固定費 - 予定支出
+    final remainingBudget = income - expensesUntilYesterday - fixedCostsTotal - scheduledTotal;
 
     // 今日を含む残り日数
     final remainingDays = remainingDaysInMonth;
 
     return (remainingBudget / remainingDays).round();
+  }
+
+  /// 現在サイクル内の未確定予定支出の合計（同期計算、キャッシュ使用）
+  int get _scheduledExpensesTotalInCurrentCycle {
+    final now = DateTime.now();
+    final cycleStart = _financialCycle.getStartDate(now);
+    final cycleEnd = _financialCycle.getEndDate(now);
+
+    return _scheduledExpenses
+        .where((se) =>
+            !se.confirmed &&
+            !se.scheduledDate.isBefore(cycleStart) &&
+            !se.scheduledDate.isAfter(cycleEnd))
+        .fold(0, (sum, se) => sum + se.amount);
   }
 
   /// 今日の固定予算をロード（なければ計算して保存）
@@ -503,6 +529,7 @@ class AppState extends ChangeNotifier {
         _db.getFixedCostCategories(),
         _db.getCurrentBudget(),
         _db.getQuickEntries(),
+        _db.getUnconfirmedScheduledExpenses(),
       ]);
       perfMonitor.stopTimer('AppState.loadData.queries');
 
@@ -512,6 +539,7 @@ class AppState extends ChangeNotifier {
       _fixedCostCategories = results[3] as List<FixedCostCategory>;
       _currentBudget = results[4] as Budget?;
       _quickEntries = results[5] as List<QuickEntry>;
+      _scheduledExpenses = results[6] as List<ScheduledExpense>;
 
       // サイクル収入をロード（FinancialCycleロード後に実行）
       await _loadCurrentCycleIncome();
@@ -573,6 +601,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> _reloadQuickEntries() async {
     _quickEntries = await _db.getQuickEntries();
+    notifyListeners();
+  }
+
+  Future<void> _reloadScheduledExpenses() async {
+    _scheduledExpenses = await _db.getUnconfirmedScheduledExpenses();
     notifyListeners();
   }
 
@@ -1847,6 +1880,104 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error calculating cycle comparison diff: $e');
       return null;
+    }
+  }
+
+  // ========================================
+  // 予定支出（ScheduledExpense）
+  // ========================================
+
+  /// 未確定の予定支出一覧（予定日昇順）
+  List<ScheduledExpense> get unconfirmedScheduledExpenses => _scheduledExpenses;
+
+  /// 期限切れの予定支出を取得（予定日が今日より前）
+  Future<List<ScheduledExpense>> getOverdueScheduledExpenses() async {
+    return await _db.getOverdueScheduledExpenses();
+  }
+
+  /// 現在サイクル内の未確定予定支出の合計金額
+  Future<int> getScheduledExpensesTotalInCurrentCycle() async {
+    return await _db.getScheduledExpensesTotalInCycle(
+      cycleStartDate: cycleStartDate,
+      cycleEndDate: cycleEndDate,
+    );
+  }
+
+  /// 予定支出を追加
+  Future<bool> addScheduledExpense(ScheduledExpense scheduledExpense) async {
+    try {
+      await _db.insertScheduledExpense(scheduledExpense);
+      await _reloadScheduledExpenses();
+      return true;
+    } catch (e) {
+      debugPrint('Error adding scheduled expense: $e');
+      return false;
+    }
+  }
+
+  /// 予定支出を更新
+  Future<bool> updateScheduledExpense(ScheduledExpense scheduledExpense) async {
+    try {
+      await _db.updateScheduledExpense(scheduledExpense);
+      await _reloadScheduledExpenses();
+      return true;
+    } catch (e) {
+      debugPrint('Error updating scheduled expense: $e');
+      return false;
+    }
+  }
+
+  /// 予定支出を削除
+  Future<bool> deleteScheduledExpense(int id) async {
+    try {
+      await _db.deleteScheduledExpense(id);
+      await _reloadScheduledExpenses();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting scheduled expense: $e');
+      return false;
+    }
+  }
+
+  /// 予定支出を確定（expensesテーブルに登録）
+  Future<bool> confirmScheduledExpense(ScheduledExpense scheduledExpense) async {
+    try {
+      await _db.confirmScheduledExpense(scheduledExpense);
+      await _reloadScheduledExpenses();
+      await _reloadExpenses();
+      return true;
+    } catch (e) {
+      debugPrint('Error confirming scheduled expense: $e');
+      return false;
+    }
+  }
+
+  /// 予定支出を修正して確定
+  Future<bool> confirmScheduledExpenseWithModification(
+    ScheduledExpense original, {
+    required int newAmount,
+    String? newCategory,
+    String? newGrade,
+    String? newMemo,
+  }) async {
+    try {
+      // 修正された予定支出を作成
+      final modified = original.copyWith(
+        amount: newAmount,
+        category: newCategory ?? original.category,
+        grade: newGrade ?? original.grade,
+        memo: newMemo ?? original.memo,
+      );
+
+      // 修正内容で確定
+      await _db.updateScheduledExpense(modified);
+      await _db.confirmScheduledExpense(modified);
+      await _reloadScheduledExpenses();
+      await _reloadExpenses();
+      return true;
+    } catch (e) {
+      debugPrint('Error confirming modified scheduled expense: $e');
+      return false;
     }
   }
 }

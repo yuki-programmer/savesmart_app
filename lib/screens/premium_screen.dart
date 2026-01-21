@@ -453,7 +453,17 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   /// 機能カードセクション（横スクロール）
   Widget _buildFeaturesSection() {
+    const iconBgCyan = Color(0xFFECFEFF);
+    const accentCyan = Color(0xFF06B6D4);
+
     final features = [
+      _FeatureItem(
+        icon: Icons.event_note_outlined,
+        iconBgColor: iconBgCyan,
+        iconColor: accentCyan,
+        title: '将来の支出を\n先取り登録',
+        desc: 'お金の計画をよりスマートに',
+      ),
       _FeatureItem(
         icon: Icons.date_range_outlined,
         iconBgColor: _iconBgBlue,

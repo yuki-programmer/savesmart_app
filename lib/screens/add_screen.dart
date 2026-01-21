@@ -10,6 +10,8 @@ import '../services/app_state.dart';
 import '../models/expense.dart';
 import 'fixed_cost_screen.dart';
 import 'category_manage_screen.dart';
+import 'add_scheduled_expense_screen.dart';
+import 'premium_screen.dart';
 
 /// 支出記録画面（1ページ完結型）
 /// 入力順: カテゴリ → 金額 → 支出タイプ
@@ -147,11 +149,14 @@ class _AddScreenState extends State<AddScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 予定支出登録ボタン（Premium機能）
+                    _buildScheduledExpenseButton(),
+                    const SizedBox(height: 10),
+                    // 固定費登録ボタン
+                    _buildFixedCostButton(),
+                    const SizedBox(height: 16),
                     // ① カテゴリ選択
                     _buildCategorySection(),
-                    const SizedBox(height: 10),
-                    // 固定費リンク（カテゴリ直下）
-                    _buildFixedCostLink(),
                     const SizedBox(height: 16),
                     // スマート・コンボ予測（カテゴリ選択後に表示）
                     if (_selectedCategory != null) _buildSmartComboSection(),
@@ -173,6 +178,87 @@ class _AddScreenState extends State<AddScreen> {
             ),
             // ⑤ 登録ボタン（固定）
             _buildSubmitButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 予定支出登録ボタン（Premium機能）
+  Widget _buildScheduledExpenseButton() {
+    final isPremium = context.watch<AppState>().isPremium;
+
+    return GestureDetector(
+      onTap: () {
+        if (isPremium) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddScheduledExpenseScreen(),
+            ),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PremiumScreen(),
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isPremium
+              ? AppColors.accentBlue.withOpacity(0.08)
+              : AppColors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isPremium
+                ? AppColors.accentBlue.withOpacity(0.2)
+                : AppColors.borderSubtle,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.event_note_outlined,
+              size: 20,
+              color: isPremium ? AppColors.accentBlue : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '将来の支出を登録',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isPremium ? AppColors.accentBlue : AppColors.textSecondary,
+                ),
+              ),
+            ),
+            if (!isPremium)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.accentOrange.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Plus',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.accentOrange,
+                  ),
+                ),
+              ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: isPremium ? AppColors.accentBlue : AppColors.textMuted,
+            ),
           ],
         ),
       ),
@@ -966,8 +1052,8 @@ class _AddScreenState extends State<AddScreen> {
     });
   }
 
-  /// 固定費リンク
-  Widget _buildFixedCostLink() {
+  /// 固定費登録ボタン（将来の支出と同じスタイル）
+  Widget _buildFixedCostButton() {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
@@ -977,29 +1063,36 @@ class _AddScreenState extends State<AddScreen> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.borderSubtle,
+          ),
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.receipt_long_outlined,
-              size: 16,
-              color: AppColors.textSecondary.withOpacity(0.7),
+              size: 20,
+              color: AppColors.textSecondary,
             ),
-            const SizedBox(width: 6),
-            Text(
-              '固定費を登録する',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary.withOpacity(0.8),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '固定費を登録',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
-            const SizedBox(width: 4),
             Icon(
               Icons.chevron_right,
-              size: 18,
-              color: AppColors.textSecondary.withOpacity(0.5),
+              size: 20,
+              color: AppColors.textMuted,
             ),
           ],
         ),

@@ -48,8 +48,8 @@ DatabaseService (Singleton)
 SQLite Database (savesmart.db)
 ```
 
-### Database Schema (Version 8)
-Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`, `quick_entries`, `daily_budgets`, `cycle_incomes`
+### Database Schema (Version 9)
+Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`, `quick_entries`, `daily_budgets`, `cycle_incomes`, `scheduled_expenses`
 
 Key fields:
 - `expenses.grade`: 'saving' | 'standard' | 'reward'
@@ -58,11 +58,13 @@ Key fields:
 - `quick_entries`: Quick entry templates (title, category, amount, grade, sort_order)
 - `daily_budgets`: Fixed daily allowance per date (date PK, fixed_amount)
 - `cycle_incomes`: Cycle-based income (cycle_key, main_income, sub_income, sub_income_name)
+- `scheduled_expenses`: Future planned expenses (amount, category, grade, memo, scheduled_date, confirmed, confirmed_at)
 
 Indices:
 - `idx_expenses_created_at`: Optimizes date-range queries
 - `idx_expenses_category_created_at`: Optimizes category+date aggregation
 - `idx_cycle_incomes_cycle_key`: Optimizes cycle income lookup
+- `idx_scheduled_expenses_date`: Optimizes scheduled date queries
 
 ## Key Directories
 
@@ -86,6 +88,7 @@ lib/
 - Typography: Google Fonts (Inter for UI, IBM Plex Sans for numbers)
 - Colors: Defined in `AppColors` class (`lib/config/theme.dart`)
 - Grade colors: Green (節約/saving), Blue (標準/standard), Orange (ご褒美/reward)
+- Grade icons: `Icons.savings_outlined` (節約), `Icons.balance_outlined` (標準), `Icons.star_outline` (ご褒美)
 - Icons: Material Icons with `_outlined` variants
 
 ## Navigation
@@ -180,6 +183,23 @@ Currency format is stored in `AppState.currencyFormat` ('prefix' or 'suffix').
 - Free users see locked card that navigates to PremiumScreen on tap
 - AppState getter: `weeklyBudgetInfo` returns `{ amount, daysRemaining, endDate, isWeekMode, isOverBudget }`
 
+### Scheduled Expenses (予定支出)
+- Premium-only feature for registering future planned expenses
+- Entry point: "将来の支出を登録" button in Add screen (top, same style as fixed cost button)
+- Home screen section: "予定している支出" between quick entries and daily expenses
+  - Shows max 2 items; "すべて見る" button when 3+ items
+  - Grade icon + color displayed for each item
+- Daily allowance calculation: Subtracts scheduled expenses total from remaining budget
+- Confirmation flow: App startup shows dialog for overdue (past) unconfirmed expenses
+  - No skip option - user must confirm or modify each one
+  - Confirmation converts scheduled expense to actual expense
+- Key files:
+  - Model: `lib/models/scheduled_expense.dart`
+  - Screen: `lib/screens/add_scheduled_expense_screen.dart`
+  - List screen: `lib/screens/scheduled_expenses_list_screen.dart`
+  - Dialog: `lib/widgets/scheduled_expense_confirmation_dialog.dart`
+- AppState methods: `addScheduledExpense`, `updateScheduledExpense`, `deleteScheduledExpense`, `confirmScheduledExpense`, `confirmScheduledExpenseWithModification`
+
 ### Analytics Accordion Sections (分析画面アコーディオン)
 Premium-only accordion sections with icon + 1-line summary:
 - **カテゴリ別の支出割合**: Pie chart + category list (top category summary)
@@ -193,6 +213,7 @@ Locked sections are tappable and navigate to PremiumScreen
 ### Premium Screen (有料プランについて)
 - Access: Settings → 有料プランについて, or tap locked features
 - Non-subscribed view: Hero section, feature cards (horizontal scroll), plan selection, trial info, CTA
+- Feature cards: 将来の支出を先取り登録, 今週どれくらい使える?, カテゴリ別支出割合, 支出ペースグラフ, 家計の余裕
 - Subscribed view: Status card (green), current plan info, renewal date, upgrade option (monthly→yearly), subscription management link
 - Widget: `PremiumScreen` (`lib/screens/premium_screen.dart`)
 

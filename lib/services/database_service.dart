@@ -9,6 +9,7 @@ import '../models/budget.dart';
 import '../models/fixed_cost.dart';
 import '../models/fixed_cost_category.dart';
 import '../models/quick_entry.dart';
+import '../models/scheduled_expense.dart';
 import 'performance_monitor.dart';
 
 class DatabaseService {
@@ -53,7 +54,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -181,6 +182,26 @@ class DatabaseService {
     // cycle_key でのクエリ高速化
     await db.execute('''
       CREATE INDEX idx_cycle_incomes_cycle_key ON cycle_incomes (cycle_key)
+    ''');
+
+    // 予定支出テーブル
+    await db.execute('''
+      CREATE TABLE scheduled_expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        amount INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        grade TEXT NOT NULL,
+        memo TEXT,
+        scheduled_date TEXT NOT NULL,
+        confirmed INTEGER NOT NULL DEFAULT 0,
+        confirmed_at TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    // scheduled_date でのクエリ高速化
+    await db.execute('''
+      CREATE INDEX idx_scheduled_expenses_date ON scheduled_expenses (scheduled_date)
     ''');
   }
 
@@ -540,6 +561,28 @@ class DatabaseService {
           [entry.value, entry.key],
         );
       }
+    }
+
+    if (oldVersion < 9) {
+      // 予定支出テーブルを作成
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS scheduled_expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          amount INTEGER NOT NULL,
+          category TEXT NOT NULL,
+          grade TEXT NOT NULL,
+          memo TEXT,
+          scheduled_date TEXT NOT NULL,
+          confirmed INTEGER NOT NULL DEFAULT 0,
+          confirmed_at TEXT,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      // scheduled_date でのクエリ高速化
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_scheduled_expenses_date ON scheduled_expenses (scheduled_date)
+      ''');
     }
   }
 
@@ -1282,5 +1325,110 @@ class DatabaseService {
       'standard_count': row['standard_count'] as int,
       'reward_count': row['reward_count'] as int,
     }).toList();
+  }
+
+  // ========================================
+  // ScheduledExpense CRUD
+  // ========================================
+
+  /// 予定支出を追加
+  Future<int> insertScheduledExpense(ScheduledExpense scheduledExpense) async {
+    final db = await database;
+    final map = scheduledExpense.toMap();
+    map.remove('id');
+    return await db.insert('scheduled_expenses', map);
+  }
+
+  /// 予定支出を更新
+  Future<void> updateScheduledExpense(ScheduledExpense scheduledExpense) async {
+    final db = await database;
+    await db.update(
+      'scheduled_expenses',
+      scheduledExpense.toMap(),
+      where: 'id = ?',
+      whereArgs: [scheduledExpense.id],
+    );
+  }
+
+  /// 予定支出を削除
+  Future<void> deleteScheduledExpense(int id) async {
+    final db = await database;
+    await db.delete(
+      'scheduled_expenses',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// 未確定の予定支出を全て取得（予定日昇順）
+  Future<List<ScheduledExpense>> getUnconfirmedScheduledExpenses() async {
+    final db = await database;
+    final maps = await db.query(
+      'scheduled_expenses',
+      where: 'confirmed = 0',
+      orderBy: 'scheduled_date ASC',
+    );
+    return maps.map((map) => ScheduledExpense.fromMap(map)).toList();
+  }
+
+  /// 期限切れの未確定予定支出を取得（予定日が今日より前）
+  Future<List<ScheduledExpense>> getOverdueScheduledExpenses() async {
+    final db = await database;
+    final today = _formatDateOnly(DateTime.now());
+    final maps = await db.query(
+      'scheduled_expenses',
+      where: 'confirmed = 0 AND date(scheduled_date) < ?',
+      whereArgs: [today],
+      orderBy: 'scheduled_date ASC',
+    );
+    return maps.map((map) => ScheduledExpense.fromMap(map)).toList();
+  }
+
+  /// サイクル内の未確定予定支出の合計金額を取得
+  Future<int> getScheduledExpensesTotalInCycle({
+    required DateTime cycleStartDate,
+    required DateTime cycleEndDate,
+  }) async {
+    final db = await database;
+    final startStr = _formatDateOnly(cycleStartDate);
+    final endDate = cycleEndDate.add(const Duration(days: 1));
+    final endStr = _formatDateOnly(endDate);
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM scheduled_expenses
+      WHERE confirmed = 0
+        AND date(scheduled_date) >= ? AND date(scheduled_date) < ?
+    ''', [startStr, endStr]);
+
+    return result.first['total'] as int;
+  }
+
+  /// 予定支出を確定し、expensesテーブルに登録
+  /// 返り値: 新規作成されたexpenseのID
+  Future<int> confirmScheduledExpense(ScheduledExpense scheduledExpense) async {
+    final db = await database;
+    final now = DateTime.now();
+
+    // 1. scheduled_expensesを確定済みに更新
+    await db.update(
+      'scheduled_expenses',
+      {
+        'confirmed': 1,
+        'confirmed_at': now.toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [scheduledExpense.id],
+    );
+
+    // 2. expensesテーブルに登録（created_atは予定日）
+    final expense = Expense(
+      amount: scheduledExpense.amount,
+      category: scheduledExpense.category,
+      grade: scheduledExpense.grade,
+      memo: scheduledExpense.memo,
+      createdAt: scheduledExpense.scheduledDate,
+    );
+    return await insertExpense(expense);
   }
 }
