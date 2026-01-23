@@ -29,6 +29,7 @@ class AddScheduledExpenseScreen extends StatefulWidget {
 
 class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
   // 入力状態
+  int? _selectedCategoryId;
   String? _selectedCategory;
   int _expenseAmount = 0;
   int _expenseUnit = 100;
@@ -70,6 +71,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
     super.initState();
     if (_isEditing) {
       final e = widget.editingExpense!;
+      _selectedCategoryId = e.categoryId;
       _selectedCategory = e.category;
       _expenseAmount = e.amount;
       _selectedGrade = e.grade;
@@ -104,7 +106,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
     return 10;
   }
 
-  bool get _canSubmit => _selectedCategory != null && _expenseAmount > 0;
+  bool get _canSubmit => _selectedCategoryId != null && _selectedCategory != null && _expenseAmount > 0;
 
   Map<String, dynamic> get _selectedGradeData =>
       _grades.firstWhere((g) => g['value'] == _selectedGrade);
@@ -120,7 +122,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.accentBlue,
               onPrimary: Colors.white,
               surface: Colors.white,
@@ -151,6 +153,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       success = await appState.confirmScheduledExpenseWithModification(
         widget.editingExpense!,
         newAmount: _expenseAmount,
+        newCategoryId: _selectedCategoryId,
         newCategory: _selectedCategory,
         newGrade: _selectedGrade,
         newMemo: _memoController.text.isNotEmpty ? _memoController.text : null,
@@ -159,6 +162,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       final scheduledExpense = ScheduledExpense(
         id: _isEditing ? widget.editingExpense!.id : null,
         amount: _expenseAmount,
+        categoryId: _selectedCategoryId!,
         category: _selectedCategory!,
         grade: _selectedGrade,
         memo: _memoController.text.isNotEmpty ? _memoController.text : null,
@@ -382,6 +386,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
         return GestureDetector(
           onTap: () {
             setState(() {
+              _selectedCategoryId = category.id;
               _selectedCategory = category.name;
             });
           },
@@ -613,7 +618,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -4),
           ),

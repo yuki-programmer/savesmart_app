@@ -1,0 +1,710 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../config/theme.dart';
+import '../models/category_budget.dart';
+import '../services/app_state.dart';
+import '../utils/formatters.dart';
+import '../widgets/wheel_picker.dart';
+
+/// カテゴリ予算管理画面（リスト編集モード）
+class CategoryBudgetScreen extends StatefulWidget {
+  const CategoryBudgetScreen({super.key});
+
+  @override
+  State<CategoryBudgetScreen> createState() => _CategoryBudgetScreenState();
+}
+
+class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
+  bool _isEditMode = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final budgets = appState.categoryBudgets;
+    final currencyFormat = appState.currencyFormat;
+
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgPrimary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, size: 20),
+          color: AppColors.textPrimary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'カテゴリ予算',
+          style: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          if (budgets.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isEditMode = !_isEditMode;
+                });
+              },
+              child: Text(
+                _isEditMode ? '完了' : '編集',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.accentBlue,
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: budgets.isEmpty
+          ? _buildEmptyState()
+          : _buildBudgetList(budgets, currencyFormat),
+      bottomNavigationBar: _buildAddButton(),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.pie_chart_outline,
+            size: 64,
+            color: AppColors.textMuted.withValues(alpha: 0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'カテゴリ予算が設定されていません',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '下のボタンから追加できます',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetList(List<CategoryBudget> budgets, String currencyFormat) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: budgets.length,
+      itemBuilder: (context, index) {
+        final budget = budgets[index];
+        return _buildBudgetItem(budget, currencyFormat);
+      },
+    );
+  }
+
+  Widget _buildBudgetItem(CategoryBudget budget, String currencyFormat) {
+    final periodLabel = budget.isRecurring ? '毎月' : '今月のみ';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: _isEditMode
+            ? IconButton(
+                icon: const Icon(
+                  Icons.remove_circle,
+                  color: AppColors.accentRed,
+                ),
+                onPressed: () => _confirmDelete(budget),
+              )
+            : null,
+        title: Text(
+          budget.categoryName,
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        subtitle: Text(
+          periodLabel,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: AppColors.textMuted,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              formatCurrency(budget.budgetAmount, currencyFormat),
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (!_isEditMode) ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppColors.textMuted.withValues(alpha: 0.5),
+              ),
+            ],
+          ],
+        ),
+        onTap: _isEditMode
+            ? null
+            : () => _showEditScreen(budget),
+      ),
+    );
+  }
+
+  void _confirmDelete(CategoryBudget budget) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '削除の確認',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          '「${budget.categoryName}」の予算設定を削除しますか？',
+          style: GoogleFonts.inter(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'キャンセル',
+              style: GoogleFonts.inter(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final appState = context.read<AppState>();
+              await appState.deleteCategoryBudget(budget.id!);
+            },
+            child: Text(
+              '削除',
+              style: GoogleFonts.inter(color: AppColors.accentRed),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditScreen(CategoryBudget budget) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CategoryBudgetEditScreen(editingBudget: budget),
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CategoryBudgetEditScreen(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentBlue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.add, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'カテゴリ予算を追加',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// カテゴリ予算 登録/編集画面
+class CategoryBudgetEditScreen extends StatefulWidget {
+  final CategoryBudget? editingBudget;
+
+  const CategoryBudgetEditScreen({
+    super.key,
+    this.editingBudget,
+  });
+
+  @override
+  State<CategoryBudgetEditScreen> createState() =>
+      _CategoryBudgetEditScreenState();
+}
+
+class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
+  int? _selectedCategoryId;
+  String? _selectedCategory;
+  int _budgetAmount = 0;
+  int _budgetUnit = 10000;
+  String _periodType = 'recurring'; // 'recurring' or 'one_time'
+
+  bool get _isEditing => widget.editingBudget != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      final budget = widget.editingBudget!;
+      _selectedCategoryId = budget.categoryId;
+      _selectedCategory = budget.categoryName;
+      _budgetAmount = budget.budgetAmount;
+      _periodType = budget.periodType;
+      // 適切な単位を設定
+      _budgetUnit = _getAppropriateUnit(_budgetAmount);
+    }
+  }
+
+  int _getAppropriateUnit(int amount) {
+    if (amount >= 1000000) return 1000000;
+    if (amount >= 100000) return 100000;
+    if (amount >= 10000) return 10000;
+    if (amount >= 1000) return 1000;
+    if (amount >= 100) return 100;
+    return 10;
+  }
+
+  bool get _canSubmit =>
+      _selectedCategoryId != null && _selectedCategory != null && _budgetAmount > 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final currencyFormat = appState.currencyFormat;
+
+    // 利用可能なカテゴリ（編集時は自分自身も含める）
+    List<String> availableCategories;
+    if (_isEditing) {
+      // 編集時: 自分以外の設定済みカテゴリを除外
+      final currentCategoryName = widget.editingBudget!.categoryName;
+      final budgetedCategories = appState.budgetedCategoryNames
+          .where((name) => name != currentCategoryName)
+          .toList();
+      availableCategories = appState.categoryNames
+          .where((name) => !budgetedCategories.contains(name))
+          .toList();
+      // 現在のカテゴリが削除されている場合も含める
+      if (!availableCategories.contains(currentCategoryName)) {
+        availableCategories.insert(0, currentCategoryName);
+      }
+    } else {
+      // 新規時: 設定済みカテゴリを除外
+      availableCategories = appState.unbudgetedCategoryNames;
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgPrimary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, size: 22),
+          color: AppColors.textPrimary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          _isEditing ? '予算を編集' : '予算を追加',
+          style: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // カテゴリ選択
+            _buildSectionTitle('カテゴリ'),
+            const SizedBox(height: 10),
+            _buildCategoryDropdown(availableCategories),
+            const SizedBox(height: 24),
+
+            // 予算金額
+            _buildSectionTitle('予算金額'),
+            const SizedBox(height: 10),
+            _buildAmountPicker(currencyFormat),
+            const SizedBox(height: 24),
+
+            // 期間タイプ
+            _buildSectionTitle('期間'),
+            const SizedBox(height: 10),
+            _buildPeriodSelector(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _buildSubmitButton(),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textSecondary,
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown(List<String> categories) {
+    // 選択中のカテゴリが利用可能リストにない場合はnullにする
+    // （保存後のリビルド時に発生するエラーを防ぐ）
+    final effectiveValue = (_selectedCategory != null &&
+            categories.contains(_selectedCategory))
+        ? _selectedCategory
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: effectiveValue,
+          hint: Text(
+            'カテゴリを選択',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: AppColors.textMuted,
+            ),
+          ),
+          isExpanded: true,
+          icon: const Icon(Icons.expand_more, color: AppColors.textMuted),
+          items: categories.map((category) {
+            return DropdownMenuItem(
+              value: category,
+              child: Text(
+                category,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            final appState = context.read<AppState>();
+            final category = appState.categories.firstWhere(
+              (c) => c.name == value,
+              orElse: () => appState.categories.first,
+            );
+            setState(() {
+              _selectedCategoryId = category.id;
+              _selectedCategory = value;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmountPicker(String currencyFormat) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        children: [
+          // 金額表示
+          Text(
+            formatCurrency(_budgetAmount, currencyFormat),
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ホイールピッカー
+          SizedBox(
+            height: 120,
+            child: WheelPicker(
+              unit: _budgetUnit,
+              initialValue: _budgetAmount,
+              onChanged: (value) {
+                setState(() {
+                  _budgetAmount = value;
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 単位選択
+          _buildUnitSelector(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnitSelector() {
+    final units = [
+      {'value': 10, 'label': '10'},
+      {'value': 100, 'label': '100'},
+      {'value': 1000, 'label': '1000'},
+      {'value': 10000, 'label': '1万'},
+      {'value': 100000, 'label': '10万'},
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: units.map((unit) {
+          final isSelected = _budgetUnit == unit['value'];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _budgetUnit = unit['value'] as int;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.accentBlue
+                      : AppColors.bgPrimary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  unit['label'] as String,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildPeriodSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        children: [
+          _buildPeriodOption(
+            value: 'recurring',
+            title: '毎月（固定）',
+            subtitle: '次の月も継続して設定されます',
+            isFirst: true,
+          ),
+          const Divider(height: 1, color: AppColors.borderSubtle),
+          _buildPeriodOption(
+            value: 'one_time',
+            title: '今月のみ',
+            subtitle: '次のサイクルで自動的に削除されます',
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodOption({
+    required String value,
+    required String title,
+    required String subtitle,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    final isSelected = _periodType == value;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _periodType = value;
+        });
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.vertical(
+            top: isFirst ? const Radius.circular(12) : Radius.zero,
+            bottom: isLast ? const Radius.circular(12) : Radius.zero,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: isSelected ? AppColors.accentBlue : AppColors.textMuted,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _canSubmit ? _submit : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentBlue,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.borderSubtle,
+              disabledForegroundColor: AppColors.textMuted,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              _isEditing ? '保存' : '追加',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submit() async {
+    final appState = context.read<AppState>();
+
+    final budget = CategoryBudget(
+      id: widget.editingBudget?.id,
+      categoryId: _selectedCategoryId!,
+      categoryName: _selectedCategory!,
+      budgetAmount: _budgetAmount,
+      periodType: _periodType,
+      createdAt: widget.editingBudget?.createdAt ?? DateTime.now(),
+    );
+
+    bool success;
+    if (_isEditing) {
+      success = await appState.updateCategoryBudget(budget);
+    } else {
+      success = await appState.addCategoryBudget(budget);
+    }
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '保存に失敗しました',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
+    }
+  }
+}

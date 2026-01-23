@@ -44,7 +44,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
           style: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withOpacity(0.9),
+            color: AppColors.textPrimary.withValues(alpha: 0.9),
           ),
         ),
         const SizedBox(height: 4),
@@ -143,7 +143,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

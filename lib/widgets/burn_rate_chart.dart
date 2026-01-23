@@ -183,7 +183,7 @@ class BurnRateChart extends StatelessWidget {
         const SizedBox(width: 16),
         // 比較線
         _buildLegendItem(
-          color: AppColors.textMuted.withOpacity(0.5),
+          color: AppColors.textMuted.withValues(alpha: 0.5),
           label: type == ComparisonLineType.previous ? '前サイクル' : '理想',
           isDashed: true,
         ),
@@ -216,7 +216,7 @@ class BurnRateChart extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w400,
-            color: AppColors.textMuted.withOpacity(0.7),
+            color: AppColors.textMuted.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -350,7 +350,7 @@ class _BurnRateChartPainter extends CustomPainter {
   void _drawGrid(Canvas canvas, Size size, double chartLeft, double chartTop,
       double chartWidth, double chartHeight, double yMax) {
     final gridPaint = Paint()
-      ..color = AppColors.textMuted.withOpacity(0.15)
+      ..color = AppColors.textMuted.withValues(alpha: 0.15)
       ..strokeWidth = 1;
 
     // 横線（0%, 50%, 100%）
@@ -369,7 +369,7 @@ class _BurnRateChartPainter extends CustomPainter {
     if (yMax > 100) {
       final y100 = chartTop + chartHeight * (1 - 100 / yMax);
       final warningPaint = Paint()
-        ..color = AppColors.accentRed.withOpacity(0.3)
+        ..color = AppColors.accentRed.withValues(alpha: 0.3)
         ..strokeWidth = 1
         ..style = PaintingStyle.stroke;
       canvas.drawLine(
@@ -383,7 +383,7 @@ class _BurnRateChartPainter extends CustomPainter {
   void _drawAxisLabels(Canvas canvas, Size size, double chartLeft, double chartTop,
       double chartWidth, double chartHeight, double chartBottom, double yMax) {
     final textStyle = TextStyle(
-      color: AppColors.textMuted.withOpacity(0.6),
+      color: AppColors.textMuted.withValues(alpha: 0.6),
       fontSize: 10,
     );
 
@@ -441,7 +441,7 @@ class _BurnRateChartPainter extends CustomPainter {
     if (comparisonRates.isEmpty) return;
 
     final paint = Paint()
-      ..color = AppColors.textMuted.withOpacity(0.5)
+      ..color = AppColors.textMuted.withValues(alpha: 0.5)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -516,7 +516,7 @@ class _BurnRateChartPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final overPaint = Paint()
-      ..color = AppColors.accentRed.withOpacity(0.8)
+      ..color = AppColors.accentRed.withValues(alpha: 0.8)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -572,7 +572,7 @@ class _BurnRateChartPainter extends CustomPainter {
 
     // ドットの色（100%超えなら赤系）
     final dotColor = rate > 100
-        ? AppColors.accentRed.withOpacity(0.9)
+        ? AppColors.accentRed.withValues(alpha: 0.9)
         : AppColors.accentBlue;
 
     // 外側の円（白いアウトライン）

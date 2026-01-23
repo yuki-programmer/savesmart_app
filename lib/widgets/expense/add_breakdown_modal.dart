@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../models/category.dart';
 import '../../utils/formatters.dart';
 import '../wheel_picker.dart';
 
 /// 内訳追加モーダルを表示
 void showAddBreakdownModal({
   required BuildContext context,
-  required List<String> availableCategories,
+  required List<Category> availableCategories,
   required void Function(Map<String, dynamic> breakdown) onAdd,
 }) {
   int breakdownAmount = 0;
   int breakdownUnit = 100;
-  String? breakdownCategory;
+  Category? selectedCategory;
   String breakdownType = 'standard';
 
   showModalBottomSheet(
@@ -111,8 +112,8 @@ void showAddBreakdownModal({
                           color: AppColors.bgPrimary,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: DropdownButton<String>(
-                          value: breakdownCategory,
+                        child: DropdownButton<Category>(
+                          value: selectedCategory,
                           hint: Text(
                             'カテゴリを選択',
                             style: GoogleFonts.inter(
@@ -122,10 +123,10 @@ void showAddBreakdownModal({
                           isExpanded: true,
                           underline: const SizedBox(),
                           items: availableCategories.map((category) {
-                            return DropdownMenuItem(
+                            return DropdownMenuItem<Category>(
                               value: category,
                               child: Text(
-                                category,
+                                category.name,
                                 style: GoogleFonts.inter(
                                   color: AppColors.textPrimary,
                                 ),
@@ -134,7 +135,7 @@ void showAddBreakdownModal({
                           }).toList(),
                           onChanged: (value) {
                             setModalState(() {
-                              breakdownCategory = value;
+                              selectedCategory = value;
                             });
                           },
                         ),
@@ -196,10 +197,11 @@ void showAddBreakdownModal({
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          if (breakdownAmount > 0 && breakdownCategory != null) {
+                          if (breakdownAmount > 0 && selectedCategory != null) {
                             onAdd({
                               'amount': breakdownAmount,
-                              'category': breakdownCategory,
+                              'categoryId': selectedCategory!.id,
+                              'category': selectedCategory!.name,
                               'type': breakdownType,
                             });
                             Navigator.pop(context);
@@ -263,7 +265,7 @@ Widget _buildUnitSelector({
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),

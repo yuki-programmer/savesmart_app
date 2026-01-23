@@ -65,7 +65,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withOpacity(0.25),
+                  color: AppColors.textMuted.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -80,7 +80,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary.withOpacity(0.9),
+                      color: AppColors.textPrimary.withValues(alpha: 0.9),
                       height: 1.3,
                     ),
                   ),
@@ -90,7 +90,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary.withOpacity(0.7),
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -138,8 +138,8 @@ class _CategoryPaceSheetContent extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: isTotal
-            ? AppColors.accentBlue.withOpacity(0.06)
-            : AppColors.bgPrimary.withOpacity(0.7),
+            ? AppColors.accentBlue.withValues(alpha: 0.06)
+            : AppColors.bgPrimary.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -153,7 +153,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
               color: isTotal
                   ? AppColors.accentBlue
-                  : AppColors.textPrimary.withOpacity(0.9),
+                  : AppColors.textPrimary.withValues(alpha: 0.9),
               height: 1.4,
             ),
           ),
@@ -170,7 +170,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary.withOpacity(0.7),
+                        color: AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(width: 2),
@@ -181,7 +181,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: isTotal
                             ? AppColors.accentBlue
-                            : AppColors.textPrimary.withOpacity(0.9),
+                            : AppColors.textPrimary.withValues(alpha: 0.9),
                       ),
                     ),
                     Text(
@@ -189,7 +189,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary.withOpacity(0.8),
+                        color: AppColors.textSecondary.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -203,7 +203,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withOpacity(0.6),
+                      color: AppColors.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(width: 2),
@@ -213,8 +213,8 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: isTotal
-                          ? AppColors.accentBlue.withOpacity(0.8)
-                          : AppColors.textSecondary.withOpacity(0.8),
+                          ? AppColors.accentBlue.withValues(alpha: 0.8)
+                          : AppColors.textSecondary.withValues(alpha: 0.8),
                     ),
                   ),
                   Text(
@@ -222,7 +222,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withOpacity(0.6),
+                      color: AppColors.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

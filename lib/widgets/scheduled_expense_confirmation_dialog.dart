@@ -101,8 +101,8 @@ class _ScheduledExpenseConfirmationDialogState
       _moveToNextOrClose();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('確認に失敗しました'),
+        const SnackBar(
+          content: Text('確認に失敗しました'),
           backgroundColor: AppColors.accentRed,
         ),
       );
@@ -168,7 +168,7 @@ class _ScheduledExpenseConfirmationDialogState
                     color: AppColors.accentOrange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.schedule,
                     color: AppColors.accentOrange,
                     size: 24,
@@ -212,7 +212,7 @@ class _ScheduledExpenseConfirmationDialogState
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.calendar_today,
                     size: 16,
                     color: AppColors.textSecondary,
@@ -311,7 +311,7 @@ class _ScheduledExpenseConfirmationDialogState
                     onPressed: _isProcessing ? null : _modifyAndConfirm,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: AppColors.borderSubtle),
+                      side: const BorderSide(color: AppColors.borderSubtle),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

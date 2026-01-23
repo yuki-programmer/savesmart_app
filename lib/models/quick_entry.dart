@@ -3,7 +3,8 @@
 class QuickEntry {
   final int? id;
   final String title; // タイルに表示する名前
-  final String category; // カテゴリ名
+  final int categoryId; // カテゴリID
+  final String category; // カテゴリ名（JOINで取得、表示用）
   final int amount; // 金額
   final String grade; // 'saving' | 'standard' | 'reward'
   final String? memo; // メモ（任意）
@@ -12,6 +13,7 @@ class QuickEntry {
   QuickEntry({
     this.id,
     required this.title,
+    required this.categoryId,
     required this.category,
     required this.amount,
     required this.grade,
@@ -23,7 +25,7 @@ class QuickEntry {
     return {
       'id': id,
       'title': title,
-      'category': category,
+      'category_id': categoryId,
       'amount': amount,
       'grade': grade,
       'memo': memo,
@@ -35,7 +37,8 @@ class QuickEntry {
     return QuickEntry(
       id: map['id'] as int?,
       title: map['title'] as String,
-      category: map['category'] as String,
+      categoryId: map['category_id'] as int,
+      category: map['category_name'] as String? ?? map['category'] as String? ?? '',
       amount: map['amount'] as int,
       grade: map['grade'] as String,
       memo: map['memo'] as String?,
@@ -46,6 +49,7 @@ class QuickEntry {
   QuickEntry copyWith({
     int? id,
     String? title,
+    int? categoryId,
     String? category,
     int? amount,
     String? grade,
@@ -55,6 +59,7 @@ class QuickEntry {
     return QuickEntry(
       id: id ?? this.id,
       title: title ?? this.title,
+      categoryId: categoryId ?? this.categoryId,
       category: category ?? this.category,
       amount: amount ?? this.amount,
       grade: grade ?? this.grade,

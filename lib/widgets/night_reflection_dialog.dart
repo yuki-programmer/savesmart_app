@@ -48,7 +48,7 @@ class NightReflectionDialog extends StatelessWidget {
     await showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: const Color(0xFF1A1F3C).withOpacity(0.85),
+      barrierColor: const Color(0xFF1A1F3C).withValues(alpha: 0.85),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return NightReflectionDialog(
@@ -105,7 +105,7 @@ class NightReflectionDialog extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white.withOpacity(0.95),
+                  color: Colors.white.withValues(alpha: 0.95),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -115,8 +115,8 @@ class NightReflectionDialog extends StatelessWidget {
                 label: '今日の支出',
                 value: '¥${formatNumber(todayTotal)}',
                 valueColor: hasSpending
-                    ? Colors.white.withOpacity(0.95)
-                    : AppColors.accentGreen.withOpacity(0.9),
+                    ? Colors.white.withValues(alpha: 0.95)
+                    : AppColors.accentGreen.withValues(alpha: 0.9),
               ),
               const SizedBox(height: 32),
               // 明日の予算
@@ -127,8 +127,8 @@ class NightReflectionDialog extends StatelessWidget {
                       ? '¥${formatNumber(tomorrowBudget!)}'
                       : '-¥${formatNumber(tomorrowBudget!.abs())}',
                   valueColor: tomorrowBudget! >= 0
-                      ? Colors.white.withOpacity(0.95)
-                      : AppColors.accentOrange.withOpacity(0.9),
+                      ? Colors.white.withValues(alpha: 0.95)
+                      : AppColors.accentOrange.withValues(alpha: 0.9),
                   isLarge: true,
                 ),
               const SizedBox(height: 48),
@@ -138,7 +138,7 @@ class NightReflectionDialog extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   height: 1.6,
                 ),
                 textAlign: TextAlign.center,
@@ -151,10 +151,10 @@ class NightReflectionDialog extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
+                    color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -163,7 +163,7 @@ class NightReflectionDialog extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -190,7 +190,7 @@ class NightReflectionDialog extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w400,
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             letterSpacing: 0.3,
           ),
         ),

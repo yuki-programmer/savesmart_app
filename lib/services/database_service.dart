@@ -10,6 +10,7 @@ import '../models/fixed_cost.dart';
 import '../models/fixed_cost_category.dart';
 import '../models/quick_entry.dart';
 import '../models/scheduled_expense.dart';
+import '../models/category_budget.dart';
 import 'performance_monitor.dart';
 
 class DatabaseService {
@@ -38,11 +39,12 @@ class DatabaseService {
         CREATE TABLE IF NOT EXISTS quick_entries (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           title TEXT NOT NULL,
-          category TEXT NOT NULL,
+          category_id INTEGER NOT NULL,
           amount INTEGER NOT NULL,
           grade TEXT NOT NULL,
           memo TEXT,
-          sort_order INTEGER NOT NULL DEFAULT 0
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY (category_id) REFERENCES categories (id)
         )
       ''');
     }
@@ -54,26 +56,18 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 11,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
+      onConfigure: (db) async {
+        // FOREIGN KEY制約を有効化
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE expenses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        amount INTEGER NOT NULL,
-        category TEXT NOT NULL,
-        grade TEXT NOT NULL,
-        memo TEXT,
-        created_at TEXT NOT NULL,
-        parent_id INTEGER,
-        FOREIGN KEY (parent_id) REFERENCES expenses (id)
-      )
-    ''');
-
+    // カテゴリテーブルを先に作成（他テーブルが参照するため）
     await db.execute('''
       CREATE TABLE categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,6 +75,40 @@ class DatabaseService {
         sort_order INTEGER NOT NULL,
         is_default INTEGER NOT NULL DEFAULT 0,
         icon TEXT
+      )
+    ''');
+
+    // デフォルトカテゴリを挿入
+    final defaultCategories = [
+      'コーヒー',
+      'ランチ',
+      '食料品',
+      '交通費',
+      '買い物',
+      '娯楽',
+      '医療',
+      'その他',
+    ];
+
+    for (var i = 0; i < defaultCategories.length; i++) {
+      await db.insert('categories', {
+        'name': defaultCategories[i],
+        'sort_order': i,
+        'is_default': 1,
+      });
+    }
+
+    await db.execute('''
+      CREATE TABLE expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        amount INTEGER NOT NULL,
+        category_id INTEGER NOT NULL,
+        grade TEXT NOT NULL,
+        memo TEXT,
+        created_at TEXT NOT NULL,
+        parent_id INTEGER,
+        FOREIGN KEY (category_id) REFERENCES categories (id),
+        FOREIGN KEY (parent_id) REFERENCES expenses (id)
       )
     ''');
 
@@ -118,32 +146,12 @@ class DatabaseService {
     // デフォルト固定費カテゴリを挿入
     await _ensureDefaultFixedCostCategories(db);
 
-    // デフォルトカテゴリを挿入
-    final defaultCategories = [
-      'コーヒー',
-      'ランチ',
-      '食料品',
-      '交通費',
-      '買い物',
-      '娯楽',
-      '医療',
-      'その他',
-    ];
-
-    for (var i = 0; i < defaultCategories.length; i++) {
-      await db.insert('categories', {
-        'name': defaultCategories[i],
-        'sort_order': i,
-        'is_default': 1,
-      });
-    }
-
     // インデックス作成（時系列クエリ高速化）
     await db.execute('''
       CREATE INDEX idx_expenses_created_at ON expenses (created_at)
     ''');
     await db.execute('''
-      CREATE INDEX idx_expenses_category_created_at ON expenses (category, created_at)
+      CREATE INDEX idx_expenses_category_created_at ON expenses (category_id, created_at)
     ''');
 
     // クイック登録テーブル
@@ -151,11 +159,12 @@ class DatabaseService {
       CREATE TABLE quick_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        category TEXT NOT NULL,
+        category_id INTEGER NOT NULL,
         amount INTEGER NOT NULL,
         grade TEXT NOT NULL,
         memo TEXT,
-        sort_order INTEGER NOT NULL DEFAULT 0
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (category_id) REFERENCES categories (id)
       )
     ''');
 
@@ -189,13 +198,14 @@ class DatabaseService {
       CREATE TABLE scheduled_expenses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         amount INTEGER NOT NULL,
-        category TEXT NOT NULL,
+        category_id INTEGER NOT NULL,
         grade TEXT NOT NULL,
         memo TEXT,
         scheduled_date TEXT NOT NULL,
         confirmed INTEGER NOT NULL DEFAULT 0,
         confirmed_at TEXT,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (category_id) REFERENCES categories (id)
       )
     ''');
 
@@ -203,32 +213,45 @@ class DatabaseService {
     await db.execute('''
       CREATE INDEX idx_scheduled_expenses_date ON scheduled_expenses (scheduled_date)
     ''');
+
+    // カテゴリ別予算テーブル
+    await db.execute('''
+      CREATE TABLE category_budgets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER NOT NULL UNIQUE,
+        budget_amount INTEGER NOT NULL,
+        period_type TEXT NOT NULL DEFAULT 'recurring',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (category_id) REFERENCES categories (id)
+      )
+    ''');
   }
 
   // Expense CRUD
   Future<List<Expense>> getExpenses({DateTime? from, DateTime? to}) async {
     perfMonitor.startTimer('DB.getExpenses');
     final db = await database;
-    String? whereClause;
-    List<dynamic>? whereArgs;
+    String whereClause = '';
+    List<dynamic> whereArgs = [];
 
     if (from != null && to != null) {
-      whereClause = 'created_at >= ? AND created_at <= ?';
+      whereClause = 'WHERE e.created_at >= ? AND e.created_at <= ?';
       whereArgs = [from.toIso8601String(), to.toIso8601String()];
     } else if (from != null) {
-      whereClause = 'created_at >= ?';
+      whereClause = 'WHERE e.created_at >= ?';
       whereArgs = [from.toIso8601String()];
     } else if (to != null) {
-      whereClause = 'created_at <= ?';
+      whereClause = 'WHERE e.created_at <= ?';
       whereArgs = [to.toIso8601String()];
     }
 
-    final maps = await db.query(
-      'expenses',
-      where: whereClause,
-      whereArgs: whereArgs,
-      orderBy: 'created_at DESC, id DESC',
-    );
+    final maps = await db.rawQuery('''
+      SELECT e.*, c.name as category_name
+      FROM expenses e
+      LEFT JOIN categories c ON e.category_id = c.id
+      $whereClause
+      ORDER BY e.created_at DESC, e.id DESC
+    ''', whereArgs);
 
     final result = maps.map((map) => Expense.fromMap(map)).toList();
     perfMonitor.stopTimer('DB.getExpenses');
@@ -288,30 +311,9 @@ class DatabaseService {
     );
   }
 
-  // カテゴリ名を更新（関連する支出のカテゴリ名も更新）
+  // カテゴリ名を更新（ID参照のため他テーブル更新は不要）
   Future<void> updateCategoryName(int id, String newName) async {
     final db = await database;
-
-    // 古いカテゴリ名を取得
-    final categories = await db.query(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    if (categories.isNotEmpty) {
-      final oldName = categories.first['name'] as String;
-
-      // 関連する支出のカテゴリ名を更新
-      await db.update(
-        'expenses',
-        {'category': newName},
-        where: 'category = ?',
-        whereArgs: [oldName],
-      );
-    }
-
-    // カテゴリ名を更新
     await db.update(
       'categories',
       {'name': newName},
@@ -329,34 +331,47 @@ class DatabaseService {
     );
   }
 
-  // カテゴリ削除（関連する支出も削除）
-  Future<void> deleteCategoryWithExpenses(int id) async {
+  // カテゴリ削除（関連する全テーブルのデータも削除）
+  Future<void> deleteCategoryWithExpenses(int categoryId) async {
     final db = await database;
 
-    // カテゴリ名を取得
-    final categories = await db.query(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    if (categories.isNotEmpty) {
-      final categoryName = categories.first['name'] as String;
-
+    // トランザクションで全テーブルを一括削除（category_id参照）
+    await db.transaction((txn) async {
       // 関連する支出を削除
-      await db.delete(
+      await txn.delete(
         'expenses',
-        where: 'category = ?',
-        whereArgs: [categoryName],
+        where: 'category_id = ?',
+        whereArgs: [categoryId],
       );
-    }
 
-    // カテゴリを削除
-    await db.delete(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+      // 関連するクイック登録を削除
+      await txn.delete(
+        'quick_entries',
+        where: 'category_id = ?',
+        whereArgs: [categoryId],
+      );
+
+      // 関連する予定支出を削除（未確定のもののみ）
+      await txn.delete(
+        'scheduled_expenses',
+        where: 'category_id = ? AND confirmed = 0',
+        whereArgs: [categoryId],
+      );
+
+      // 関連するカテゴリ予算を削除
+      await txn.delete(
+        'category_budgets',
+        where: 'category_id = ?',
+        whereArgs: [categoryId],
+      );
+
+      // カテゴリを削除
+      await txn.delete(
+        'categories',
+        where: 'id = ?',
+        whereArgs: [categoryId],
+      );
+    });
   }
 
   // Budget CRUD
@@ -584,6 +599,134 @@ class DatabaseService {
         CREATE INDEX IF NOT EXISTS idx_scheduled_expenses_date ON scheduled_expenses (scheduled_date)
       ''');
     }
+
+    if (oldVersion < 10) {
+      // カテゴリ別予算テーブルを作成
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS category_budgets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category_name TEXT NOT NULL UNIQUE,
+          budget_amount INTEGER NOT NULL,
+          period_type TEXT NOT NULL DEFAULT 'recurring',
+          created_at TEXT NOT NULL
+        )
+      ''');
+    }
+
+    if (oldVersion < 11) {
+      // カテゴリ参照をTEXTからINTEGER (category_id) に移行
+      // SQLiteではFOREIGN KEY追加はテーブル再作成が必要
+
+      // ============ expenses テーブル ============
+      // 新テーブル作成
+      await db.execute('''
+        CREATE TABLE expenses_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          amount INTEGER NOT NULL,
+          category_id INTEGER NOT NULL,
+          grade TEXT NOT NULL,
+          memo TEXT,
+          created_at TEXT NOT NULL,
+          parent_id INTEGER,
+          FOREIGN KEY (category_id) REFERENCES categories (id),
+          FOREIGN KEY (parent_id) REFERENCES expenses_new (id)
+        )
+      ''');
+
+      // データ移行（カテゴリ名からIDに変換）
+      await db.execute('''
+        INSERT INTO expenses_new (id, amount, category_id, grade, memo, created_at, parent_id)
+        SELECT e.id, e.amount, COALESCE(c.id, 1), e.grade, e.memo, e.created_at, e.parent_id
+        FROM expenses e
+        LEFT JOIN categories c ON e.category = c.name
+      ''');
+
+      // 旧テーブル削除、新テーブルをリネーム
+      await db.execute('DROP TABLE expenses');
+      await db.execute('ALTER TABLE expenses_new RENAME TO expenses');
+
+      // インデックス再作成
+      await db.execute('DROP INDEX IF EXISTS idx_expenses_created_at');
+      await db.execute('DROP INDEX IF EXISTS idx_expenses_category_created_at');
+      await db.execute('CREATE INDEX idx_expenses_created_at ON expenses (created_at)');
+      await db.execute('CREATE INDEX idx_expenses_category_created_at ON expenses (category_id, created_at)');
+
+      // ============ quick_entries テーブル ============
+      await db.execute('''
+        CREATE TABLE quick_entries_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          category_id INTEGER NOT NULL,
+          amount INTEGER NOT NULL,
+          grade TEXT NOT NULL,
+          memo TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY (category_id) REFERENCES categories (id)
+        )
+      ''');
+
+      await db.execute('''
+        INSERT INTO quick_entries_new (id, title, category_id, amount, grade, memo, sort_order)
+        SELECT q.id, q.title, COALESCE(c.id, 1), q.amount, q.grade, q.memo, q.sort_order
+        FROM quick_entries q
+        LEFT JOIN categories c ON q.category = c.name
+      ''');
+
+      await db.execute('DROP TABLE quick_entries');
+      await db.execute('ALTER TABLE quick_entries_new RENAME TO quick_entries');
+
+      // ============ scheduled_expenses テーブル ============
+      await db.execute('''
+        CREATE TABLE scheduled_expenses_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          amount INTEGER NOT NULL,
+          category_id INTEGER NOT NULL,
+          grade TEXT NOT NULL,
+          memo TEXT,
+          scheduled_date TEXT NOT NULL,
+          confirmed INTEGER NOT NULL DEFAULT 0,
+          confirmed_at TEXT,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (category_id) REFERENCES categories (id)
+        )
+      ''');
+
+      await db.execute('''
+        INSERT INTO scheduled_expenses_new (id, amount, category_id, grade, memo, scheduled_date, confirmed, confirmed_at, created_at)
+        SELECT s.id, s.amount, COALESCE(c.id, 1), s.grade, s.memo, s.scheduled_date, s.confirmed, s.confirmed_at, s.created_at
+        FROM scheduled_expenses s
+        LEFT JOIN categories c ON s.category = c.name
+      ''');
+
+      await db.execute('DROP TABLE scheduled_expenses');
+      await db.execute('ALTER TABLE scheduled_expenses_new RENAME TO scheduled_expenses');
+
+      // インデックス再作成
+      await db.execute('DROP INDEX IF EXISTS idx_scheduled_expenses_date');
+      await db.execute('CREATE INDEX idx_scheduled_expenses_date ON scheduled_expenses (scheduled_date)');
+
+      // ============ category_budgets テーブル ============
+      await db.execute('''
+        CREATE TABLE category_budgets_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category_id INTEGER NOT NULL UNIQUE,
+          budget_amount INTEGER NOT NULL,
+          period_type TEXT NOT NULL DEFAULT 'recurring',
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (category_id) REFERENCES categories (id)
+        )
+      ''');
+
+      await db.execute('''
+        INSERT INTO category_budgets_new (id, category_id, budget_amount, period_type, created_at)
+        SELECT cb.id, c.id, cb.budget_amount, cb.period_type, cb.created_at
+        FROM category_budgets cb
+        INNER JOIN categories c ON cb.category_name = c.name
+      ''');
+
+      await db.execute('DROP TABLE category_budgets');
+      await db.execute('ALTER TABLE category_budgets_new RENAME TO category_budgets');
+    }
   }
 
   /// デフォルト固定費カテゴリが存在しない場合に投入する
@@ -706,7 +849,7 @@ class DatabaseService {
   /// カテゴリ別・月別・グレード別の支出集計を取得（SQL集計）
   /// 返り値: List<{ 'month': 'YYYY-MM', 'grade': String, 'total': int, 'count': int }>
   Future<List<Map<String, dynamic>>> getMonthlyGradeBreakdown({
-    required String categoryName,
+    required int categoryId,
     required int months,
   }) async {
     final db = await database;
@@ -723,11 +866,11 @@ class DatabaseService {
         SUM(amount) as total,
         COUNT(*) as count
       FROM expenses
-      WHERE category = ?
+      WHERE category_id = ?
         AND created_at >= ?
       GROUP BY strftime('%Y-%m', created_at), grade
       ORDER BY month ASC, grade ASC
-    ''', [categoryName, startDateStr]);
+    ''', [categoryId, startDateStr]);
 
     return results.map((row) => {
       'month': row['month'] as String,
@@ -773,7 +916,7 @@ class DatabaseService {
   /// 返り値: List<{ 'amount': int, 'grade': String, 'freq': int, 'lastUsed': String }>
   /// 優先順位: 頻度 DESC → 最終利用日 DESC
   Future<List<Map<String, dynamic>>> getSmartCombos({
-    required String categoryName,
+    required int categoryId,
     int limit = 3,
   }) async {
     final db = await database;
@@ -785,11 +928,11 @@ class DatabaseService {
         COUNT(*) as freq,
         MAX(created_at) as last_used
       FROM expenses
-      WHERE category = ?
+      WHERE category_id = ?
       GROUP BY amount, grade
       ORDER BY freq DESC, last_used DESC
       LIMIT ?
-    ''', [categoryName, limit]);
+    ''', [categoryId, limit]);
 
     return results.map((row) => {
       'amount': row['amount'] as int,
@@ -802,10 +945,12 @@ class DatabaseService {
   // QuickEntry CRUD
   Future<List<QuickEntry>> getQuickEntries() async {
     final db = await database;
-    final maps = await db.query(
-      'quick_entries',
-      orderBy: 'sort_order ASC',
-    );
+    final maps = await db.rawQuery('''
+      SELECT q.*, c.name as category_name
+      FROM quick_entries q
+      LEFT JOIN categories c ON q.category_id = c.id
+      ORDER BY q.sort_order ASC
+    ''');
     return maps.map((map) => QuickEntry.fromMap(map)).toList();
   }
 
@@ -1042,12 +1187,13 @@ class DatabaseService {
     required int offset,
   }) async {
     final db = await database;
-    final maps = await db.query(
-      'expenses',
-      orderBy: 'created_at DESC, id DESC',
-      limit: limit,
-      offset: offset,
-    );
+    final maps = await db.rawQuery('''
+      SELECT e.*, c.name as category_name
+      FROM expenses e
+      LEFT JOIN categories c ON e.category_id = c.id
+      ORDER BY e.created_at DESC, e.id DESC
+      LIMIT ? OFFSET ?
+    ''', [limit, offset]);
     return maps.map((map) => Expense.fromMap(map)).toList();
   }
 
@@ -1069,14 +1215,14 @@ class DatabaseService {
     perfMonitor.startTimer('DB.searchExpensesPaged');
     final db = await database;
     final searchQuery = '%$query%';
-    final maps = await db.query(
-      'expenses',
-      where: 'category LIKE ? OR memo LIKE ?',
-      whereArgs: [searchQuery, searchQuery],
-      orderBy: 'created_at DESC, id DESC',
-      limit: limit,
-      offset: offset,
-    );
+    final maps = await db.rawQuery('''
+      SELECT e.*, c.name as category_name
+      FROM expenses e
+      LEFT JOIN categories c ON e.category_id = c.id
+      WHERE c.name LIKE ? OR e.memo LIKE ?
+      ORDER BY e.created_at DESC, e.id DESC
+      LIMIT ? OFFSET ?
+    ''', [searchQuery, searchQuery, limit, offset]);
     final result = maps.map((map) => Expense.fromMap(map)).toList();
     perfMonitor.stopTimer('DB.searchExpensesPaged');
     return result;
@@ -1086,10 +1232,12 @@ class DatabaseService {
   Future<int> searchExpensesCount(String query) async {
     final db = await database;
     final searchQuery = '%$query%';
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM expenses WHERE category LIKE ? OR memo LIKE ?',
-      [searchQuery, searchQuery],
-    );
+    final result = await db.rawQuery('''
+      SELECT COUNT(*) as count
+      FROM expenses e
+      LEFT JOIN categories c ON e.category_id = c.id
+      WHERE c.name LIKE ? OR e.memo LIKE ?
+    ''', [searchQuery, searchQuery]);
     return result.first['count'] as int;
   }
 
@@ -1222,12 +1370,13 @@ class DatabaseService {
     final db = await database;
     final today = _formatDateOnly(DateTime.now());
 
-    final maps = await db.query(
-      'expenses',
-      where: "date(created_at) = ?",
-      whereArgs: [today],
-      orderBy: 'created_at DESC, id DESC',
-    );
+    final maps = await db.rawQuery('''
+      SELECT e.*, c.name as category_name
+      FROM expenses e
+      LEFT JOIN categories c ON e.category_id = c.id
+      WHERE date(e.created_at) = ?
+      ORDER BY e.created_at DESC, e.id DESC
+    ''', [today]);
 
     return maps.map((map) => Expense.fromMap(map)).toList();
   }
@@ -1298,19 +1447,20 @@ class DatabaseService {
 
     final results = await db.rawQuery('''
       SELECT
-        category,
-        SUM(amount) as total_amount,
+        c.name as category,
+        SUM(e.amount) as total_amount,
         COUNT(*) as expense_count,
-        SUM(CASE WHEN grade = 'saving' THEN amount ELSE 0 END) as saving_amount,
-        SUM(CASE WHEN grade = 'standard' THEN amount ELSE 0 END) as standard_amount,
-        SUM(CASE WHEN grade = 'reward' THEN amount ELSE 0 END) as reward_amount,
-        SUM(CASE WHEN grade = 'saving' THEN 1 ELSE 0 END) as saving_count,
-        SUM(CASE WHEN grade = 'standard' THEN 1 ELSE 0 END) as standard_count,
-        SUM(CASE WHEN grade = 'reward' THEN 1 ELSE 0 END) as reward_count
-      FROM expenses
-      WHERE date(created_at) >= ? AND date(created_at) < ?
-        AND category != 'その他'
-      GROUP BY category
+        SUM(CASE WHEN e.grade = 'saving' THEN e.amount ELSE 0 END) as saving_amount,
+        SUM(CASE WHEN e.grade = 'standard' THEN e.amount ELSE 0 END) as standard_amount,
+        SUM(CASE WHEN e.grade = 'reward' THEN e.amount ELSE 0 END) as reward_amount,
+        SUM(CASE WHEN e.grade = 'saving' THEN 1 ELSE 0 END) as saving_count,
+        SUM(CASE WHEN e.grade = 'standard' THEN 1 ELSE 0 END) as standard_count,
+        SUM(CASE WHEN e.grade = 'reward' THEN 1 ELSE 0 END) as reward_count
+      FROM expenses e
+      LEFT JOIN categories c ON e.category_id = c.id
+      WHERE date(e.created_at) >= ? AND date(e.created_at) < ?
+        AND c.name != 'その他'
+      GROUP BY e.category_id
       ORDER BY total_amount DESC
     ''', [startStr, endStr]);
 
@@ -1363,11 +1513,13 @@ class DatabaseService {
   /// 未確定の予定支出を全て取得（予定日昇順）
   Future<List<ScheduledExpense>> getUnconfirmedScheduledExpenses() async {
     final db = await database;
-    final maps = await db.query(
-      'scheduled_expenses',
-      where: 'confirmed = 0',
-      orderBy: 'scheduled_date ASC',
-    );
+    final maps = await db.rawQuery('''
+      SELECT s.*, c.name as category_name
+      FROM scheduled_expenses s
+      LEFT JOIN categories c ON s.category_id = c.id
+      WHERE s.confirmed = 0
+      ORDER BY s.scheduled_date ASC
+    ''');
     return maps.map((map) => ScheduledExpense.fromMap(map)).toList();
   }
 
@@ -1375,12 +1527,13 @@ class DatabaseService {
   Future<List<ScheduledExpense>> getOverdueScheduledExpenses() async {
     final db = await database;
     final today = _formatDateOnly(DateTime.now());
-    final maps = await db.query(
-      'scheduled_expenses',
-      where: 'confirmed = 0 AND date(scheduled_date) < ?',
-      whereArgs: [today],
-      orderBy: 'scheduled_date ASC',
-    );
+    final maps = await db.rawQuery('''
+      SELECT s.*, c.name as category_name
+      FROM scheduled_expenses s
+      LEFT JOIN categories c ON s.category_id = c.id
+      WHERE s.confirmed = 0 AND date(s.scheduled_date) < ?
+      ORDER BY s.scheduled_date ASC
+    ''', [today]);
     return maps.map((map) => ScheduledExpense.fromMap(map)).toList();
   }
 
@@ -1424,11 +1577,110 @@ class DatabaseService {
     // 2. expensesテーブルに登録（created_atは予定日）
     final expense = Expense(
       amount: scheduledExpense.amount,
+      categoryId: scheduledExpense.categoryId,
       category: scheduledExpense.category,
       grade: scheduledExpense.grade,
       memo: scheduledExpense.memo,
       createdAt: scheduledExpense.scheduledDate,
     );
     return await insertExpense(expense);
+  }
+
+  // ========================================
+  // CategoryBudget CRUD
+  // ========================================
+
+  /// カテゴリ予算を全て取得
+  Future<List<CategoryBudget>> getCategoryBudgets() async {
+    final db = await database;
+    final maps = await db.rawQuery('''
+      SELECT cb.*, c.name as category_name
+      FROM category_budgets cb
+      LEFT JOIN categories c ON cb.category_id = c.id
+      ORDER BY cb.created_at ASC
+    ''');
+    return maps.map((map) => CategoryBudget.fromMap(map)).toList();
+  }
+
+  /// カテゴリ予算を追加
+  Future<int> insertCategoryBudget(CategoryBudget budget) async {
+    final db = await database;
+    final map = budget.toMap();
+    map.remove('id');
+    return await db.insert(
+      'category_budgets',
+      map,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// カテゴリ予算を更新
+  Future<void> updateCategoryBudget(CategoryBudget budget) async {
+    final db = await database;
+    await db.update(
+      'category_budgets',
+      budget.toMap(),
+      where: 'id = ?',
+      whereArgs: [budget.id],
+    );
+  }
+
+  /// カテゴリ予算を削除
+  Future<void> deleteCategoryBudget(int id) async {
+    final db = await database;
+    await db.delete(
+      'category_budgets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// カテゴリ名でカテゴリ予算を削除（カテゴリ削除時の連動用）
+  Future<void> deleteCategoryBudgetByCategoryId(int categoryId) async {
+    final db = await database;
+    await db.delete(
+      'category_budgets',
+      where: 'category_id = ?',
+      whereArgs: [categoryId],
+    );
+  }
+
+  /// 今月のみ（one_time）のカテゴリ予算を全て削除
+  Future<void> deleteOneTimeCategoryBudgets() async {
+    final db = await database;
+    await db.delete(
+      'category_budgets',
+      where: 'period_type = ?',
+      whereArgs: ['one_time'],
+    );
+  }
+
+  /// カテゴリ別の支出合計を取得（サイクル内）
+  /// 返り値: Map<カテゴリ名, 支出合計>
+  Future<Map<String, int>> getCategoryExpenseTotals({
+    required DateTime cycleStartDate,
+    required DateTime cycleEndDate,
+  }) async {
+    final db = await database;
+    final startStr = _formatDateOnly(cycleStartDate);
+    final endDate = cycleEndDate.add(const Duration(days: 1));
+    final endStr = _formatDateOnly(endDate);
+
+    final results = await db.rawQuery('''
+      SELECT c.name as category_name, SUM(e.amount) as total
+      FROM expenses e
+      LEFT JOIN categories c ON e.category_id = c.id
+      WHERE date(e.created_at) >= ? AND date(e.created_at) < ?
+      GROUP BY e.category_id
+    ''', [startStr, endStr]);
+
+    final totals = <String, int>{};
+    for (final row in results) {
+      final categoryName = row['category_name'] as String?;
+      if (categoryName != null) {
+        totals[categoryName] = row['total'] as int;
+      }
+    }
+    return totals;
   }
 }

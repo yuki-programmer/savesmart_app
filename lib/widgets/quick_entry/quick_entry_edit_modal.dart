@@ -31,6 +31,7 @@ class QuickEntryEditModal extends StatefulWidget {
 
 class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
   late TextEditingController _titleController;
+  int? _selectedCategoryId;
   String? _selectedCategory;
   int _amount = 0;
   int _unit = 100;
@@ -64,6 +65,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.entry?.title ?? '');
+    _selectedCategoryId = widget.entry?.categoryId;
     _selectedCategory = widget.entry?.category;
     _amount = widget.entry?.amount ?? 0;
     _selectedGrade = widget.entry?.grade ?? 'standard';
@@ -89,6 +91,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
   }
 
   bool get _canSave =>
+      _selectedCategoryId != null &&
       _selectedCategory != null &&
       _amount > 0;
 
@@ -123,7 +126,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textMuted.withOpacity(0.3),
+                    color: AppColors.textMuted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -158,17 +161,17 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   hintText: '空欄ならカテゴリ名を使用',
                   hintStyle: GoogleFonts.inter(
                     fontSize: 14,
-                    color: AppColors.textMuted.withOpacity(0.7),
+                    color: AppColors.textMuted.withValues(alpha: 0.7),
                   ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.black.withOpacity(0.06)),
+                    borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.black.withOpacity(0.06)),
+                    borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -207,7 +210,13 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   final isSelected = _selectedCategory == category;
                   return GestureDetector(
                     onTap: () {
+                      final appState = context.read<AppState>();
+                      final categoryObj = appState.categories.firstWhere(
+                        (c) => c.name == category,
+                        orElse: () => appState.categories.first,
+                      );
                       setState(() {
+                        _selectedCategoryId = categoryObj.id;
                         _selectedCategory = category;
                       });
                     },
@@ -224,7 +233,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                         border: Border.all(
                           color: isSelected
                               ? _selectedGradeData['color'] as Color
-                              : Colors.black.withOpacity(0.06),
+                              : Colors.black.withValues(alpha: 0.06),
                           width: isSelected ? 1.5 : 1,
                         ),
                       ),
@@ -320,7 +329,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                           border: Border.all(
                             color: isSelected
                                 ? color
-                                : Colors.black.withOpacity(0.06),
+                                : Colors.black.withValues(alpha: 0.06),
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -351,7 +360,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   decoration: BoxDecoration(
                     color: _canSave
                         ? _selectedGradeData['color'] as Color
-                        : AppColors.textMuted.withOpacity(0.3),
+                        : AppColors.textMuted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -378,7 +387,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.accentRed.withOpacity(0.8),
+                        color: AppColors.accentRed.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -401,7 +410,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black.withOpacity(0.04)),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -444,6 +453,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
     final entry = QuickEntry(
       id: widget.entry?.id,
       title: _effectiveTitle,
+      categoryId: _selectedCategoryId!,
       category: _selectedCategory!,
       amount: _amount,
       grade: _selectedGrade,

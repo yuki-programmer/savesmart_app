@@ -55,7 +55,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textMuted.withOpacity(0.25),
+              color: AppColors.textMuted.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -67,7 +67,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             style: GoogleFonts.inter(
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withOpacity(0.9),
+              color: AppColors.textPrimary.withValues(alpha: 0.9),
               height: 1.3,
             ),
             textAlign: TextAlign.center,
@@ -78,7 +78,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary.withOpacity(0.75),
+              color: AppColors.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -100,7 +100,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withOpacity(0.75),
+                    color: AppColors.textSecondary.withValues(alpha: 0.75),
                     height: 1.4,
                   ),
                 ),
@@ -109,7 +109,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textMuted.withOpacity(0.8),
+                    color: AppColors.textMuted.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -123,7 +123,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withOpacity(0.75),
+              color: AppColors.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -166,8 +166,8 @@ class _EditAmountModalState extends State<EditAmountModal> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: _newAmount > widget.expense.amount
-                    ? AppColors.accentRedLight.withOpacity(0.6)
-                    : AppColors.accentGreenLight.withOpacity(0.6),
+                    ? AppColors.accentRedLight.withValues(alpha: 0.6)
+                    : AppColors.accentGreenLight.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -216,7 +216,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary.withOpacity(0.75),
+                          color: AppColors.textSecondary.withValues(alpha: 0.75),
                         ),
                       ),
                     ),
@@ -233,8 +233,8 @@ class _EditAmountModalState extends State<EditAmountModal> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: _newAmount > 0 && _newAmount != widget.expense.amount
-                          ? AppColors.accentOrange.withOpacity(0.9)
-                          : AppColors.textMuted.withOpacity(0.25),
+                          ? AppColors.accentOrange.withValues(alpha: 0.9)
+                          : AppColors.textMuted.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -284,7 +284,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -312,6 +312,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
     final updatedExpense = Expense(
       id: widget.expense.id,
       amount: _newAmount,
+      categoryId: widget.expense.categoryId,
       category: widget.expense.category,
       grade: widget.expense.grade,
       memo: widget.expense.memo,

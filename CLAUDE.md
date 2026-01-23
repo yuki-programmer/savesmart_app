@@ -48,8 +48,8 @@ DatabaseService (Singleton)
 SQLite Database (savesmart.db)
 ```
 
-### Database Schema (Version 9)
-Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`, `quick_entries`, `daily_budgets`, `cycle_incomes`, `scheduled_expenses`
+### Database Schema (Version 10)
+Tables: `expenses`, `categories`, `budgets`, `fixed_costs`, `fixed_cost_categories`, `quick_entries`, `daily_budgets`, `cycle_incomes`, `scheduled_expenses`, `category_budgets`
 
 Key fields:
 - `expenses.grade`: 'saving' | 'standard' | 'reward'
@@ -59,6 +59,7 @@ Key fields:
 - `daily_budgets`: Fixed daily allowance per date (date PK, fixed_amount)
 - `cycle_incomes`: Cycle-based income (cycle_key, main_income, sub_income, sub_income_name)
 - `scheduled_expenses`: Future planned expenses (amount, category, grade, memo, scheduled_date, confirmed, confirmed_at)
+- `category_budgets`: Per-category budget limits (category_name UNIQUE, budget_amount, period_type: 'recurring'|'one_time')
 
 Indices:
 - `idx_expenses_created_at`: Optimizes date-range queries
@@ -200,6 +201,21 @@ Currency format is stored in `AppState.currencyFormat` ('prefix' or 'suffix').
   - Dialog: `lib/widgets/scheduled_expense_confirmation_dialog.dart`
 - AppState methods: `addScheduledExpense`, `updateScheduledExpense`, `deleteScheduledExpense`, `confirmScheduledExpense`, `confirmScheduledExpenseWithModification`
 
+### Category Budget (カテゴリ別予算)
+- Premium-only feature for setting budget limits per category
+- Entry point: Analytics screen → "カテゴリ別の支出" section → "予算を設定" button
+- Period types:
+  - `recurring`: Continues to next cycle (毎月)
+  - `one_time`: Auto-deleted on cycle change (今月のみ)
+- Cycle report: Shows previous cycle achievement on cycle change
+  - Dialog: `CategoryBudgetReportDialog` (`lib/widgets/category_budget_report_dialog.dart`)
+  - Displays consumption rate per category, continuing/ending budgets
+- Key files:
+  - Model: `lib/models/category_budget.dart`
+  - Screen: `lib/screens/category_budget_screen.dart`
+- AppState methods: `addCategoryBudget`, `updateCategoryBudget`, `deleteCategoryBudget`, `deleteOneTimeCategoryBudgets`, `getCategoryBudgetStatus`, `getPreviousCycleBudgetStatus`
+- AppState getters: `budgetedCategoryNames`, `unbudgetedCategoryNames`, `continuingBudgets`, `endingBudgets`
+
 ### Analytics Accordion Sections (分析画面アコーディオン)
 Premium-only accordion sections with icon + 1-line summary:
 - **カテゴリ別の支出割合**: Pie chart + category list (top category summary)
@@ -213,7 +229,7 @@ Locked sections are tappable and navigate to PremiumScreen
 ### Premium Screen (有料プランについて)
 - Access: Settings → 有料プランについて, or tap locked features
 - Non-subscribed view: Hero section, feature cards (horizontal scroll), plan selection, trial info, CTA
-- Feature cards: 将来の支出を先取り登録, 今週どれくらい使える?, カテゴリ別支出割合, 支出ペースグラフ, 家計の余裕
+- Feature cards: 将来の支出を先取り登録, 今週どれくらい使える?, カテゴリ別支出割合, 支出ペースグラフ, 家計の余裕, カテゴリに上限を設定
 - Subscribed view: Status card (green), current plan info, renewal date, upgrade option (monthly→yearly), subscription management link
 - Widget: `PremiumScreen` (`lib/screens/premium_screen.dart`)
 

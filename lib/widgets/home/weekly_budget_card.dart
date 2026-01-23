@@ -57,7 +57,7 @@ class WeeklyBudgetCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -70,10 +70,10 @@ class WeeklyBudgetCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.accentBlue.withOpacity(0.1),
+              color: AppColors.accentBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.date_range_outlined,
               size: 20,
               color: AppColors.accentBlue,
@@ -91,7 +91,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -99,7 +99,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                   subText,
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: AppColors.textMuted.withOpacity(0.7),
+                    color: AppColors.textMuted.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -114,7 +114,7 @@ class WeeklyBudgetCard extends StatelessWidget {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withOpacity(0.9),
+              color: AppColors.textPrimary.withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -127,10 +127,10 @@ class WeeklyBudgetCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.accentOrange.withOpacity(0.08),
+        color: AppColors.accentOrange.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.accentOrange.withOpacity(0.2),
+          color: AppColors.accentOrange.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -141,10 +141,10 @@ class WeeklyBudgetCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.accentOrange.withOpacity(0.15),
+              color: AppColors.accentOrange.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.warning_amber_rounded,
               size: 22,
               color: AppColors.accentOrange,
@@ -170,7 +170,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                   '支出を見直そう',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -192,7 +192,7 @@ class WeeklyBudgetCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -205,13 +205,13 @@ class WeeklyBudgetCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.textMuted.withOpacity(0.1),
+                color: AppColors.textMuted.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.date_range_outlined,
                 size: 20,
-                color: AppColors.textMuted.withOpacity(0.5),
+                color: AppColors.textMuted.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(width: 14),
@@ -226,7 +226,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textMuted.withOpacity(0.7),
+                      color: AppColors.textMuted.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -235,7 +235,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted.withOpacity(0.5),
+                      color: AppColors.textMuted.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -264,7 +264,7 @@ class WeeklyBudgetCard extends StatelessWidget {
           Icon(
             Icons.lock_outline,
             size: 12,
-            color: AppColors.textMuted.withOpacity(0.7),
+            color: AppColors.textMuted.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 4),
           Text(
@@ -272,7 +272,7 @@ class WeeklyBudgetCard extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted.withOpacity(0.7),
+              color: AppColors.textMuted.withValues(alpha: 0.7),
             ),
           ),
         ],

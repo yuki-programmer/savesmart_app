@@ -178,7 +178,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
             child: Container(
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.accentBlue.withOpacity(0.1)
+                    ? AppColors.accentBlue.withValues(alpha: 0.1)
                     : AppColors.bgPrimary,
                 borderRadius: BorderRadius.circular(10),
                 border: isSelected

@@ -104,7 +104,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withOpacity(0.25),
+                  color: AppColors.textMuted.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -116,7 +116,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary.withOpacity(0.9),
+                  color: AppColors.textPrimary.withValues(alpha: 0.9),
                   height: 1.3,
                 ),
               ),
@@ -138,8 +138,8 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: hasData
-                        ? color.withOpacity(0.08)
-                        : AppColors.bgPrimary.withOpacity(0.5),
+                        ? color.withValues(alpha: 0.08)
+                        : AppColors.bgPrimary.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -150,14 +150,14 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                         height: 32,
                         decoration: BoxDecoration(
                           color: hasData
-                              ? color.withOpacity(0.15)
-                              : AppColors.textMuted.withOpacity(0.1),
+                              ? color.withValues(alpha: 0.15)
+                              : AppColors.textMuted.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           icon,
                           size: 16,
-                          color: hasData ? color : AppColors.textMuted.withOpacity(0.5),
+                          color: hasData ? color : AppColors.textMuted.withValues(alpha: 0.5),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -169,8 +169,8 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: hasData
-                                ? AppColors.textPrimary.withOpacity(0.9)
-                                : AppColors.textMuted.withOpacity(0.6),
+                                ? AppColors.textPrimary.withValues(alpha: 0.9)
+                                : AppColors.textMuted.withValues(alpha: 0.6),
                             height: 1.4,
                           ),
                         ),
@@ -182,8 +182,8 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: hasData
-                              ? AppColors.textPrimary.withOpacity(0.9)
-                              : AppColors.textMuted.withOpacity(0.5),
+                              ? AppColors.textPrimary.withValues(alpha: 0.9)
+                              : AppColors.textMuted.withValues(alpha: 0.5),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -194,8 +194,8 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
                           color: hasData
-                              ? AppColors.textSecondary.withOpacity(0.7)
-                              : AppColors.textMuted.withOpacity(0.4),
+                              ? AppColors.textSecondary.withValues(alpha: 0.7)
+                              : AppColors.textMuted.withValues(alpha: 0.4),
                           height: 1.4,
                         ),
                       ),
@@ -219,7 +219,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary.withOpacity(0.8),
+                      color: AppColors.textSecondary.withValues(alpha: 0.8),
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,

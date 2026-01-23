@@ -25,6 +25,7 @@ class SplitModal extends StatefulWidget {
 class _SplitModalState extends State<SplitModal> {
   int _splitAmount = 0;
   int _splitUnit = 100;
+  int? _targetCategoryId;
   String? _targetCategory;
   late String _targetGrade;
   late List<String> _availableCategories;
@@ -40,6 +41,20 @@ class _SplitModalState extends State<SplitModal> {
     }
     // デフォルトは切り出し元のタイプ
     _targetGrade = widget.expense.grade;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 初期カテゴリIDを設定
+    if (_targetCategory != null && _targetCategoryId == null) {
+      final appState = context.read<AppState>();
+      final categoryObj = appState.categories.firstWhere(
+        (c) => c.name == _targetCategory,
+        orElse: () => appState.categories.first,
+      );
+      _targetCategoryId = categoryObj.id;
+    }
   }
 
   int get _maxSplitAmount => widget.expense.amount - 1;
@@ -66,7 +81,7 @@ class _SplitModalState extends State<SplitModal> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textMuted.withOpacity(0.25),
+              color: AppColors.textMuted.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -78,7 +93,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withOpacity(0.9),
+              color: AppColors.textPrimary.withValues(alpha: 0.9),
               height: 1.3,
             ),
             textAlign: TextAlign.center,
@@ -89,7 +104,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary.withOpacity(0.75),
+              color: AppColors.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -111,7 +126,7 @@ class _SplitModalState extends State<SplitModal> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary.withOpacity(0.9),
+                    color: AppColors.textPrimary.withValues(alpha: 0.9),
                     height: 1.4,
                   ),
                 ),
@@ -120,7 +135,7 @@ class _SplitModalState extends State<SplitModal> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withOpacity(0.9),
+                    color: AppColors.textPrimary.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -134,7 +149,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withOpacity(0.75),
+              color: AppColors.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -179,7 +194,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withOpacity(0.75),
+              color: AppColors.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -212,7 +227,13 @@ class _SplitModalState extends State<SplitModal> {
                 );
               }).toList(),
               onChanged: (value) {
+                final appState = context.read<AppState>();
+                final categoryObj = appState.categories.firstWhere(
+                  (c) => c.name == value,
+                  orElse: () => appState.categories.first,
+                );
                 setState(() {
+                  _targetCategoryId = categoryObj.id;
                   _targetCategory = value;
                 });
               },
@@ -226,7 +247,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withOpacity(0.75),
+              color: AppColors.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -239,7 +260,7 @@ class _SplitModalState extends State<SplitModal> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.accentBlueLight.withOpacity(0.6),
+                color: AppColors.accentBlueLight.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
@@ -252,7 +273,7 @@ class _SplitModalState extends State<SplitModal> {
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w400,
-                          color: AppColors.textPrimary.withOpacity(0.85),
+                          color: AppColors.textPrimary.withValues(alpha: 0.85),
                           height: 1.4,
                         ),
                       ),
@@ -261,7 +282,7 @@ class _SplitModalState extends State<SplitModal> {
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary.withOpacity(0.9),
+                          color: AppColors.textPrimary.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -277,7 +298,7 @@ class _SplitModalState extends State<SplitModal> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: AppColors.textPrimary.withOpacity(0.85),
+                              color: AppColors.textPrimary.withValues(alpha: 0.85),
                               height: 1.4,
                             ),
                           ),
@@ -318,7 +339,7 @@ class _SplitModalState extends State<SplitModal> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary.withOpacity(0.75),
+                          color: AppColors.textSecondary.withValues(alpha: 0.75),
                         ),
                       ),
                     ),
@@ -335,8 +356,8 @@ class _SplitModalState extends State<SplitModal> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: _splitAmount > 0 && _targetCategory != null
-                          ? AppColors.accentBlue.withOpacity(0.9)
-                          : AppColors.textMuted.withOpacity(0.25),
+                          ? AppColors.accentBlue.withValues(alpha: 0.9)
+                          : AppColors.textMuted.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -385,7 +406,7 @@ class _SplitModalState extends State<SplitModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
@@ -430,7 +451,7 @@ class _SplitModalState extends State<SplitModal> {
               ),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? color.withOpacity(0.15) : AppColors.bgPrimary,
+                color: isSelected ? color.withValues(alpha: 0.15) : AppColors.bgPrimary,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isSelected ? color : Colors.transparent,
@@ -491,7 +512,7 @@ class _SplitModalState extends State<SplitModal> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -514,11 +535,12 @@ class _SplitModalState extends State<SplitModal> {
   }
 
   Future<void> _performSplit() async {
-    if (_splitAmount <= 0 || _targetCategory == null) return;
+    if (_splitAmount <= 0 || _targetCategoryId == null || _targetCategory == null) return;
 
     final success = await context.read<AppState>().splitExpense(
       widget.expense.id!,
       _splitAmount,
+      _targetCategoryId!,
       _targetCategory!,
       grade: _targetGrade,
     );

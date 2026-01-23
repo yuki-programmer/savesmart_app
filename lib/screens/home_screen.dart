@@ -21,6 +21,8 @@ import 'quick_entry_manage_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
 import 'fixed_cost_history_screen.dart';
+import 'category_budget_screen.dart';
+import '../widgets/home/category_budget_section.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -132,6 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         // 今月サマリーカード - Selector化
                         _buildMonthlySummarySection(),
                         const SizedBox(height: 16),
+                        // カテゴリ予算セクション（Premium機能）
+                        _buildCategoryBudgetSection(),
                         // クイック登録セクション - Selector化
                         _buildQuickEntrySectionWithSelector(),
                         const SizedBox(height: 16),
@@ -346,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           border: isLast
               ? null
-              : Border(
+              : const Border(
                   bottom: BorderSide(color: AppColors.borderSubtle),
                 ),
         ),
@@ -459,7 +463,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textMuted.withOpacity(0.3),
+                    color: AppColors.textMuted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -509,6 +513,54 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  /// カテゴリ予算セクション（Premium機能）
+  Widget _buildCategoryBudgetSection() {
+    return Selector<AppState, _CategoryBudgetSectionData>(
+      selector: (_, appState) => _CategoryBudgetSectionData(
+        isPremium: appState.isPremium,
+        categoryBudgets: appState.categoryBudgets,
+        currencyFormat: appState.currencyFormat,
+      ),
+      builder: (context, data, child) {
+        // Premiumでない場合は非表示
+        if (!data.isPremium) {
+          return const SizedBox.shrink();
+        }
+
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: context.read<AppState>().getCategoryBudgetStatus(),
+          builder: (context, snapshot) {
+            final budgetStatusList = snapshot.data ?? [];
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: CategoryBudgetSection(
+                budgetStatusList: budgetStatusList,
+                currencyFormat: data.currencyFormat,
+                onEditTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CategoryBudgetScreen(),
+                    ),
+                  );
+                },
+                onSetupTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CategoryBudgetScreen(),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
@@ -579,7 +631,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: AppColors.textSecondary.withOpacity(0.7),
+            color: AppColors.textSecondary.withValues(alpha: 0.7),
             height: 1.3,
           ),
         ),
@@ -591,14 +643,14 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 1),
               ),
             ],
           ),
           child: IconButton(
-            icon: Icon(Icons.settings_outlined, size: 18, color: AppColors.textMuted.withOpacity(0.6)),
+            icon: Icon(Icons.settings_outlined, size: 18, color: AppColors.textMuted.withValues(alpha: 0.6)),
             onPressed: () {
               Navigator.push(
                 context,
@@ -723,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withOpacity(0.85),
+                color: AppColors.textPrimary.withValues(alpha: 0.85),
                 height: 1.4,
               ),
             ),
@@ -739,7 +791,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.accentBlue.withOpacity(0.8),
+                  color: AppColors.accentBlue.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -813,7 +865,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: AppColors.accentBlue.withOpacity(0.2),
+            color: AppColors.accentBlue.withValues(alpha: 0.2),
             style: BorderStyle.solid,
           ),
         ),
@@ -823,7 +875,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               Icons.add_circle_outline,
               size: 18,
-              color: AppColors.accentBlue.withOpacity(0.6),
+              color: AppColors.accentBlue.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 8),
             Text(
@@ -831,7 +883,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary.withOpacity(0.8),
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -876,12 +928,12 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: gradeColor.withOpacity(0.2),
+            color: gradeColor.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: gradeColor.withOpacity(0.06),
+              color: gradeColor.withValues(alpha: 0.06),
               blurRadius: 6,
               offset: const Offset(0, 1),
             ),
@@ -896,7 +948,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withOpacity(0.9),
+                color: AppColors.textPrimary.withValues(alpha: 0.9),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -910,14 +962,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withOpacity(0.85),
+                    color: AppColors.textPrimary.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: gradeLightColor.withOpacity(0.6),
+                    color: gradeLightColor.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -1001,7 +1053,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withOpacity(0.85),
+                color: AppColors.textPrimary.withValues(alpha: 0.85),
                 height: 1.4,
               ),
             ),
@@ -1017,7 +1069,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.accentBlue.withOpacity(0.8),
+                  color: AppColors.accentBlue.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -1037,7 +1089,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textMuted.withOpacity(0.8),
+                  color: AppColors.textMuted.withValues(alpha: 0.8),
                   height: 1.4,
                 ),
               ),
@@ -1058,7 +1110,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withOpacity(0.85),
+            color: AppColors.textPrimary.withValues(alpha: 0.85),
             height: 1.4,
           ),
         ),
@@ -1069,7 +1121,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.015),
+                color: Colors.black.withValues(alpha: 0.015),
                 blurRadius: 6,
                 offset: const Offset(0, 1),
               ),
@@ -1098,7 +1150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary.withOpacity(0.8),
+                                color: AppColors.textSecondary.withValues(alpha: 0.8),
                               ),
                             ),
                             Text(
@@ -1106,7 +1158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary.withOpacity(0.9),
+                                color: AppColors.textPrimary.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -1119,7 +1171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Icon(
                           Icons.expand_more,
                           size: 20,
-                          color: AppColors.textMuted.withOpacity(0.6),
+                          color: AppColors.textMuted.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -1147,7 +1199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         style: GoogleFonts.inter(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w400,
-                                          color: AppColors.textSecondary.withOpacity(0.9),
+                                          color: AppColors.textSecondary.withValues(alpha: 0.9),
                                         ),
                                       ),
                                       Text(
@@ -1155,7 +1207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         style: GoogleFonts.ibmPlexSans(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
-                                          color: AppColors.textPrimary.withOpacity(0.85),
+                                          color: AppColors.textPrimary.withValues(alpha: 0.85),
                                         ),
                                       ),
                                     ],
@@ -1166,7 +1218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               '固定費が登録されていません',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: AppColors.textMuted.withOpacity(0.7),
+                                color: AppColors.textMuted.withValues(alpha: 0.7),
                               ),
                             ),
                           const SizedBox(height: 8),
@@ -1186,14 +1238,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
-                                    color: AppColors.accentBlue.withOpacity(0.8),
+                                    color: AppColors.accentBlue.withValues(alpha: 0.8),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 Icon(
                                   Icons.chevron_right,
                                   size: 16,
-                                  color: AppColors.accentBlue.withOpacity(0.6),
+                                  color: AppColors.accentBlue.withValues(alpha: 0.6),
                                 ),
                               ],
                             ),
@@ -1245,7 +1297,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.015),
+            color: Colors.black.withValues(alpha: 0.015),
             blurRadius: 6,
             offset: const Offset(0, 1),
           ),
@@ -1278,7 +1330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary.withOpacity(0.9),
+                      color: AppColors.textPrimary.withValues(alpha: 0.9),
                       height: 1.4,
                     ),
                   ),
@@ -1292,7 +1344,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withOpacity(0.8),
+                      color: AppColors.textMuted.withValues(alpha: 0.8),
                       height: 1.4,
                     ),
                   ),
@@ -1305,7 +1357,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withOpacity(0.9),
+              color: AppColors.textPrimary.withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -1573,4 +1625,32 @@ class _ScheduledExpensesData {
     }
     return true;
   }
+}
+
+/// カテゴリ予算セクション用データ
+class _CategoryBudgetSectionData {
+  final bool isPremium;
+  final List<dynamic> categoryBudgets;
+  final String currencyFormat;
+
+  const _CategoryBudgetSectionData({
+    required this.isPremium,
+    required this.categoryBudgets,
+    required this.currencyFormat,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _CategoryBudgetSectionData &&
+          runtimeType == other.runtimeType &&
+          isPremium == other.isPremium &&
+          categoryBudgets.length == other.categoryBudgets.length &&
+          currencyFormat == other.currencyFormat;
+
+  @override
+  int get hashCode =>
+      isPremium.hashCode ^
+      categoryBudgets.length.hashCode ^
+      currencyFormat.hashCode;
 }

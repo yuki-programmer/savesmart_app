@@ -153,7 +153,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                         width: 36,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppColors.textMuted.withOpacity(0.25),
+                          color: AppColors.textMuted.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -166,7 +166,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                       style: GoogleFonts.inter(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary.withOpacity(0.9),
+                        color: AppColors.textPrimary.withValues(alpha: 0.9),
                         height: 1.3,
                       ),
                     ),
@@ -195,7 +195,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.accentBlue.withOpacity(0.08),
+                        color: AppColors.accentBlue.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -206,7 +206,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary.withOpacity(0.8),
+                              color: AppColors.textPrimary.withValues(alpha: 0.8),
                             ),
                           ),
                           Text(
@@ -262,7 +262,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withOpacity(0.8),
+            color: AppColors.textPrimary.withValues(alpha: 0.8),
           ),
         ),
         const SizedBox(height: 10),
@@ -279,7 +279,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 decoration: InputDecoration(
                   hintText: '例：250000',
                   hintStyle: GoogleFonts.inter(
-                    color: AppColors.textMuted.withOpacity(0.5),
+                    color: AppColors.textMuted.withValues(alpha: 0.5),
                     fontSize: 16,
                   ),
                   filled: true,
@@ -318,7 +318,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 decoration: BoxDecoration(
                   color: _isMainValid
                       ? AppColors.accentBlue
-                      : AppColors.textMuted.withOpacity(0.3),
+                      : AppColors.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -328,7 +328,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     fontWeight: FontWeight.w600,
                     color: _isMainValid
                         ? Colors.white
-                        : AppColors.textMuted.withOpacity(0.6),
+                        : AppColors.textMuted.withValues(alpha: 0.6),
                   ),
                 ),
               ),
@@ -351,7 +351,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withOpacity(0.8),
+                color: AppColors.textPrimary.withValues(alpha: 0.8),
               ),
             ),
             if (!_showSubIncomeForm)
@@ -361,7 +361,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.accentGreen.withOpacity(0.1),
+                    color: AppColors.accentGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -407,7 +407,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 'ボーナスや臨時収入があれば追加できます',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.textMuted.withOpacity(0.6),
+                  color: AppColors.textMuted.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -435,7 +435,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary.withOpacity(0.85),
+                    color: AppColors.textPrimary.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -455,7 +455,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.accentRed.withOpacity(0.1),
+                color: AppColors.accentRed.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Icon(
@@ -477,7 +477,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
         color: AppColors.bgPrimary,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.accentGreen.withOpacity(0.3),
+          color: AppColors.accentGreen.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -491,7 +491,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
             decoration: InputDecoration(
               hintText: '名目（例：ボーナス）',
               hintStyle: GoogleFonts.inter(
-                color: AppColors.textMuted.withOpacity(0.5),
+                color: AppColors.textMuted.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
               filled: true,
@@ -527,7 +527,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   decoration: InputDecoration(
                     hintText: '金額',
                     hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted.withOpacity(0.5),
+                      color: AppColors.textMuted.withValues(alpha: 0.5),
                       fontSize: 14,
                     ),
                     filled: true,
@@ -602,7 +602,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     decoration: BoxDecoration(
                       color: _isSubValid
                           ? AppColors.accentGreen
-                          : AppColors.textMuted.withOpacity(0.3),
+                          : AppColors.textMuted.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
@@ -613,7 +613,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                           fontWeight: FontWeight.w600,
                           color: _isSubValid
                               ? Colors.white
-                              : AppColors.textMuted.withOpacity(0.6),
+                              : AppColors.textMuted.withValues(alpha: 0.6),
                         ),
                       ),
                     ),

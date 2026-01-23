@@ -137,7 +137,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         leading: IconButton(
           icon: Icon(
             Icons.close,
-            color: AppColors.textSecondary.withOpacity(0.8),
+            color: AppColors.textSecondary.withValues(alpha: 0.8),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -146,7 +146,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withOpacity(0.9),
+            color: AppColors.textPrimary.withValues(alpha: 0.9),
           ),
         ),
         centerTitle: true,
@@ -160,7 +160,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 fontWeight: FontWeight.w600,
                 color: _canSave
                     ? AppColors.accentBlue
-                    : AppColors.textMuted.withOpacity(0.4),
+                    : AppColors.textMuted.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -206,7 +206,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -234,7 +234,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 20,
                         fontWeight: FontWeight.w300,
-                        color: AppColors.textMuted.withOpacity(0.5),
+                        color: AppColors.textMuted.withValues(alpha: 0.5),
                       ),
                     ),
                     // 100円単位ホイール
@@ -263,7 +263,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     '左: 1,000円単位　右: 100円単位',
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: AppColors.textMuted.withOpacity(0.6),
+                      color: AppColors.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                 ),
@@ -279,7 +279,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -297,7 +297,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       hintText: '任意',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 16,
-                        color: AppColors.textMuted.withOpacity(0.5),
+                        color: AppColors.textMuted.withValues(alpha: 0.5),
                       ),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
@@ -323,7 +323,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -341,7 +341,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withOpacity(0.8),
+                  color: AppColors.textSecondary.withValues(alpha: 0.8),
                 ),
               ),
               GestureDetector(
@@ -351,7 +351,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.accentBlue.withOpacity(0.8),
+                    color: AppColors.accentBlue.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -386,12 +386,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.accentBlue.withOpacity(0.1)
+              ? AppColors.accentBlue.withValues(alpha: 0.1)
               : AppColors.bgPrimary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? AppColors.accentBlue.withOpacity(0.3)
+                ? AppColors.accentBlue.withValues(alpha: 0.3)
                 : Colors.transparent,
           ),
         ),
@@ -402,7 +402,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected
                 ? AppColors.accentBlue
-                : AppColors.textSecondary.withOpacity(0.8),
+                : AppColors.textSecondary.withValues(alpha: 0.8),
           ),
         ),
       ),
@@ -421,12 +421,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.textMuted.withOpacity(0.1)
+              ? AppColors.textMuted.withValues(alpha: 0.1)
               : AppColors.bgPrimary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? AppColors.textMuted.withOpacity(0.3)
+                ? AppColors.textMuted.withValues(alpha: 0.3)
                 : Colors.transparent,
           ),
         ),
@@ -437,7 +437,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected
                 ? AppColors.textSecondary
-                : AppColors.textMuted.withOpacity(0.7),
+                : AppColors.textMuted.withValues(alpha: 0.7),
           ),
         ),
       ),
@@ -456,7 +456,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary.withOpacity(0.8),
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -483,12 +483,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.accentBlue.withOpacity(0.1)
+                      ? AppColors.accentBlue.withValues(alpha: 0.1)
                       : AppColors.bgPrimary,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected
-                        ? AppColors.accentBlue.withOpacity(0.3)
+                        ? AppColors.accentBlue.withValues(alpha: 0.3)
                         : Colors.transparent,
                   ),
                 ),
@@ -499,7 +499,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected
                         ? AppColors.accentBlue
-                        : AppColors.textSecondary.withOpacity(0.8),
+                        : AppColors.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -528,7 +528,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               height: 44,
               margin: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                color: AppColors.accentBlueLight.withOpacity(0.5),
+                color: AppColors.accentBlueLight.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
             ),

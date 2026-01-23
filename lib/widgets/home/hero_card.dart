@@ -240,7 +240,7 @@ class _NightContent extends StatelessWidget {
               '今日のふりかえり',
               style: TextStyle(
                 fontSize: 14,
-                color: HomeConstants.nightPrimaryText.withOpacity(0.9),
+                color: HomeConstants.nightPrimaryText.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.5,
               ),
@@ -256,7 +256,7 @@ class _NightContent extends StatelessWidget {
               '今日使えるお金',
               style: TextStyle(
                 fontSize: 12,
-                color: HomeConstants.nightPrimaryText.withOpacity(0.7),
+                color: HomeConstants.nightPrimaryText.withValues(alpha: 0.7),
                 letterSpacing: 0.5,
               ),
             ),
@@ -280,7 +280,7 @@ class _NightContent extends StatelessWidget {
         Container(
           width: 120,
           height: 1,
-          color: HomeConstants.nightPrimaryText.withOpacity(0.2),
+          color: HomeConstants.nightPrimaryText.withValues(alpha: 0.2),
         ),
 
         const SizedBox(height: 16),
@@ -289,7 +289,7 @@ class _NightContent extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildMetric('今日', todayTotal, HomeConstants.nightPrimaryText.withOpacity(0.75)),
+            _buildMetric('今日', todayTotal, HomeConstants.nightPrimaryText.withValues(alpha: 0.75)),
             const SizedBox(width: 32),
             _buildMetric('明日', dynamicTomorrowForecast ?? 0, HomeConstants.nightPrimaryText),
           ],
@@ -304,14 +304,14 @@ class _NightContent extends StatelessWidget {
               Icon(
                 Icons.touch_app_outlined,
                 size: 14,
-                color: HomeConstants.nightPrimaryText.withOpacity(0.6),
+                color: HomeConstants.nightPrimaryText.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 6),
               Text(
                 'タップして振り返る',
                 style: TextStyle(
                   fontSize: 12,
-                  color: HomeConstants.nightPrimaryText.withOpacity(0.6),
+                  color: HomeConstants.nightPrimaryText.withValues(alpha: 0.6),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -329,7 +329,7 @@ class _NightContent extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: textColor.withOpacity(textColor.opacity * 0.7),
+            color: textColor.withValues(alpha: textColor.a * 0.7),
             letterSpacing: 0.5,
           ),
         ),

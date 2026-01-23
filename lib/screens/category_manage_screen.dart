@@ -15,13 +15,13 @@ class CategoryManageScreen extends StatelessWidget {
         backgroundColor: AppColors.bgPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textSecondary.withOpacity(0.8)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textSecondary.withValues(alpha: 0.8)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'カテゴリ管理',
           style: GoogleFonts.inter(
-            color: AppColors.textPrimary.withOpacity(0.9),
+            color: AppColors.textPrimary.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
             fontSize: 17,
           ),
@@ -33,7 +33,7 @@ class CategoryManageScreen extends StatelessWidget {
             child: Text(
               '+ 追加',
               style: GoogleFonts.inter(
-                color: AppColors.accentBlue.withOpacity(0.9),
+                color: AppColors.accentBlue.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -53,7 +53,7 @@ class CategoryManageScreen extends StatelessWidget {
                   Icon(
                     Icons.category_outlined,
                     size: 56,
-                    color: AppColors.textMuted.withOpacity(0.4),
+                    color: AppColors.textMuted.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 14),
                   Text(
@@ -61,7 +61,7 @@ class CategoryManageScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withOpacity(0.7),
+                      color: AppColors.textMuted.withValues(alpha: 0.7),
                       height: 1.4,
                     ),
                   ),
@@ -90,10 +90,10 @@ class CategoryManageScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderSubtle.withOpacity(0.5)),
+        border: Border.all(color: AppColors.borderSubtle.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.015),
+            color: Colors.black.withValues(alpha: 0.015),
             blurRadius: 6,
             offset: const Offset(0, 1),
           ),
@@ -107,7 +107,7 @@ class CategoryManageScreen extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary.withOpacity(0.9),
+                color: AppColors.textPrimary.withValues(alpha: 0.9),
                 height: 1.4,
               ),
             ),
@@ -160,7 +160,7 @@ class CategoryManageScreen extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'カテゴリ名を入力',
             hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withOpacity(0.7),
+              color: AppColors.textMuted.withValues(alpha: 0.7),
               fontSize: 14,
             ),
             filled: true,
@@ -178,16 +178,26 @@ class CategoryManageScreen extends StatelessWidget {
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary.withOpacity(0.7),
+                color: AppColors.textSecondary.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               if (controller.text.trim().isNotEmpty) {
-                context.read<AppState>().addCategory(controller.text.trim());
-                Navigator.pop(context);
+                final success = await context.read<AppState>().addCategory(controller.text.trim());
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  if (!success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('カテゴリの追加に失敗しました', style: GoogleFonts.inter()),
+                        backgroundColor: AppColors.accentRed,
+                      ),
+                    );
+                  }
+                }
               }
             },
             child: Text(
@@ -226,7 +236,7 @@ class CategoryManageScreen extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'カテゴリ名を入力',
             hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withOpacity(0.7),
+              color: AppColors.textMuted.withValues(alpha: 0.7),
               fontSize: 14,
             ),
             filled: true,
@@ -244,19 +254,29 @@ class CategoryManageScreen extends StatelessWidget {
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary.withOpacity(0.7),
+                color: AppColors.textSecondary.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               if (controller.text.trim().isNotEmpty) {
-                context.read<AppState>().updateCategoryNameAndIcon(
+                final success = await context.read<AppState>().updateCategoryNameAndIcon(
                       category.id!,
                       controller.text.trim(),
                     );
-                Navigator.pop(context);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  if (!success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('カテゴリの更新に失敗しました', style: GoogleFonts.inter()),
+                        backgroundColor: AppColors.accentRed,
+                      ),
+                    );
+                  }
+                }
               }
             },
             child: Text(
@@ -294,7 +314,7 @@ class CategoryManageScreen extends StatelessWidget {
               : 'このカテゴリを削除しますか？',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
-            color: AppColors.textSecondary.withOpacity(0.8),
+            color: AppColors.textSecondary.withValues(alpha: 0.8),
             fontSize: 14,
             height: 1.5,
           ),
@@ -305,15 +325,25 @@ class CategoryManageScreen extends StatelessWidget {
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary.withOpacity(0.7),
+                color: AppColors.textSecondary.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
           ),
           TextButton(
-            onPressed: () {
-              context.read<AppState>().deleteCategory(category.id);
-              Navigator.pop(context);
+            onPressed: () async {
+              final success = await context.read<AppState>().deleteCategory(category.id);
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (!success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('カテゴリの削除に失敗しました', style: GoogleFonts.inter()),
+                      backgroundColor: AppColors.accentRed,
+                    ),
+                  );
+                }
+              }
             },
             child: Text(
               '削除',

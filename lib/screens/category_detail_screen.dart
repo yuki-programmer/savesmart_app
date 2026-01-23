@@ -9,11 +9,13 @@ import '../utils/formatters.dart';
 /// カテゴリ詳細分析画面（PLUSプラン専用）
 /// MBTI風の3セグメントバーと詳細カードを表示
 class CategoryDetailScreen extends StatefulWidget {
+  final int categoryId;
   final String categoryName;
   final Color categoryColor;
 
   const CategoryDetailScreen({
     super.key,
+    required this.categoryId,
     required this.categoryName,
     required this.categoryColor,
   });
@@ -134,7 +136,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             onPressed: () => Navigator.of(context).pop(),
             icon: Icon(
               Icons.close,
-              color: AppColors.textSecondary.withOpacity(0.8),
+              color: AppColors.textSecondary.withValues(alpha: 0.8),
               size: 24,
             ),
             splashRadius: 24,
@@ -176,7 +178,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -216,7 +218,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textMuted.withOpacity(0.8),
+                  color: AppColors.textMuted.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -233,7 +235,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
         color: AppColors.bgPrimary,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
         ),
       ),
       padding: const EdgeInsets.all(4),
@@ -260,7 +262,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -275,7 +277,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected
                     ? AppColors.textPrimary
-                    : AppColors.textMuted.withOpacity(0.7),
+                    : AppColors.textMuted.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -315,7 +317,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -445,7 +447,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
                   ),
                 );
               },
@@ -528,7 +530,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w400,
-            color: AppColors.textMuted.withOpacity(0.8),
+            color: AppColors.textMuted.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -548,7 +550,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           style: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withOpacity(0.9),
+            color: AppColors.textPrimary.withValues(alpha: 0.9),
           ),
         ),
         const SizedBox(height: 12),
@@ -604,12 +606,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -726,9 +728,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: avgDiff < 0
-                        ? AppColors.accentGreenLight.withOpacity(0.5)
+                        ? AppColors.accentGreenLight.withValues(alpha: 0.5)
                         : avgDiff > 0
-                            ? AppColors.accentOrangeLight.withOpacity(0.5)
+                            ? AppColors.accentOrangeLight.withValues(alpha: 0.5)
                             : AppColors.bgPrimary,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -769,7 +771,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
                 '今月のデータはありません',
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: AppColors.textMuted.withOpacity(0.7),
+                  color: AppColors.textMuted.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -789,12 +791,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           style: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withOpacity(0.9),
+            color: AppColors.textPrimary.withValues(alpha: 0.9),
           ),
         ),
         const SizedBox(height: 12),
         FutureBuilder<List<Map<String, dynamic>>>(
-          future: appState.getCategoryMonthlyTrend(widget.categoryName, months: 12),
+          future: appState.getCategoryMonthlyTrend(widget.categoryId, months: 12),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Container(
@@ -859,7 +861,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1081,6 +1083,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
 /// カテゴリ詳細画面を表示（Fullscreen Dialog）
 Future<void> showCategoryDetailScreen(
   BuildContext context,
+  int categoryId,
   String categoryName,
   Color categoryColor,
 ) {
@@ -1088,11 +1091,12 @@ Future<void> showCategoryDetailScreen(
     PageRouteBuilder(
       opaque: false,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.3),
+      barrierColor: Colors.black.withValues(alpha: 0.3),
       transitionDuration: const Duration(milliseconds: 350),
       reverseTransitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return CategoryDetailScreen(
+          categoryId: categoryId,
           categoryName: categoryName,
           categoryColor: categoryColor,
         );

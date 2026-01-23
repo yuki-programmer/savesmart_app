@@ -366,6 +366,7 @@ Future<bool> confirmScheduledExpenseWithModification(int id, int amount, String 
 
 ### 12.2 Premium限定機能
 - **予定支出の登録**（将来の支出を先取り登録）
+- **カテゴリ別予算**（カテゴリごとに上限を設定）
 - 今週あと使える（ホーム画面）
 - 消費ペースグラフ
 - 1日あたりの支出分析
@@ -848,3 +849,89 @@ FutureBuilder<Map<String, dynamic>?>(
 ### 22.4 高度な支出予測
 - 基本的な日割り計算のみ
 - 機械学習ベースの予測は未実装
+
+---
+
+## 23. カテゴリ別予算機能（Category Budget）【Premium】
+
+### 23.1 概要
+- カテゴリごとに予算上限を設定する機能
+- 使いすぎを事前に防ぐ（予算に対する消費率を可視化）
+- Premium限定機能
+
+### 23.2 データベース（category_budgets テーブル）
+```sql
+id              INTEGER PRIMARY KEY
+category_name   TEXT NOT NULL UNIQUE   -- カテゴリ名
+budget_amount   INTEGER NOT NULL       -- 予算金額
+period_type     TEXT DEFAULT 'recurring'  -- 'recurring'（毎月）| 'one_time'（今月のみ）
+created_at      TEXT NOT NULL
+updated_at      TEXT NOT NULL
+```
+
+### 23.3 予算タイプ
+| タイプ | 意味 | 動作 |
+|--------|------|------|
+| recurring | 毎月（固定） | 次のサイクルも継続して適用 |
+| one_time | 今月のみ | サイクル切替時に自動削除 |
+
+### 23.4 カテゴリ予算設定画面（CategoryBudgetScreen）
+- アクセス: 分析画面「カテゴリ別の支出」セクション内「予算を設定」ボタン
+- 一覧表示:
+  - 設定済みカテゴリの予算と消費率
+  - プログレスバー（消費率に応じた色分け）
+  - 超過時は赤色でハイライト
+- 新規追加・編集:
+  - カテゴリ選択（ドロップダウン、予算設定済みカテゴリは除外）
+  - 金額入力（ホイールピッカー）
+  - 期間タイプ選択（毎月/今月のみ）
+- 削除: スワイプまたは編集画面から
+
+### 23.5 分析画面での表示
+- 「カテゴリ別の支出」セクション内に予算進捗を表示
+- 各カテゴリに消費率バーを追加
+- 超過カテゴリは警告表示
+
+### 23.6 サイクル切替時のレポート（CategoryBudgetReportDialog）
+- 条件: サイクルが切り替わった初回起動時
+- ダイアログ内容:
+  - 前サイクルの各カテゴリ予算達成状況
+  - 消費率バー（超過は赤、達成は青）
+  - 継続予算（recurring）のリスト
+  - 終了予算（one_time）のリスト
+- アクション:
+  - 「閉じる」: レポート確認完了、one_time予算を削除
+  - 「予算を編集する」: CategoryBudgetScreenへ遷移
+
+### 23.7 AppState メソッド
+```dart
+// カテゴリ予算 CRUD
+Future<bool> addCategoryBudget(CategoryBudget)
+Future<bool> updateCategoryBudget(CategoryBudget)
+Future<bool> deleteCategoryBudget(int id)
+Future<bool> deleteOneTimeCategoryBudgets()  // one_time予算を全削除
+
+// カテゴリ予算ステータス取得
+Future<List<Map<String, dynamic>>> getCategoryBudgetStatus()
+  // 返り値: [{ 'budget': CategoryBudget, 'spent': int, 'rate': double, 'isOverBudget': bool }, ...]
+  // 消費率が高い順にソート
+
+Future<List<Map<String, dynamic>>> getPreviousCycleBudgetStatus()
+  // 前サイクルの達成状況（サイクルレポート用）
+
+// ゲッター
+List<String> get budgetedCategoryNames      // 予算設定済みカテゴリ名
+List<String> get unbudgetedCategoryNames    // 予算未設定カテゴリ名
+List<CategoryBudget> get continuingBudgets  // recurring予算リスト
+List<CategoryBudget> get endingBudgets      // one_time予算リスト
+```
+
+### 23.8 関連ファイル
+- モデル: `lib/models/category_budget.dart`
+- 設定画面: `lib/screens/category_budget_screen.dart`
+- サイクルレポート: `lib/widgets/category_budget_report_dialog.dart`
+
+### 23.9 PremiumScreen での紹介
+- 機能カード: 「カテゴリに上限を設定」
+- アイコン: `Icons.tune_outlined`（ピンク）
+- 説明: 「使いすぎを事前に防ぐ」

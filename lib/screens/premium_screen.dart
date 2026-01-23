@@ -33,6 +33,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
   static const Color _iconBgGreen = Color(0xFFF0FDF4);
   static const Color _iconBgOrange = Color(0xFFFFF7ED);
   static const Color _iconBgPurple = Color(0xFFFAF5FF);
+  static const Color _iconBgPink = Color(0xFFFCE7F3);
+  static const Color _accentPink = Color(0xFFEC4899);
   static const Color _trialBgStart = Color(0xFFEFF6FF);
   static const Color _trialBgEnd = Color(0xFFDBEAFE);
   static const Color _heroIconBgStart = Color(0xFFFEF3C7);
@@ -87,10 +89,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _accentGreen.withOpacity(0.08),
+              color: _accentGreen.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _accentGreen.withOpacity(0.25),
+                color: _accentGreen.withValues(alpha: 0.25),
                 width: 1,
               ),
             ),
@@ -101,7 +103,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _accentGreen.withOpacity(0.15),
+                    color: _accentGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -172,7 +174,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.settings_outlined,
                         size: 20,
                         color: _textSecondary,
@@ -188,7 +190,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       ),
                     ],
                   ),
-                  Icon(
+                  const Icon(
                     Icons.chevron_right,
                     size: 20,
                     color: _textMuted,
@@ -237,10 +239,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _accentGold.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: _accentGold.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: _accentGold.withOpacity(0.08),
+              color: _accentGold.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -320,7 +322,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             ),
 
             // 矢印
-            Icon(
+            const Icon(
               Icons.chevron_right,
               size: 22,
               color: _textMuted,
@@ -410,7 +412,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: _accentGold.withOpacity(0.2),
+                  color: _accentGold.withValues(alpha: 0.2),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
@@ -492,6 +494,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
         title: '家計の\n余裕',
         desc: 'あといくら使える？',
       ),
+      _FeatureItem(
+        icon: Icons.tune_outlined,
+        iconBgColor: _iconBgPink,
+        iconColor: _accentPink,
+        title: 'カテゴリに\n上限を設定',
+        desc: '使いすぎを事前に防ぐ',
+      ),
     ];
 
     return Padding(
@@ -521,7 +530,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         border: Border.all(color: _borderLight),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -757,7 +766,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -824,7 +833,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: _accentBlue.withOpacity(0.3),
+                color: _accentBlue.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),

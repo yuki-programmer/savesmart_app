@@ -49,7 +49,7 @@ class ScheduledExpensesListScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.event_available,
                     size: 48,
                     color: AppColors.textMuted,
@@ -157,7 +157,7 @@ class ScheduledExpensesListScreen extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: Text(
+                          child: const Text(
                             '削除',
                             style: TextStyle(color: AppColors.accentRed),
                           ),
@@ -295,7 +295,7 @@ class _ScheduledExpenseCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.calendar_today,
                         size: 12,
                         color: AppColors.textSecondary,

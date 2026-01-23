@@ -97,7 +97,7 @@ class QuickEntryManageScreen extends StatelessWidget {
           Icon(
             Icons.bookmark_outline,
             size: 48,
-            color: AppColors.textMuted.withOpacity(0.5),
+            color: AppColors.textMuted.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -217,7 +217,7 @@ class _QuickEntryListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
       ),
       child: Row(
         children: [
@@ -252,7 +252,7 @@ class _QuickEntryListItem extends StatelessWidget {
                     Container(
                       width: 1,
                       height: 12,
-                      color: AppColors.textMuted.withOpacity(0.3),
+                      color: AppColors.textMuted.withValues(alpha: 0.3),
                     ),
                     const SizedBox(width: 8),
                     // 金額
@@ -293,7 +293,7 @@ class _QuickEntryListItem extends StatelessWidget {
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_horiz,
-              color: AppColors.textSecondary.withOpacity(0.6),
+              color: AppColors.textSecondary.withValues(alpha: 0.6),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),

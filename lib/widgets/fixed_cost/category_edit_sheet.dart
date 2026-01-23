@@ -41,7 +41,7 @@ class _FixedCostCategoryEditSheetState
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.textMuted.withOpacity(0.3),
+                color: AppColors.textMuted.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -65,7 +65,7 @@ class _FixedCostCategoryEditSheetState
                     child: Icon(
                       Icons.close,
                       size: 22,
-                      color: AppColors.textSecondary.withOpacity(0.7),
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -115,7 +115,7 @@ class _FixedCostCategoryEditSheetState
             Icon(
               Icons.add_circle_outline,
               size: 20,
-              color: AppColors.accentBlue.withOpacity(0.8),
+              color: AppColors.accentBlue.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 12),
             Text(
@@ -153,7 +153,7 @@ class _FixedCostCategoryEditSheetState
             icon: Icon(
               Icons.edit_outlined,
               size: 20,
-              color: AppColors.textSecondary.withOpacity(0.6),
+              color: AppColors.textSecondary.withValues(alpha: 0.6),
             ),
             constraints: const BoxConstraints(),
             padding: const EdgeInsets.all(8),
@@ -165,7 +165,7 @@ class _FixedCostCategoryEditSheetState
             icon: Icon(
               Icons.delete_outline,
               size: 20,
-              color: AppColors.textSecondary.withOpacity(0.6),
+              color: AppColors.textSecondary.withValues(alpha: 0.6),
             ),
             constraints: const BoxConstraints(),
             padding: const EdgeInsets.all(8),
@@ -193,7 +193,7 @@ class _FixedCostCategoryEditSheetState
           decoration: InputDecoration(
             hintText: 'カテゴリ名',
             hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withOpacity(0.5),
+              color: AppColors.textMuted.withValues(alpha: 0.5),
             ),
           ),
           style: GoogleFonts.inter(fontSize: 16),
@@ -251,7 +251,7 @@ class _FixedCostCategoryEditSheetState
           decoration: InputDecoration(
             hintText: 'カテゴリ名',
             hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withOpacity(0.5),
+              color: AppColors.textMuted.withValues(alpha: 0.5),
             ),
           ),
           style: GoogleFonts.inter(fontSize: 16),

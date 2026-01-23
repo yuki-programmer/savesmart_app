@@ -24,6 +24,7 @@ class AddScreen extends StatefulWidget {
 
 class _AddScreenState extends State<AddScreen> {
   // 入力状態
+  int? _selectedCategoryId;
   String? _selectedCategory;
   int _expenseAmount = 0;
   int _expenseUnit = 100;
@@ -70,7 +71,7 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   // 登録ボタンの有効化条件
-  bool get _canSubmit => _selectedCategory != null && _expenseAmount > 0;
+  bool get _canSubmit => _selectedCategoryId != null && _selectedCategory != null && _expenseAmount > 0;
 
   // 選択中のグレードデータ
   Map<String, dynamic> get _selectedGradeData =>
@@ -85,13 +86,13 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   /// カテゴリ選択時にスマート・コンボを取得
-  Future<void> _loadSmartCombos(String category) async {
+  Future<void> _loadSmartCombos(int categoryId) async {
     setState(() {
       _isLoadingCombos = true;
     });
 
     final appState = context.read<AppState>();
-    final combos = await appState.getSmartCombos(category);
+    final combos = await appState.getSmartCombos(categoryId);
 
     if (mounted) {
       setState(() {
@@ -210,12 +211,12 @@ class _AddScreenState extends State<AddScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: isPremium
-              ? AppColors.accentBlue.withOpacity(0.08)
+              ? AppColors.accentBlue.withValues(alpha: 0.08)
               : AppColors.bgCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isPremium
-                ? AppColors.accentBlue.withOpacity(0.2)
+                ? AppColors.accentBlue.withValues(alpha: 0.2)
                 : AppColors.borderSubtle,
           ),
         ),
@@ -241,7 +242,7 @@ class _AddScreenState extends State<AddScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.accentOrange.withOpacity(0.15),
+                  color: AppColors.accentOrange.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -332,10 +333,13 @@ class _AddScreenState extends State<AddScreen> {
             return GestureDetector(
               onTap: () {
                 setState(() {
+                  _selectedCategoryId = category.id;
                   _selectedCategory = category.name;
                 });
                 // カテゴリ選択時にスマート・コンボを取得
-                _loadSmartCombos(category.name);
+                if (category.id != null) {
+                  _loadSmartCombos(category.id!);
+                }
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
@@ -348,14 +352,14 @@ class _AddScreenState extends State<AddScreen> {
                   border: Border.all(
                     color: isSelected
                         ? _selectedGradeData['color'] as Color
-                        : Colors.black.withOpacity(0.06),
+                        : Colors.black.withValues(alpha: 0.06),
                     width: isSelected ? 1.5 : 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
                             color: (_selectedGradeData['color'] as Color)
-                                .withOpacity(0.15),
+                                .withValues(alpha: 0.15),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -454,10 +458,10 @@ class _AddScreenState extends State<AddScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: lightColor.withOpacity(0.6),
+                  color: lightColor.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: color.withOpacity(0.4),
+                    color: color.withValues(alpha: 0.4),
                     width: 1,
                   ),
                 ),
@@ -476,7 +480,7 @@ class _AddScreenState extends State<AddScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.15),
+                        color: color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -548,7 +552,7 @@ class _AddScreenState extends State<AddScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -580,7 +584,7 @@ class _AddScreenState extends State<AddScreen> {
             Container(
               width: 1,
               height: 20,
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               margin: const EdgeInsets.symmetric(horizontal: 4),
             ),
             // 単位ボタン
@@ -655,13 +659,13 @@ class _AddScreenState extends State<AddScreen> {
                     color: isSelected ? lightColor : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? color : Colors.black.withOpacity(0.06),
+                      color: isSelected ? color : Colors.black.withValues(alpha: 0.06),
                       width: isSelected ? 2 : 1,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: color.withOpacity(0.2),
+                              color: color.withValues(alpha: 0.2),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -727,17 +731,17 @@ class _AddScreenState extends State<AddScreen> {
             hintText: '例: スタバ 新作フラペチーノ',
             hintStyle: GoogleFonts.inter(
               fontSize: 14,
-              color: AppColors.textMuted.withOpacity(0.7),
+              color: AppColors.textMuted.withValues(alpha: 0.7),
             ),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.06)),
+              borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.black.withOpacity(0.06)),
+              borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -787,7 +791,7 @@ class _AddScreenState extends State<AddScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: remainingAmount > 0
-                      ? AppColors.accentBlueLight.withOpacity(0.5)
+                      ? AppColors.accentBlueLight.withValues(alpha: 0.5)
                       : AppColors.bgPrimary,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -850,10 +854,10 @@ class _AddScreenState extends State<AddScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: lightColor.withOpacity(0.4),
+                color: lightColor.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -873,7 +877,7 @@ class _AddScreenState extends State<AddScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -890,7 +894,7 @@ class _AddScreenState extends State<AddScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -909,7 +913,7 @@ class _AddScreenState extends State<AddScreen> {
                     child: Icon(
                       Icons.close,
                       size: 18,
-                      color: AppColors.textMuted.withOpacity(0.6),
+                      color: AppColors.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -925,7 +929,7 @@ class _AddScreenState extends State<AddScreen> {
                 color: _selectedGradeData['lightColor'] as Color,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: (_selectedGradeData['color'] as Color).withOpacity(0.3),
+                  color: (_selectedGradeData['color'] as Color).withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -943,7 +947,7 @@ class _AddScreenState extends State<AddScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -995,7 +999,7 @@ class _AddScreenState extends State<AddScreen> {
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: AppColors.borderSubtle.withOpacity(0.5),
+                  color: AppColors.borderSubtle.withValues(alpha: 0.5),
                   width: 1,
                 ),
               ),
@@ -1036,7 +1040,7 @@ class _AddScreenState extends State<AddScreen> {
     final categories = context.read<AppState>().categories;
     showAddBreakdownModal(
       context: context,
-      availableCategories: categories.map((c) => c.name).toList(),
+      availableCategories: categories,
       onAdd: (breakdown) {
         setState(() {
           _breakdowns.add(breakdown);
@@ -1073,7 +1077,7 @@ class _AddScreenState extends State<AddScreen> {
         ),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.receipt_long_outlined,
               size: 20,
               color: AppColors.textSecondary,
@@ -1089,7 +1093,7 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ),
             ),
-            Icon(
+            const Icon(
               Icons.chevron_right,
               size: 20,
               color: AppColors.textMuted,
@@ -1110,7 +1114,7 @@ class _AddScreenState extends State<AddScreen> {
         color: AppColors.bgPrimary,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -1125,12 +1129,12 @@ class _AddScreenState extends State<AddScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: _canSubmit ? gradeColor : AppColors.textMuted.withOpacity(0.3),
+              color: _canSubmit ? gradeColor : AppColors.textMuted.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(14),
               boxShadow: _canSubmit
                   ? [
                       BoxShadow(
-                        color: gradeColor.withOpacity(0.3),
+                        color: gradeColor.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -1159,6 +1163,7 @@ class _AddScreenState extends State<AddScreen> {
   void _resetInput() {
     final appState = context.read<AppState>();
     setState(() {
+      _selectedCategoryId = null;
       _selectedCategory = null;
       _expenseAmount = 0;
       _expenseUnit = 100;
@@ -1183,6 +1188,7 @@ class _AddScreenState extends State<AddScreen> {
       // 内訳がない場合は通常の登録
       final expense = Expense(
         amount: _expenseAmount,
+        categoryId: _selectedCategoryId!,
         category: _selectedCategory!,
         grade: _selectedGrade,
         memo: _memoController.text.isEmpty ? null : _memoController.text,
@@ -1198,6 +1204,7 @@ class _AddScreenState extends State<AddScreen> {
         for (final breakdown in _breakdowns) {
           final breakdownExpense = Expense(
             amount: breakdown['amount'] as int,
+            categoryId: breakdown['categoryId'] as int,
             category: breakdown['category'] as String,
             grade: breakdown['type'] as String? ?? _selectedGrade,
             createdAt: now,
@@ -1211,6 +1218,7 @@ class _AddScreenState extends State<AddScreen> {
         if (remainingAmount > 0) {
           final remainingExpense = Expense(
             amount: remainingAmount,
+            categoryId: _selectedCategoryId!,
             category: _selectedCategory!,
             grade: _selectedGrade,
             memo: _memoController.text.isEmpty ? null : _memoController.text,

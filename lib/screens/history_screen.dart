@@ -255,7 +255,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 6,
                     offset: const Offset(0, 1),
                   ),
@@ -264,7 +264,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 18,
-                color: AppColors.textSecondary.withOpacity(0.8),
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -278,7 +278,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withOpacity(0.9),
+                    color: AppColors.textPrimary.withValues(alpha: 0.9),
                     height: 1.3,
                   ),
                 ),
@@ -288,7 +288,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withOpacity(0.7),
+                      color: AppColors.textMuted.withValues(alpha: 0.7),
                     ),
                   ),
               ],
@@ -309,12 +309,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
               height: 40,
               decoration: BoxDecoration(
                 color: _isSearching
-                    ? AppColors.accentBlueLight.withOpacity(0.7)
+                    ? AppColors.accentBlueLight.withValues(alpha: 0.7)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 6,
                     offset: const Offset(0, 1),
                   ),
@@ -325,7 +325,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 size: 20,
                 color: _isSearching
                     ? AppColors.accentBlue
-                    : AppColors.textSecondary.withOpacity(0.7),
+                    : AppColors.textSecondary.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -351,18 +351,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
         decoration: InputDecoration(
           hintText: 'カテゴリ・メモで検索（全期間）',
           hintStyle: GoogleFonts.inter(
-            color: AppColors.textMuted.withOpacity(0.7),
+            color: AppColors.textMuted.withValues(alpha: 0.7),
             fontSize: 14,
           ),
           prefixIcon: Icon(
             Icons.search,
-            color: AppColors.textMuted.withOpacity(0.6),
+            color: AppColors.textMuted.withValues(alpha: 0.6),
             size: 20,
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
                   icon: Icon(Icons.clear,
-                      color: AppColors.textMuted.withOpacity(0.6), size: 18),
+                      color: AppColors.textMuted.withValues(alpha: 0.6), size: 18),
                   onPressed: () {
                     _searchController.clear();
                     _performSearch('');
@@ -374,17 +374,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide:
-                BorderSide(color: AppColors.borderSubtle.withOpacity(0.5)),
+                BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.5)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide:
-                BorderSide(color: AppColors.borderSubtle.withOpacity(0.5)),
+                BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.5)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide:
-                BorderSide(color: AppColors.accentBlue.withOpacity(0.5)),
+                BorderSide(color: AppColors.accentBlue.withValues(alpha: 0.5)),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -478,10 +478,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.accentBlueLight.withOpacity(0.3),
+        color: AppColors.accentBlueLight.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.accentBlue.withOpacity(0.2),
+          color: AppColors.accentBlue.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -490,7 +490,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Icon(
             Icons.date_range_rounded,
             size: 18,
-            color: AppColors.accentBlue.withOpacity(0.8),
+            color: AppColors.accentBlue.withValues(alpha: 0.8),
           ),
           const SizedBox(width: 10),
           Text(
@@ -516,7 +516,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           height: 24,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: AppColors.accentBlue.withOpacity(0.5),
+            color: AppColors.accentBlue.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -537,7 +537,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Icon(
               Icons.search_off_rounded,
               size: 56,
-              color: AppColors.textMuted.withOpacity(0.4),
+              color: AppColors.textMuted.withValues(alpha: 0.4),
             ),
             const SizedBox(height: 14),
             Text(
@@ -545,7 +545,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textMuted.withOpacity(0.7),
+                color: AppColors.textMuted.withValues(alpha: 0.7),
                 height: 1.4,
               ),
             ),
@@ -568,7 +568,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textMuted.withOpacity(0.7),
+                color: AppColors.textMuted.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -622,7 +622,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Icon(
             Icons.receipt_long_outlined,
             size: 56,
-            color: AppColors.textMuted.withOpacity(0.4),
+            color: AppColors.textMuted.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 14),
           Text(
@@ -630,7 +630,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: AppColors.textMuted.withOpacity(0.7),
+              color: AppColors.textMuted.withValues(alpha: 0.7),
               height: 1.4,
             ),
           ),
@@ -671,8 +671,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         color: isToday
-                            ? AppColors.accentBlue.withOpacity(0.7)
-                            : AppColors.textMuted.withOpacity(0.6),
+                            ? AppColors.accentBlue.withValues(alpha: 0.7)
+                            : AppColors.textMuted.withValues(alpha: 0.6),
                       ),
                     ),
                   // 日付（数字を大きく）
@@ -683,7 +683,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       fontWeight: isToday ? FontWeight.w700 : FontWeight.w600,
                       color: isToday
                           ? AppColors.accentBlue
-                          : AppColors.textPrimary.withOpacity(0.85),
+                          : AppColors.textPrimary.withValues(alpha: 0.85),
                     ),
                   ),
                   // 曜日（小さく）
@@ -693,8 +693,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: isToday
-                          ? AppColors.accentBlue.withOpacity(0.8)
-                          : AppColors.textMuted.withOpacity(0.7),
+                          ? AppColors.accentBlue.withValues(alpha: 0.8)
+                          : AppColors.textMuted.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -720,7 +720,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: expenses.isNotEmpty
-                        ? AppColors.accentBlue.withOpacity(0.6)
+                        ? AppColors.accentBlue.withValues(alpha: 0.6)
                         : Colors.grey[300],
                   ),
                 ),
@@ -757,7 +757,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         '',
         style: GoogleFonts.inter(
           fontSize: 12,
-          color: AppColors.textMuted.withOpacity(0.5),
+          color: AppColors.textMuted.withValues(alpha: 0.5),
         ),
       ),
     );
@@ -828,7 +828,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary.withOpacity(0.9),
+                            color: AppColors.textPrimary.withValues(alpha: 0.9),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -837,7 +837,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withOpacity(0.7),
+                            color: AppColors.textMuted.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -850,7 +850,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withOpacity(0.6),
+                            color: AppColors.textMuted.withValues(alpha: 0.6),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -864,7 +864,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withOpacity(0.5),
+                            color: AppColors.textMuted.withValues(alpha: 0.5),
                           ),
                         ),
                       ),
@@ -879,7 +879,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary.withOpacity(0.85),
+                      color: AppColors.textPrimary.withValues(alpha: 0.85),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -901,19 +901,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     switch (grade) {
       case 'saving':
-        bgColor = AppColors.accentGreenLight.withOpacity(0.7);
+        bgColor = AppColors.accentGreenLight.withValues(alpha: 0.7);
         textColor = AppColors.accentGreen;
         break;
       case 'standard':
-        bgColor = AppColors.accentBlueLight.withOpacity(0.7);
+        bgColor = AppColors.accentBlueLight.withValues(alpha: 0.7);
         textColor = AppColors.accentBlue;
         break;
       case 'reward':
-        bgColor = AppColors.accentOrangeLight.withOpacity(0.7);
+        bgColor = AppColors.accentOrangeLight.withValues(alpha: 0.7);
         textColor = AppColors.accentOrange;
         break;
       default:
-        bgColor = AppColors.textMuted.withOpacity(0.08);
+        bgColor = AppColors.textMuted.withValues(alpha: 0.08);
         textColor = AppColors.textMuted;
     }
 
@@ -999,7 +999,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               '${expense.createdAt.year}/${expense.createdAt.month}/${expense.createdAt.day}',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: AppColors.textMuted.withOpacity(0.7),
+                                color: AppColors.textMuted.withValues(alpha: 0.7),
                               ),
                             ),
                           ),

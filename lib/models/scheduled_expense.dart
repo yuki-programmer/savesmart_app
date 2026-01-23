@@ -1,7 +1,8 @@
 class ScheduledExpense {
   int? id;
   int amount;
-  String category;
+  int categoryId;
+  String category; // カテゴリ名（JOINで取得、表示用）
   String grade;
   String? memo;
   DateTime scheduledDate;
@@ -12,6 +13,7 @@ class ScheduledExpense {
   ScheduledExpense({
     this.id,
     required this.amount,
+    required this.categoryId,
     required this.category,
     required this.grade,
     this.memo,
@@ -25,7 +27,7 @@ class ScheduledExpense {
     return {
       'id': id,
       'amount': amount,
-      'category': category,
+      'category_id': categoryId,
       'grade': grade,
       'memo': memo,
       'scheduled_date': scheduledDate.toIso8601String(),
@@ -39,7 +41,8 @@ class ScheduledExpense {
     return ScheduledExpense(
       id: map['id'] as int?,
       amount: map['amount'] as int,
-      category: map['category'] as String,
+      categoryId: map['category_id'] as int,
+      category: map['category_name'] as String? ?? map['category'] as String? ?? '',
       grade: map['grade'] as String,
       memo: map['memo'] as String?,
       scheduledDate: DateTime.parse(map['scheduled_date'] as String),
@@ -54,6 +57,7 @@ class ScheduledExpense {
   ScheduledExpense copyWith({
     int? id,
     int? amount,
+    int? categoryId,
     String? category,
     String? grade,
     String? memo,
@@ -65,6 +69,7 @@ class ScheduledExpense {
     return ScheduledExpense(
       id: id ?? this.id,
       amount: amount ?? this.amount,
+      categoryId: categoryId ?? this.categoryId,
       category: category ?? this.category,
       grade: grade ?? this.grade,
       memo: memo ?? this.memo,

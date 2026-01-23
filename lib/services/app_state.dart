@@ -7,6 +7,7 @@ import '../models/fixed_cost.dart';
 import '../models/fixed_cost_category.dart';
 import '../models/quick_entry.dart';
 import '../models/scheduled_expense.dart';
+import '../models/category_budget.dart';
 import '../config/constants.dart';
 import '../core/dev_config.dart';
 import '../core/financial_cycle.dart';
@@ -36,6 +37,7 @@ class AppState extends ChangeNotifier {
   List<FixedCostCategory> _fixedCostCategories = [];
   List<QuickEntry> _quickEntries = [];
   List<ScheduledExpense> _scheduledExpenses = [];
+  List<CategoryBudget> _categoryBudgets = [];
   Budget? _currentBudget;
   bool _isLoading = true;
 
@@ -94,6 +96,7 @@ class AppState extends ChangeNotifier {
   List<FixedCostCategory> get fixedCostCategories => _fixedCostCategories;
   List<QuickEntry> get quickEntries => _quickEntries;
   List<ScheduledExpense> get scheduledExpenses => _scheduledExpenses;
+  List<CategoryBudget> get categoryBudgets => _categoryBudgets;
   Budget? get currentBudget => _currentBudget;
   bool get isLoading => _isLoading;
 
@@ -530,6 +533,7 @@ class AppState extends ChangeNotifier {
         _db.getCurrentBudget(),
         _db.getQuickEntries(),
         _db.getUnconfirmedScheduledExpenses(),
+        _db.getCategoryBudgets(),
       ]);
       perfMonitor.stopTimer('AppState.loadData.queries');
 
@@ -540,6 +544,7 @@ class AppState extends ChangeNotifier {
       _currentBudget = results[4] as Budget?;
       _quickEntries = results[5] as List<QuickEntry>;
       _scheduledExpenses = results[6] as List<ScheduledExpense>;
+      _categoryBudgets = results[7] as List<CategoryBudget>;
 
       // サイクル収入をロード（FinancialCycleロード後に実行）
       await _loadCurrentCycleIncome();
@@ -609,6 +614,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _reloadCategoryBudgets() async {
+    _categoryBudgets = await _db.getCategoryBudgets();
+    notifyListeners();
+  }
+
   Future<bool> addExpense(Expense expense) async {
     try {
       await _db.insertExpense(expense);
@@ -631,6 +641,7 @@ class AppState extends ChangeNotifier {
     for (final breakdown in breakdowns) {
       final breakdownExpense = Expense(
         amount: breakdown['amount'] as int,
+        categoryId: breakdown['categoryId'] as int,
         category: breakdown['category'] as String,
         grade: breakdown['type'] as String? ?? mainExpense.grade,
         createdAt: mainExpense.createdAt,
@@ -664,27 +675,20 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<bool> splitExpense(int id, int splitAmount, String newCategory, {String? grade}) async {
+  Future<bool> splitExpense(int id, int splitAmount, int newCategoryId, String newCategoryName, {String? grade}) async {
     try {
       final original = _expenses.firstWhere((e) => e.id == id);
       final remainingAmount = original.amount - splitAmount;
 
       // 元の支出を更新
-      final updatedOriginal = Expense(
-        id: original.id,
-        amount: remainingAmount,
-        category: original.category,
-        grade: original.grade,
-        memo: original.memo,
-        createdAt: original.createdAt,
-        parentId: original.parentId,
-      );
+      final updatedOriginal = original.copyWith(amount: remainingAmount);
       await _db.updateExpense(updatedOriginal);
 
       // 新しい支出を作成（gradeが指定されていればそれを使用、なければ元のgrade）
       final newExpense = Expense(
         amount: splitAmount,
-        category: newCategory,
+        categoryId: newCategoryId,
+        category: newCategoryName,
         grade: grade ?? original.grade,
         memo: '${original.category}から切り出し',
         createdAt: original.createdAt,
@@ -700,36 +704,63 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> addCategory(String name, {String? icon}) async {
-    final sortOrder = _categories.length;
-    final category = Category(
-      name: name,
-      sortOrder: sortOrder,
-      isDefault: false,
-      icon: icon,
-    );
-    await _db.insertCategory(category);
-    await _reloadCategories();
-  }
-
-  // カテゴリ名とアイコンを更新
-  Future<void> updateCategoryNameAndIcon(int id, String newName, {String? icon}) async {
-    await _db.updateCategoryName(id, newName);
-    // アイコンも更新する場合
-    if (icon != null) {
-      final category = _categories.firstWhere((c) => c.id == id);
-      category.icon = icon;
-      await _db.updateCategory(category);
+  Future<bool> addCategory(String name, {String? icon}) async {
+    try {
+      final sortOrder = _categories.length;
+      final category = Category(
+        name: name,
+        sortOrder: sortOrder,
+        isDefault: false,
+        icon: icon,
+      );
+      await _db.insertCategory(category);
+      await _reloadCategories();
+      return true;
+    } catch (e) {
+      debugPrint('Error adding category: $e');
+      return false;
     }
-    await _reloadCategories();
   }
 
-  // カテゴリを削除（関連する支出も削除）
-  Future<void> deleteCategory(int id) async {
-    await _db.deleteCategoryWithExpenses(id);
-    // カテゴリ削除時は関連する支出も削除されるため両方リロード
-    await _reloadCategories();
-    await _reloadExpenses();
+  // カテゴリ名とアイコンを更新（関連する全テーブルも連動更新）
+  Future<bool> updateCategoryNameAndIcon(int id, String newName, {String? icon}) async {
+    try {
+      await _db.updateCategoryName(id, newName);
+      // アイコンも更新する場合
+      if (icon != null) {
+        final category = _categories.firstWhere((c) => c.id == id);
+        category.icon = icon;
+        await _db.updateCategory(category);
+      }
+      // 全関連データをリロード
+      await _reloadCategories();
+      await _reloadExpenses();
+      await _reloadQuickEntries();
+      await _reloadScheduledExpenses();
+      await _reloadCategoryBudgets();
+      return true;
+    } catch (e) {
+      debugPrint('Error updating category: $e');
+      return false;
+    }
+  }
+
+  // カテゴリを削除（関連する全テーブルのデータも連動削除）
+  Future<bool> deleteCategory(int id) async {
+    try {
+      // DBトランザクションで全関連データを一括削除
+      await _db.deleteCategoryWithExpenses(id);
+      // 全関連データをリロード
+      await _reloadCategories();
+      await _reloadExpenses();
+      await _reloadQuickEntries();
+      await _reloadScheduledExpenses();
+      await _reloadCategoryBudgets();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting category: $e');
+      return false;
+    }
   }
 
   // カテゴリ別の支出件数を取得
@@ -882,12 +913,12 @@ class AppState extends ChangeNotifier {
   ///   'total': int,
   /// }>
   Future<List<Map<String, dynamic>>> getCategoryMonthlyTrend(
-    String categoryName, {
+    int categoryId, {
     int months = 12,
   }) async {
     // SQLで集計データを取得
     final rawData = await _db.getMonthlyGradeBreakdown(
-      categoryName: categoryName,
+      categoryId: categoryId,
       months: months,
     );
 
@@ -1541,8 +1572,8 @@ class AppState extends ChangeNotifier {
   /// スマート・コンボ予測を取得
   /// カテゴリ別に頻出の「金額×支出タイプ」組み合わせを最大3つ返す
   /// 返り値: List<{ 'amount': int, 'grade': String, 'freq': int, 'lastUsed': String }>
-  Future<List<Map<String, dynamic>>> getSmartCombos(String categoryName) async {
-    return await _db.getSmartCombos(categoryName: categoryName, limit: 3);
+  Future<List<Map<String, dynamic>>> getSmartCombos(int categoryId) async {
+    return await _db.getSmartCombos(categoryId: categoryId, limit: 3);
   }
 
   // === QuickEntry CRUD ===
@@ -1590,6 +1621,7 @@ class AppState extends ChangeNotifier {
   Future<bool> executeQuickEntry(QuickEntry entry) async {
     final expense = Expense(
       amount: entry.amount,
+      categoryId: entry.categoryId,
       category: entry.category,
       grade: entry.grade,
       memo: entry.memo,
@@ -1956,6 +1988,7 @@ class AppState extends ChangeNotifier {
   Future<bool> confirmScheduledExpenseWithModification(
     ScheduledExpense original, {
     required int newAmount,
+    int? newCategoryId,
     String? newCategory,
     String? newGrade,
     String? newMemo,
@@ -1964,6 +1997,7 @@ class AppState extends ChangeNotifier {
       // 修正された予定支出を作成
       final modified = original.copyWith(
         amount: newAmount,
+        categoryId: newCategoryId ?? original.categoryId,
         category: newCategory ?? original.category,
         grade: newGrade ?? original.grade,
         memo: newMemo ?? original.memo,
@@ -1979,5 +2013,160 @@ class AppState extends ChangeNotifier {
       debugPrint('Error confirming modified scheduled expense: $e');
       return false;
     }
+  }
+
+  // ========================================
+  // カテゴリ別予算（CategoryBudget）
+  // ========================================
+
+  /// カテゴリ予算を追加
+  Future<bool> addCategoryBudget(CategoryBudget budget) async {
+    try {
+      await _db.insertCategoryBudget(budget);
+      await _reloadCategoryBudgets();
+      return true;
+    } catch (e) {
+      debugPrint('Error adding category budget: $e');
+      return false;
+    }
+  }
+
+  /// カテゴリ予算を更新
+  Future<bool> updateCategoryBudget(CategoryBudget budget) async {
+    try {
+      await _db.updateCategoryBudget(budget);
+      await _reloadCategoryBudgets();
+      return true;
+    } catch (e) {
+      debugPrint('Error updating category budget: $e');
+      return false;
+    }
+  }
+
+  /// カテゴリ予算を削除
+  Future<bool> deleteCategoryBudget(int id) async {
+    try {
+      await _db.deleteCategoryBudget(id);
+      await _reloadCategoryBudgets();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting category budget: $e');
+      return false;
+    }
+  }
+
+  /// 今月のみ（one_time）のカテゴリ予算を全て削除
+  Future<bool> deleteOneTimeCategoryBudgets() async {
+    try {
+      await _db.deleteOneTimeCategoryBudgets();
+      await _reloadCategoryBudgets();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting one-time category budgets: $e');
+      return false;
+    }
+  }
+
+  /// カテゴリ別の支出合計を取得（現在サイクル内）
+  Future<Map<String, int>> getCategoryExpenseTotals() async {
+    return await _db.getCategoryExpenseTotals(
+      cycleStartDate: cycleStartDate,
+      cycleEndDate: cycleEndDate,
+    );
+  }
+
+  /// カテゴリ予算と実績を合わせたデータを取得（消費率順）
+  /// 返り値: List<{
+  ///   'budget': CategoryBudget,
+  ///   'spent': int,
+  ///   'rate': double (消費率 0.0〜),
+  ///   'isOverBudget': bool,
+  /// }>
+  Future<List<Map<String, dynamic>>> getCategoryBudgetStatus() async {
+    if (_categoryBudgets.isEmpty) return [];
+
+    final totals = await getCategoryExpenseTotals();
+    final result = <Map<String, dynamic>>[];
+
+    for (final budget in _categoryBudgets) {
+      final spent = totals[budget.categoryName] ?? 0;
+      final rate = budget.budgetAmount > 0
+          ? spent / budget.budgetAmount
+          : 0.0;
+
+      result.add({
+        'budget': budget,
+        'spent': spent,
+        'rate': rate,
+        'isOverBudget': spent > budget.budgetAmount,
+      });
+    }
+
+    // 消費率が高い順にソート
+    result.sort((a, b) => (b['rate'] as double).compareTo(a['rate'] as double));
+
+    return result;
+  }
+
+  /// 予算設定済みのカテゴリ名リストを取得
+  List<String> get budgetedCategoryNames {
+    return _categoryBudgets.map((b) => b.categoryName).toList();
+  }
+
+  /// 予算未設定のカテゴリ名リストを取得
+  List<String> get unbudgetedCategoryNames {
+    final budgeted = budgetedCategoryNames;
+    return categoryNames.where((name) => !budgeted.contains(name)).toList();
+  }
+
+  /// 前サイクルのカテゴリ予算達成状況を取得（サイクル切替時のレポート用）
+  /// 返り値: List<{
+  ///   'budget': CategoryBudget,
+  ///   'spent': int,
+  ///   'rate': double (消費率 0.0〜),
+  ///   'isOverBudget': bool,
+  /// }>
+  Future<List<Map<String, dynamic>>> getPreviousCycleBudgetStatus() async {
+    if (_categoryBudgets.isEmpty) return [];
+
+    final now = DateTime.now();
+    final prevStartDate = _financialCycle.getPreviousCycleStartDate(now);
+    final prevEndDate = _financialCycle.getPreviousCycleEndDate(now);
+
+    final totals = await _db.getCategoryExpenseTotals(
+      cycleStartDate: prevStartDate,
+      cycleEndDate: prevEndDate,
+    );
+
+    final result = <Map<String, dynamic>>[];
+
+    for (final budget in _categoryBudgets) {
+      final spent = totals[budget.categoryName] ?? 0;
+      final rate = budget.budgetAmount > 0
+          ? spent / budget.budgetAmount
+          : 0.0;
+
+      result.add({
+        'budget': budget,
+        'spent': spent,
+        'rate': rate,
+        'isOverBudget': spent > budget.budgetAmount,
+      });
+    }
+
+    // 消費率が高い順にソート
+    result.sort((a, b) => (b['rate'] as double).compareTo(a['rate'] as double));
+
+    return result;
+  }
+
+  /// 継続予算（recurring）のリストを取得
+  List<CategoryBudget> get continuingBudgets {
+    return _categoryBudgets.where((b) => b.isRecurring).toList();
+  }
+
+  /// 今月のみ予算（one_time）のリストを取得
+  List<CategoryBudget> get endingBudgets {
+    return _categoryBudgets.where((b) => b.isOneTime).toList();
   }
 }
