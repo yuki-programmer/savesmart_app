@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
 import '../utils/formatters.dart';
+import '../screens/premium_screen.dart';
 
 /// 夜の振り返りダイアログ
 /// 19:00以降に表示され、今日の支出と明日の予算を表示する
 class NightReflectionDialog extends StatelessWidget {
   final int todayTotal;
   final int? tomorrowBudget;
+  final bool isPremium;
   final VoidCallback onClose;
 
   const NightReflectionDialog({
     super.key,
     required this.todayTotal,
     required this.tomorrowBudget,
+    required this.isPremium,
     required this.onClose,
   });
 
@@ -44,6 +47,7 @@ class NightReflectionDialog extends StatelessWidget {
   static Future<void> show(BuildContext context, {
     required int todayTotal,
     required int? tomorrowBudget,
+    required bool isPremium,
   }) async {
     await showGeneralDialog(
       context: context,
@@ -54,6 +58,7 @@ class NightReflectionDialog extends StatelessWidget {
         return NightReflectionDialog(
           todayTotal: todayTotal,
           tomorrowBudget: tomorrowBudget,
+          isPremium: isPremium,
           onClose: () {
             Navigator.of(context).pop();
           },
@@ -143,6 +148,60 @@ class NightReflectionDialog extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
+              // Premium導線（Free版のみ）
+              if (!isPremium) ...[
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PremiumScreen()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.event_note_outlined,
+                          size: 16,
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '明日の予定支出を確認',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Plus',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(flex: 3),
               // 閉じるボタン
               GestureDetector(

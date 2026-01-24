@@ -26,6 +26,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   bool _paceExpanded = false;
   bool _burnRateExpanded = false;
   bool _budgetMarginExpanded = false;
+  bool _fixedCostsExpanded = false;
 
   // カテゴリ別グラフで固定費を含めるかどうか（デフォルト: false = 固定費抜き）
   bool _includeFixedCosts = false;
@@ -150,6 +151,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     summary: _getBudgetMarginSummary(appState),
                     maskedSummary: '¥--- の余裕',
                   ),
+                  const SizedBox(height: 20),
+
+                  // 固定費セクション（Free でも表示）
+                  _buildFixedCostsSection(appState),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -264,9 +269,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   /// 今サイクルのまとめセクション（Free でも表示）
   Widget _buildMonthlySummary(AppState appState) {
     final fixedCostsTotal = appState.fixedCostsTotal;
-    final total = appState.thisMonthTotal + fixedCostsTotal;
+    final totalExpense = appState.thisMonthTotal + fixedCostsTotal;
     final availableAmount = appState.thisMonthAvailableAmount;
+    final remainingDays = appState.remainingDaysInMonth;
     final cyclePeriod = _getCyclePeriodLabel(appState);
+    final remaining = (availableAmount ?? 0) - totalExpense;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -284,6 +291,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ヘッダー：タイトル + サイクル期間 + 残り日数
           Row(
             children: [
               Text(
@@ -311,76 +319,125 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.bgPrimary,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'あと$remainingDays日',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 16),
+
+          // メイン：残り金額
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '支出合計',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textMuted.withValues(alpha: 0.8),
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '¥${formatNumber(total)}',
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary.withValues(alpha: 0.9),
-                ),
-              ),
-            ],
-          ),
-          // 使える金額の行
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.bgPrimary.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: GestureDetector(
-              onTap: () => showIncomeSheet(context, DateTime.now()),
-              child: Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '使える金額：',
+                    '残り',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                      color: AppColors.textMuted.withValues(alpha: 0.8),
+                      height: 1.4,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      availableAmount != null
-                          ? '¥${formatNumber(availableAmount)}'
-                          : '未設定',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: availableAmount != null
-                            ? AppColors.textPrimary.withValues(alpha: 0.9)
-                            : AppColors.textMuted.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 4),
                   Text(
-                    availableAmount != null ? '変更' : '追加',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.accentBlue,
+                    '¥${formatNumber(remaining)}',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w600,
+                      color: remaining < 0 ? AppColors.accentRed : AppColors.textPrimary.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 収入・支出の内訳
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.bgPrimary.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                // 収入行
+                GestureDetector(
+                  onTap: () => showIncomeSheet(context, DateTime.now()),
+                  child: Row(
+                    children: [
+                      Text(
+                        '収入',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.textSecondary.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        availableAmount != null
+                            ? '¥${formatNumber(availableAmount)}'
+                            : '未設定',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: availableAmount != null
+                              ? AppColors.accentBlue
+                              : AppColors.textMuted.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.edit_outlined,
+                        size: 14,
+                        color: AppColors.accentBlue.withValues(alpha: 0.6),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // 支出行
+                Row(
+                  children: [
+                    Text(
+                      '支出',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '¥${formatNumber(totalExpense)}',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -1902,4 +1959,143 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
+  /// 固定費セクション（アコーディオン形式）
+  Widget _buildFixedCostsSection(AppState appState) {
+    final fixedCosts = appState.fixedCosts;
+    final totalFixedCosts = appState.fixedCostsTotal;
+    final currencyFormat = appState.currencyFormat;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ヘッダー（タップで開閉）
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _fixedCostsExpanded = !_fixedCostsExpanded;
+              });
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 20,
+                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '固定費',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary.withValues(alpha: 0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '合計 ¥${formatNumber(totalFixedCosts)}',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _fixedCostsExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 20,
+                      color: AppColors.textMuted.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // 展開時の内訳
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              children: [
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      if (fixedCosts.isNotEmpty)
+                        ...fixedCosts.map((fc) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      fc.name,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
+                                        color: AppColors.textSecondary.withValues(alpha: 0.9),
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    currencyFormat == 'prefix'
+                                        ? '¥${formatNumber(fc.amount)}'
+                                        : '${formatNumber(fc.amount)}円',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textPrimary.withValues(alpha: 0.85),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                      if (fixedCosts.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            '固定費が登録されていません',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppColors.textMuted.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            crossFadeState: _fixedCostsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
 }

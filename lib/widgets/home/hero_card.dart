@@ -50,6 +50,7 @@ class HeroCard extends StatelessWidget {
   final int? fixedTodayAllowance;
   final int? dynamicTomorrowForecast;
   final int todayTotal;
+  final int remainingDays;
   final bool hasOpenedReflection;
   final VoidCallback? onTapReflection;
   final String currencyFormat;
@@ -59,6 +60,7 @@ class HeroCard extends StatelessWidget {
     required this.fixedTodayAllowance,
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
+    required this.remainingDays,
     required this.hasOpenedReflection,
     this.onTapReflection,
     this.currencyFormat = 'prefix',
@@ -116,6 +118,7 @@ class HeroCard extends StatelessWidget {
           fixedTodayAllowance: fixedTodayAllowance,
           dynamicTomorrowForecast: dynamicTomorrowForecast,
           todayTotal: todayTotal,
+          remainingDays: remainingDays,
           canOpenReflection: state.canOpenReflection,
           currencyFormat: currencyFormat,
         );
@@ -125,6 +128,7 @@ class HeroCard extends StatelessWidget {
         return _DayContent(
           fixedTodayAllowance: fixedTodayAllowance,
           dynamicTomorrowForecast: dynamicTomorrowForecast,
+          remainingDays: remainingDays,
           isMorningGlow: state.timeMode == HeroCardTimeMode.morning,
           currencyFormat: currencyFormat,
         );
@@ -136,12 +140,14 @@ class HeroCard extends StatelessWidget {
 class _DayContent extends StatelessWidget {
   final int? fixedTodayAllowance;
   final int? dynamicTomorrowForecast;
+  final int remainingDays;
   final bool isMorningGlow;
   final String currencyFormat;
 
   const _DayContent({
     required this.fixedTodayAllowance,
     required this.dynamicTomorrowForecast,
+    required this.remainingDays,
     required this.isMorningGlow,
     required this.currencyFormat,
   });
@@ -152,15 +158,36 @@ class _DayContent extends StatelessWidget {
 
     return Column(
       children: [
-        // ラベル
-        Text(
-          '今日使えるお金',
-          style: TextStyle(
-            fontSize: HomeConstants.heroLabelSize,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.5,
-          ),
+        // ラベル + 残り日数
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '今日使えるお金',
+              style: TextStyle(
+                fontSize: HomeConstants.heroLabelSize,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.accentBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'あと$remainingDays日',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.accentBlue.withValues(alpha: 0.8),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
 
@@ -215,6 +242,7 @@ class _NightContent extends StatelessWidget {
   final int? fixedTodayAllowance;
   final int? dynamicTomorrowForecast;
   final int todayTotal;
+  final int remainingDays;
   final bool canOpenReflection;
   final String currencyFormat;
 
@@ -222,6 +250,7 @@ class _NightContent extends StatelessWidget {
     required this.fixedTodayAllowance,
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
+    required this.remainingDays,
     required this.canOpenReflection,
     required this.currencyFormat,
   });
@@ -252,13 +281,34 @@ class _NightContent extends StatelessWidget {
         // 主役：今日使えるお金（夜でも表示）
         Column(
           children: [
-            Text(
-              '今日使えるお金',
-              style: TextStyle(
-                fontSize: 12,
-                color: HomeConstants.nightPrimaryText.withValues(alpha: 0.7),
-                letterSpacing: 0.5,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '今日使えるお金',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: HomeConstants.nightPrimaryText.withValues(alpha: 0.7),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: HomeConstants.nightPrimaryText.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'あと$remainingDays日',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: HomeConstants.nightPrimaryText.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(

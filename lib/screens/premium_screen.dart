@@ -137,7 +137,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     children: [
                       _buildInfoRow(
                         label: '現在のプラン',
-                        value: isYearlyPlan ? '年額プラン（¥3,000/年）' : '月額プラン（¥300/月）',
+                        value: isYearlyPlan ? '年額プラン（¥3,600/年）' : '月額プラン（¥400/月）',
                       ),
                       const SizedBox(height: 10),
                       _buildInfoRow(
@@ -310,7 +310,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '2ヶ月分おトク（¥3,000/年）',
+                    '3ヶ月分おトク（¥3,600/年）',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: _accentGreen,
@@ -464,7 +464,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         iconBgColor: iconBgCyan,
         iconColor: accentCyan,
         title: '将来の支出を\n先取り登録',
-        desc: 'お金の計画をよりスマートに',
+        desc: '支出計画をよりスマートに',
       ),
       _FeatureItem(
         icon: Icons.date_range_outlined,
@@ -491,14 +491,14 @@ class _PremiumScreenState extends State<PremiumScreen> {
         icon: Icons.account_balance_wallet_outlined,
         iconBgColor: _iconBgPurple,
         iconColor: _accentPurple,
-        title: '家計の\n余裕',
+        title: '家計の余裕',
         desc: 'あといくら使える？',
       ),
       _FeatureItem(
         icon: Icons.tune_outlined,
         iconBgColor: _iconBgPink,
         iconColor: _accentPink,
-        title: 'カテゴリに\n上限を設定',
+        title: 'カテゴリに\n予算を設定',
         desc: '使いすぎを事前に防ぐ',
       ),
     ];
@@ -603,8 +603,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
           _buildPlanCard(
             type: PlanType.yearly,
             name: '年額プラン',
-            price: '¥3,000 / 年',
-            savings: '2ヶ月分おトク',
+            price: '¥3,600 / 年',
+            savings: '3ヶ月分おトク',
             showBadge: true,
           ),
           const SizedBox(height: 10),
@@ -613,7 +613,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           _buildPlanCard(
             type: PlanType.monthly,
             name: '月額プラン',
-            price: '¥300 / 月',
+            price: '¥400 / 月',
           ),
           const SizedBox(height: 24),
         ],

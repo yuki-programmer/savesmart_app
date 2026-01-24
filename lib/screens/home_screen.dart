@@ -6,7 +6,6 @@ import '../config/theme.dart';
 import '../config/home_constants.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
-import '../models/fixed_cost.dart';
 import '../models/quick_entry.dart';
 import '../models/scheduled_expense.dart';
 import 'add_scheduled_expense_screen.dart';
@@ -20,7 +19,6 @@ import 'premium_screen.dart';
 import 'quick_entry_manage_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
-import 'fixed_cost_history_screen.dart';
 import 'category_budget_screen.dart';
 import '../widgets/home/category_budget_section.dart';
 
@@ -32,7 +30,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _fixedCostsExpanded = false;
   bool _hasOpenedReflectionToday = false;
 
   @override
@@ -72,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       todayTotal: appState.todayTotal,
       tomorrowBudget: appState.dynamicTomorrowForecast,
+      isPremium: appState.isPremium,
     );
 
     // 開封マーク
@@ -83,23 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
-  // 日付ベースのランダムステータス文言
-  String _getDailyStatusText() {
-    final statusMessages = [
-      '今月は標準ペースです',
-      '今月は落ち着いた使い方',
-      '最近は安定しています',
-    ];
-
-    // YYYY-MM-DD形式で日付をハッシュ化して同じ日は同じ文言を表示
-    final now = DateTime.now();
-    final dateString = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final hash = dateString.hashCode.abs();
-    final index = hash % statusMessages.length;
-
-    return statusMessages[index];
-  }
 
   String _getFormattedDate() {
     final now = DateTime.now();
@@ -130,10 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 12),
                         // 週間バジェットカード（Premium機能）
                         _buildWeeklyBudgetSection(),
-                        const SizedBox(height: 16),
-                        // 今月サマリーカード - Selector化
-                        _buildMonthlySummarySection(),
-                        const SizedBox(height: 16),
                         // カテゴリ予算セクション（Premium機能）
                         _buildCategoryBudgetSection(),
                         // クイック登録セクション - Selector化
@@ -143,9 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildScheduledExpensesSection(),
                         // 日々の出費 - Selector化
                         _buildRecentExpensesSection(),
-                        const SizedBox(height: 28),
-                        // 固定費 - Selector化
-                        _buildFixedCostsSectionWithSelector(),
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -163,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
         fixedTodayAllowance: appState.fixedTodayAllowance,
         dynamicTomorrowForecast: appState.dynamicTomorrowForecast,
         todayTotal: appState.todayTotal,
+        remainingDays: appState.remainingDaysInMonth,
         currencyFormat: appState.currencyFormat,
       ),
       builder: (context, data, child) {
@@ -171,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
           fixedTodayAllowance: data.fixedTodayAllowance,
           dynamicTomorrowForecast: data.dynamicTomorrowForecast,
           todayTotal: data.todayTotal,
+          remainingDays: data.remainingDays,
           hasOpenedReflection: _hasOpenedReflectionToday,
           onTapReflection: () => _showNightReflectionDialog(appState),
           currencyFormat: data.currencyFormat,
@@ -195,20 +171,28 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       builder: (context, data, child) {
-        return WeeklyBudgetCard(
-          amount: data.amount,
-          daysRemaining: data.daysRemaining,
-          endDate: data.endDate,
-          isWeekMode: data.isWeekMode,
-          isOverBudget: data.isOverBudget,
-          isPremium: data.isPremium,
-          currencyFormat: data.currencyFormat,
-          onTapLocked: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PremiumScreen()),
-            );
-          },
+        // Free版では非表示
+        if (!data.isPremium) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: WeeklyBudgetCard(
+            amount: data.amount,
+            daysRemaining: data.daysRemaining,
+            endDate: data.endDate,
+            isWeekMode: data.isWeekMode,
+            isOverBudget: data.isOverBudget,
+            isPremium: data.isPremium,
+            currencyFormat: data.currencyFormat,
+            onTapLocked: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PremiumScreen()),
+              );
+            },
+          ),
         );
       },
     );
@@ -566,21 +550,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 今月サマリーセクション（Selector使用）
-  Widget _buildMonthlySummarySection() {
-    return Selector<AppState, _MonthlySummaryData>(
-      selector: (_, appState) => _MonthlySummaryData(
-        usableAmount: appState.thisMonthAvailableAmount,
-        fixedCostsTotal: appState.fixedCostsTotal,
-        thisMonthTotal: appState.thisMonthTotal,
-        remainingDays: appState.remainingDaysInMonth,
-        currencyFormat: appState.currencyFormat,
-      ),
-      builder: (context, data, child) {
-        return _buildMonthlySummaryCard(data);
-      },
-    );
-  }
 
   /// クイック登録セクション（Selector使用）
   Widget _buildQuickEntrySectionWithSelector() {
@@ -604,20 +573,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       builder: (context, data, child) {
         return _buildRecentExpenses(data);
-      },
-    );
-  }
-
-  /// 固定費セクション（Selector使用）
-  Widget _buildFixedCostsSectionWithSelector() {
-    return Selector<AppState, _FixedCostsData>(
-      selector: (_, appState) => _FixedCostsData(
-        fixedCosts: appState.fixedCosts,
-        totalFixedCosts: appState.fixedCostsTotal,
-        currencyFormat: appState.currencyFormat,
-      ),
-      builder: (context, data, child) {
-        return _buildFixedCostsSection(data);
       },
     );
   }
@@ -663,104 +618,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 今月サマリーカード（リファクタ版）
-  Widget _buildMonthlySummaryCard(_MonthlySummaryData data) {
-    final monthlyExpenseTotal = data.thisMonthTotal + data.fixedCostsTotal;
-    final remaining = (data.usableAmount ?? 0) - monthlyExpenseTotal;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(HomeConstants.standardCardPadding),
-      decoration: BoxDecoration(
-        color: HomeConstants.cardBackground,
-        borderRadius: BorderRadius.circular(HomeConstants.standardCardRadius),
-        boxShadow: HomeConstants.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '今月の状況',
-            style: GoogleFonts.inter(
-              fontSize: HomeConstants.summaryTitleSize,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 12),
-          // 残り金額（メイン）
-          Row(
-            children: [
-              Text(
-                '残り ',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                ),
-              ),
-              Text(
-                formatCurrency(remaining, data.currencyFormat),
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: HomeConstants.summaryMainSize,
-                  fontWeight: FontWeight.w600,
-                  color: remaining < 0 ? AppColors.accentRed : HomeConstants.primaryText,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                'あと ${data.remainingDays}日',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // 収入/支出（サブ）
-          Row(
-            children: [
-              _buildMetric('収入', data.usableAmount ?? 0, AppColors.accentBlue, data.currencyFormat),
-              const SizedBox(width: 24),
-              _buildMetric('支出', monthlyExpenseTotal, Colors.grey[700]!, data.currencyFormat),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 状態メッセージ
-          Text(
-            _getDailyStatusText(),
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetric(String label, int value, Color color, String currencyFormat) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: HomeConstants.summaryLabelSize,
-            color: Colors.grey[600],
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          formatCurrency(value, currencyFormat),
-          style: GoogleFonts.ibmPlexSans(
-            fontSize: HomeConstants.summaryMetricSize,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
 
   /// クイック登録セクション（2カラムグリッド）
   Widget _buildQuickEntrySection(_QuickEntryData data) {
@@ -1101,172 +958,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFixedCostsSection(_FixedCostsData data) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '今月の固定費',
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withValues(alpha: 0.85),
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.015),
-                blurRadius: 6,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // ヘッダー（タップで開閉）
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _fixedCostsExpanded = !_fixedCostsExpanded;
-                  });
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '合計',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary.withValues(alpha: 0.8),
-                              ),
-                            ),
-                            Text(
-                              formatCurrency(data.totalFixedCosts, data.currencyFormat),
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary.withValues(alpha: 0.9),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      AnimatedRotation(
-                        turns: _fixedCostsExpanded ? 0.5 : 0,
-                        duration: const Duration(milliseconds: 200),
-                        child: Icon(
-                          Icons.expand_more,
-                          size: 20,
-                          color: AppColors.textMuted.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // 展開時の内訳
-              AnimatedCrossFade(
-                firstChild: const SizedBox.shrink(),
-                secondChild: Column(
-                  children: [
-                    const Divider(height: 1),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          if (data.fixedCosts.isNotEmpty)
-                            ...data.fixedCosts.map((fc) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        fc.name,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                          color: AppColors.textSecondary.withValues(alpha: 0.9),
-                                        ),
-                                      ),
-                                      Text(
-                                        formatCurrency(fc.amount, data.currencyFormat),
-                                        style: GoogleFonts.ibmPlexSans(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.textPrimary.withValues(alpha: 0.85),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )),
-                          if (data.fixedCosts.isEmpty)
-                            Text(
-                              '固定費が登録されていません',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppColors.textMuted.withValues(alpha: 0.7),
-                              ),
-                            ),
-                          const SizedBox(height: 8),
-                          // 編集リンク
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const FixedCostHistoryScreen()),
-                              );
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '編集',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.accentBlue.withValues(alpha: 0.8),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.chevron_right,
-                                  size: 16,
-                                  color: AppColors.accentBlue.withValues(alpha: 0.6),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                crossFadeState: _fixedCostsExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 200),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildExpenseItem(Expense expense, String currencyFormat) {
     // カテゴリが「その他」の場合は非表示
     final showCategory = expense.category != 'その他';
@@ -1388,12 +1079,14 @@ class _HeroCardData {
   final int? fixedTodayAllowance;
   final int? dynamicTomorrowForecast;
   final int todayTotal;
+  final int remainingDays;
   final String currencyFormat;
 
   const _HeroCardData({
     required this.fixedTodayAllowance,
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
+    required this.remainingDays,
     required this.currencyFormat,
   });
 
@@ -1405,6 +1098,7 @@ class _HeroCardData {
           fixedTodayAllowance == other.fixedTodayAllowance &&
           dynamicTomorrowForecast == other.dynamicTomorrowForecast &&
           todayTotal == other.todayTotal &&
+          remainingDays == other.remainingDays &&
           currencyFormat == other.currencyFormat;
 
   @override
@@ -1412,6 +1106,7 @@ class _HeroCardData {
       fixedTodayAllowance.hashCode ^
       dynamicTomorrowForecast.hashCode ^
       todayTotal.hashCode ^
+      remainingDays.hashCode ^
       currencyFormat.hashCode;
 }
 
@@ -1456,42 +1151,6 @@ class _WeeklyBudgetData {
       isWeekMode.hashCode ^
       isOverBudget.hashCode ^
       isPremium.hashCode ^
-      currencyFormat.hashCode;
-}
-
-/// 今月サマリー用データ
-class _MonthlySummaryData {
-  final int? usableAmount;
-  final int fixedCostsTotal;
-  final int thisMonthTotal;
-  final int remainingDays;
-  final String currencyFormat;
-
-  const _MonthlySummaryData({
-    required this.usableAmount,
-    required this.fixedCostsTotal,
-    required this.thisMonthTotal,
-    required this.remainingDays,
-    required this.currencyFormat,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is _MonthlySummaryData &&
-          runtimeType == other.runtimeType &&
-          usableAmount == other.usableAmount &&
-          fixedCostsTotal == other.fixedCostsTotal &&
-          thisMonthTotal == other.thisMonthTotal &&
-          remainingDays == other.remainingDays &&
-          currencyFormat == other.currencyFormat;
-
-  @override
-  int get hashCode =>
-      usableAmount.hashCode ^
-      fixedCostsTotal.hashCode ^
-      thisMonthTotal.hashCode ^
-      remainingDays.hashCode ^
       currencyFormat.hashCode;
 }
 
@@ -1545,42 +1204,6 @@ class _RecentExpensesData {
 
   @override
   int get hashCode => recentExpenses.length.hashCode ^ currencyFormat.hashCode;
-
-  bool _listEquals<T>(List<T> a, List<T> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
-    }
-    return true;
-  }
-}
-
-/// 固定費用データ
-class _FixedCostsData {
-  final List<FixedCost> fixedCosts;
-  final int totalFixedCosts;
-  final String currencyFormat;
-
-  const _FixedCostsData({
-    required this.fixedCosts,
-    required this.totalFixedCosts,
-    required this.currencyFormat,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is _FixedCostsData &&
-          runtimeType == other.runtimeType &&
-          _listEquals(fixedCosts, other.fixedCosts) &&
-          totalFixedCosts == other.totalFixedCosts &&
-          currencyFormat == other.currencyFormat;
-
-  @override
-  int get hashCode =>
-      fixedCosts.length.hashCode ^
-      totalFixedCosts.hashCode ^
-      currencyFormat.hashCode;
 
   bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;
