@@ -181,7 +181,7 @@ Currency format is stored in `AppState.currencyFormat` ('prefix' or 'suffix').
 - Shows remaining budget for the week (today to Sunday) or until payday
 - Calculation: `(remainingBudget) × (periodDays / cycleRemainingDays)`
 - Over-budget state shows warning with orange styling
-- Free users see locked card that navigates to PremiumScreen on tap
+- **Free users: Card is completely hidden** (not shown at all)
 - AppState getter: `weeklyBudgetInfo` returns `{ amount, daysRemaining, endDate, isWeekMode, isOverBudget }`
 
 ### Scheduled Expenses (予定支出)
@@ -223,13 +223,19 @@ Premium-only accordion sections with icon + 1-line summary:
 - **支出ペース**: Burn rate chart with previous cycle comparison
 - **家計の余裕**: Pace buffer and upgrade suggestions
 
-Free users see masked summaries (e.g., "●●が最多", "¥---")
-Locked sections are tappable and navigate to PremiumScreen
+**Free users: Accordion sections show masked summaries (e.g., "●●が最多", "¥---") and navigate to PremiumScreen on tap**
+
+### Fixed Costs Section (固定費セクション)
+- **Free users can access** (not Premium-only)
+- Accordion-style display at bottom of Analytics screen
+- Shows total fixed costs in header, expands to show individual items
+- Widget: `_buildFixedCostsSection()` in `analytics_screen.dart`
 
 ### Premium Screen (有料プランについて)
 - Access: Settings → 有料プランについて, or tap locked features
 - Non-subscribed view: Hero section, feature cards (horizontal scroll), plan selection, trial info, CTA
-- Feature cards: 将来の支出を先取り登録, 今週どれくらい使える?, カテゴリ別支出割合, 支出ペースグラフ, 家計の余裕, カテゴリに上限を設定
+- Feature cards: 将来の支出を先取り登録, 今週どれくらい使える?, カテゴリ別支出割合, 支出ペースグラフ, 家計の余裕, カテゴリに予算を設定
+- **Pricing**: 月額 ¥400/月、年額 ¥3,600/年（3ヶ月分おトク）
 - Subscribed view: Status card (green), current plan info, renewal date, upgrade option (monthly→yearly), subscription management link
 - Widget: `PremiumScreen` (`lib/screens/premium_screen.dart`)
 
@@ -246,6 +252,7 @@ Time mode is purely visual theming. Night reflection dialog is a separate featur
 - SharedPreferences tracks if reflection was opened today (`reflection_opened_YYYY-MM-DD`)
 - Shows today's total spending and tomorrow's forecasted budget
 - Night mode display does NOT equal reflection availability
+- **Free users see Premium promotion** ("明日の予定支出を確認" with Plus badge, navigates to PremiumScreen)
 
 ## Desktop Support
 
