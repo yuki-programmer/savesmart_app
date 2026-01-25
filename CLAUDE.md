@@ -362,3 +362,7 @@ AppState caches frequently accessed data with date-based invalidation:
 ## Reference Documentation
 
 See `function.md` for detailed feature specifications in Japanese.
+
+## Skills
+
+UI/UX設計時は `.claude/skills/ui-ux-psychology/SKILL.md` を参照すること。

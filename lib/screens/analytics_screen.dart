@@ -6,7 +6,6 @@ import '../config/theme.dart';
 import '../models/expense.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
-import '../widgets/income_sheet.dart';
 import '../widgets/burn_rate_chart.dart';
 import '../widgets/analytics/category_pace_sheet.dart';
 import '../widgets/analytics/monthly_expense_trend_chart.dart';
@@ -30,30 +29,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   // カテゴリ別グラフで固定費を含めるかどうか（デフォルト: false = 固定費抜き）
   bool _includeFixedCosts = false;
-
-  // incomeSheet自動起動用フラグ（2重起動防止）
-  bool _incomeSheetOpening = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _checkIncomeSheetRequest();
-  }
-
-  void _checkIncomeSheetRequest() {
-    if (_incomeSheetOpening) return;
-
-    final appState = context.read<AppState>();
-    if (appState.consumeOpenIncomeSheetRequest()) {
-      _incomeSheetOpening = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        showIncomeSheet(context, DateTime.now()).then((_) {
-          _incomeSheetOpening = false;
-        });
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -379,40 +354,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
             child: Column(
               children: [
-                // 収入行
-                GestureDetector(
-                  onTap: () => showIncomeSheet(context, DateTime.now()),
-                  child: Row(
-                    children: [
-                      Text(
-                        '収入',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textSecondary.withValues(alpha: 0.8),
-                        ),
+                // 収入行（表示のみ、編集はAdd画面から）
+                Row(
+                  children: [
+                    Text(
+                      '収入',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textSecondary.withValues(alpha: 0.8),
                       ),
-                      const Spacer(),
-                      Text(
-                        availableAmount != null
-                            ? '¥${formatNumber(availableAmount)}'
-                            : '未設定',
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: availableAmount != null
-                              ? AppColors.accentBlue
-                              : AppColors.textMuted.withValues(alpha: 0.6),
-                        ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      availableAmount != null
+                          ? '¥${formatNumber(availableAmount)}'
+                          : '未設定',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: availableAmount != null
+                            ? AppColors.accentBlue
+                            : AppColors.textMuted.withValues(alpha: 0.6),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.edit_outlined,
-                        size: 14,
-                        color: AppColors.accentBlue.withValues(alpha: 0.6),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 // 支出行
@@ -1251,16 +1217,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => showIncomeSheet(context, DateTime.now()),
-              child: Text(
-                '設定する',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.accentBlue,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              '追加画面から設定できます',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textMuted,
               ),
             ),
           ],
@@ -1614,16 +1577,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => showIncomeSheet(context, DateTime.now()),
-              child: Text(
-                '設定する',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.accentBlue,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              '追加画面から設定できます',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textMuted,
               ),
             ),
           ],

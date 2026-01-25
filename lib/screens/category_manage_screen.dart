@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/category_icons.dart';
 import '../services/app_state.dart';
 
 class CategoryManageScreen extends StatelessWidget {
@@ -84,6 +85,8 @@ class CategoryManageScreen extends StatelessWidget {
   }
 
   Widget _buildCategoryCard(BuildContext context, category, AppState appState) {
+    final icon = CategoryIcons.getIcon(category.icon);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -101,6 +104,23 @@ class CategoryManageScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // アイコン表示
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.bgPrimary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Icon(
+                icon,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               category.name,
@@ -139,156 +159,20 @@ class CategoryManageScreen extends StatelessWidget {
   }
 
   void _showAddDialog(BuildContext context) {
-    final controller = TextEditingController();
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: Text(
-          'カテゴリを追加',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
-          decoration: InputDecoration(
-            hintText: 'カテゴリ名を入力',
-            hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withValues(alpha: 0.7),
-              fontSize: 14,
-            ),
-            filled: true,
-            fillColor: AppColors.bgPrimary,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'キャンセル',
-              style: GoogleFonts.inter(
-                color: AppColors.textSecondary.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (controller.text.trim().isNotEmpty) {
-                final success = await context.read<AppState>().addCategory(controller.text.trim());
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  if (!success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('カテゴリの追加に失敗しました', style: GoogleFonts.inter()),
-                        backgroundColor: AppColors.accentRed,
-                      ),
-                    );
-                  }
-                }
-              }
-            },
-            child: Text(
-              '追加',
-              style: GoogleFonts.inter(
-                color: AppColors.accentBlue,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
+      builder: (context) => const _CategoryEditDialog(isEdit: false),
     );
   }
 
   void _showEditDialog(BuildContext context, category) {
-    final controller = TextEditingController(text: category.name);
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: Text(
-          'カテゴリを編集',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
-          decoration: InputDecoration(
-            hintText: 'カテゴリ名を入力',
-            hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withValues(alpha: 0.7),
-              fontSize: 14,
-            ),
-            filled: true,
-            fillColor: AppColors.bgPrimary,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'キャンセル',
-              style: GoogleFonts.inter(
-                color: AppColors.textSecondary.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (controller.text.trim().isNotEmpty) {
-                final success = await context.read<AppState>().updateCategoryNameAndIcon(
-                      category.id!,
-                      controller.text.trim(),
-                    );
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  if (!success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('カテゴリの更新に失敗しました', style: GoogleFonts.inter()),
-                        backgroundColor: AppColors.accentRed,
-                      ),
-                    );
-                  }
-                }
-              }
-            },
-            child: Text(
-              '保存',
-              style: GoogleFonts.inter(
-                color: AppColors.accentOrange,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
+      builder: (context) => _CategoryEditDialog(
+        isEdit: true,
+        categoryId: category.id,
+        initialName: category.name,
+        initialIcon: category.icon,
       ),
     );
   }
@@ -357,5 +241,203 @@ class CategoryManageScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// カテゴリ追加/編集ダイアログ（アイコン選択付き）
+class _CategoryEditDialog extends StatefulWidget {
+  final bool isEdit;
+  final int? categoryId;
+  final String? initialName;
+  final String? initialIcon;
+
+  const _CategoryEditDialog({
+    required this.isEdit,
+    this.categoryId,
+    this.initialName,
+    this.initialIcon,
+  });
+
+  @override
+  State<_CategoryEditDialog> createState() => _CategoryEditDialogState();
+}
+
+class _CategoryEditDialogState extends State<_CategoryEditDialog> {
+  late TextEditingController _controller;
+  String? _selectedIcon;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName ?? '');
+    _selectedIcon = widget.initialIcon;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      title: Text(
+        widget.isEdit ? 'カテゴリを編集' : 'カテゴリを追加',
+        textAlign: TextAlign.center,
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // カテゴリ名入力
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
+              decoration: InputDecoration(
+                hintText: 'カテゴリ名を入力',
+                hintStyle: GoogleFonts.inter(
+                  color: AppColors.textMuted.withValues(alpha: 0.7),
+                  fontSize: 14,
+                ),
+                filled: true,
+                fillColor: AppColors.bgPrimary,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // アイコン選択ラベル
+            Text(
+              'アイコン',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            // アイコン選択グリッド
+            _buildIconGrid(),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'キャンセル',
+            style: GoogleFonts.inter(
+              color: AppColors.textSecondary.withValues(alpha: 0.7),
+              fontSize: 14,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: _save,
+          child: Text(
+            widget.isEdit ? '保存' : '追加',
+            style: GoogleFonts.inter(
+              color: widget.isEdit ? AppColors.accentOrange : AppColors.accentBlue,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIconGrid() {
+    final icons = CategoryIcons.allIcons;
+    return SizedBox(
+      height: 160,
+      width: 280,
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 6,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1,
+        ),
+        itemCount: icons.length,
+        itemBuilder: (context, index) {
+          final item = icons[index];
+          final isSelected = _selectedIcon == item.name;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedIcon = isSelected ? null : item.name;
+              });
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.accentBlue.withValues(alpha: 0.1)
+                    : AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(8),
+                border: isSelected
+                    ? Border.all(color: AppColors.accentBlue, width: 2)
+                    : null,
+              ),
+              child: Center(
+                child: Icon(
+                  item.icon,
+                  size: 20,
+                  color: isSelected
+                      ? AppColors.accentBlue
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    if (_controller.text.trim().isEmpty) return;
+
+    final appState = context.read<AppState>();
+    bool success;
+
+    if (widget.isEdit) {
+      success = await appState.updateCategoryNameAndIcon(
+        widget.categoryId!,
+        _controller.text.trim(),
+        icon: _selectedIcon,
+      );
+    } else {
+      success = await appState.addCategory(
+        _controller.text.trim(),
+        icon: _selectedIcon,
+      );
+    }
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.isEdit ? 'カテゴリの更新に失敗しました' : 'カテゴリの追加に失敗しました',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
+    }
   }
 }

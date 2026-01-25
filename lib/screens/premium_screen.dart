@@ -604,6 +604,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             type: PlanType.yearly,
             name: '年額プラン',
             price: '¥3,600 / 年',
+            originalPrice: '¥4,800',
             savings: '3ヶ月分おトク',
             showBadge: true,
           ),
@@ -625,6 +626,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
     required PlanType type,
     required String name,
     required String price,
+    String? originalPrice,
     String? savings,
     bool showBadge = false,
   }) {
@@ -688,13 +690,40 @@ class _PremiumScreenState extends State<PremiumScreen> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        price,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: _textSecondary,
+                      if (originalPrice != null) ...[
+                        // アンカー効果: 元の価格を赤線で消す
+                        Row(
+                          children: [
+                            Text(
+                              originalPrice,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: Colors.red.shade400,
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: Colors.red.shade400,
+                                decorationThickness: 2,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              price,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: _textPrimary,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      ] else ...[
+                        Text(
+                          price,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: _textSecondary,
+                          ),
+                        ),
+                      ],
                       if (savings != null) ...[
                         const SizedBox(height: 2),
                         Text(

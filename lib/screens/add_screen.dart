@@ -6,6 +6,7 @@ import '../config/category_icons.dart';
 import '../utils/formatters.dart';
 import '../widgets/wheel_picker.dart';
 import '../widgets/expense/add_breakdown_modal.dart';
+import '../widgets/income_sheet.dart';
 import '../services/app_state.dart';
 import '../models/expense.dart';
 import 'fixed_cost_screen.dart';
@@ -153,8 +154,8 @@ class _AddScreenState extends State<AddScreen> {
                     // 予定支出登録ボタン（Premium機能）
                     _buildScheduledExpenseButton(),
                     const SizedBox(height: 10),
-                    // 固定費登録ボタン
-                    _buildFixedCostButton(),
+                    // 収入・固定費ボタン（横並び）
+                    _buildIncomeAndFixedCostRow(),
                     const SizedBox(height: 16),
                     // ① カテゴリ選択
                     _buildCategorySection(),
@@ -1056,51 +1057,120 @@ class _AddScreenState extends State<AddScreen> {
     });
   }
 
-  /// 固定費登録ボタン（将来の支出と同じスタイル）
-  Widget _buildFixedCostButton() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const FixedCostScreen(),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.bgCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.borderSubtle,
-          ),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.receipt_long_outlined,
-              size: 20,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '固定費を登録',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
+  /// 収入・固定費ボタン（横並び）
+  Widget _buildIncomeAndFixedCostRow() {
+    final appState = context.watch<AppState>();
+    final income = appState.thisMonthAvailableAmount;
+
+    return Row(
+      children: [
+        // 収入ボタン
+        Expanded(
+          child: GestureDetector(
+            onTap: () => showIncomeSheet(context, DateTime.now()),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.bgCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.borderSubtle,
                 ),
               ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '収入',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          income != null
+                              ? '¥${formatNumber(income)}'
+                              : '未設定',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: income != null
+                                ? AppColors.accentBlue
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: AppColors.textMuted.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: AppColors.textMuted,
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(width: 10),
+        // 固定費ボタン
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const FixedCostScreen(),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.bgCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.borderSubtle,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.receipt_long_outlined,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '固定費を登録',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: AppColors.textMuted.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

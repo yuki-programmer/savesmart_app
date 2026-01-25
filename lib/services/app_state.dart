@@ -1409,18 +1409,23 @@ class AppState extends ChangeNotifier {
   // === 家計の余白（Budget Margin）計算 Methods ===
 
   /// ペースバッファ（余裕額）を計算
-  /// = (月間変動費予算 * (経過日数 / 月の日数)) - 現在の累積支出額
+  /// = (可処分金額 * (経過日数 / サイクル日数)) - 現在の累積支出額
   /// 可処分金額が未設定の場合は null を返す
   int? get paceBuffer {
     final disposable = disposableAmount;
     if (disposable == null) return null;
 
     final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final elapsedDays = now.day;
+    final today = DateTime(now.year, now.month, now.day);
+    final cycleStart = cycleStartDate;
+
+    // サイクル総日数
+    final totalDays = _financialCycle.getTotalDays(now);
+    // 経過日数（今日を含む）
+    final elapsedDays = today.difference(cycleStart).inDays + 1;
 
     // 経過日数に応じた予算ペース
-    final expectedBudget = (disposable * elapsedDays / daysInMonth).round();
+    final expectedBudget = (disposable * elapsedDays / totalDays).round();
     // 余裕額 = 予算ペース - 実際の支出
     return expectedBudget - thisMonthTotal;
   }
