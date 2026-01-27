@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 /// 実行コマンド:
 /// ```
 /// flutter run --dart-define=DEV_TOOLS=true
+/// flutter run --release --dart-define=PREMIUM_TEST=true  # リリースモードでプレミアム有効
 /// ```
 class DevConfig {
   DevConfig._();
@@ -15,6 +16,11 @@ class DevConfig {
   /// dart-define で DEV_TOOLS=true が指定されているか
   static const bool devToolsEnabled =
       bool.fromEnvironment('DEV_TOOLS', defaultValue: false);
+
+  /// dart-define で PREMIUM_TEST=true が指定されているか
+  /// リリースモードでもプレミアム機能をテストできる
+  static const bool premiumTestEnabled =
+      bool.fromEnvironment('PREMIUM_TEST', defaultValue: false);
 
   /// 開発者ツールを表示できるか
   /// - Release ビルドでは常に false

@@ -19,6 +19,8 @@ import 'widgets/bottom_nav.dart';
 import 'widgets/scheduled_expense_confirmation_dialog.dart';
 import 'widgets/category_budget_report_dialog.dart';
 import 'services/app_state.dart';
+import 'services/remote_config_service.dart';
+import 'services/performance_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +46,12 @@ Future<void> main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+  }
+
+  // Remote Config初期化（モバイルのみ）
+  if (!isDesktop) {
+    await RemoteConfigService.instance.initialize();
+    await PerformanceService.instance.initialize();
   }
 
   runApp(const SaveSmartApp());

@@ -8,6 +8,7 @@ import '../widgets/wheel_picker.dart';
 import '../widgets/expense/add_breakdown_modal.dart';
 import '../widgets/income_sheet.dart';
 import '../services/app_state.dart';
+import '../services/performance_service.dart';
 import '../models/expense.dart';
 import 'fixed_cost_screen.dart';
 import 'category_manage_screen.dart';
@@ -23,7 +24,10 @@ class AddScreen extends StatefulWidget {
   State<AddScreen> createState() => _AddScreenState();
 }
 
-class _AddScreenState extends State<AddScreen> {
+class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
+  @override
+  String get screenTraceName => 'Add';
+
   // 入力状態
   int? _selectedCategoryId;
   String? _selectedCategory;
@@ -32,6 +36,9 @@ class _AddScreenState extends State<AddScreen> {
   late String _selectedGrade; // 設定から初期化
   final TextEditingController _memoController = TextEditingController();
   bool _isInitialized = false;
+
+  // 支出日（デフォルトは今日）
+  DateTime _expenseDate = DateTime.now();
 
   // 内訳リスト
   List<Map<String, dynamic>> _breakdowns = [];
@@ -125,6 +132,51 @@ class _AddScreenState extends State<AddScreen> {
     });
   }
 
+  /// 支出日を選択
+  Future<void> _selectExpenseDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _expenseDate,
+      firstDate: DateTime(2020, 1, 1),
+      lastDate: now,
+      locale: const Locale('ja'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.accentBlue,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() => _expenseDate = picked);
+    }
+  }
+
+  /// 支出日をフォーマット
+  String _formatExpenseDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+
+    if (target == today) return '今日';
+
+    final yesterday = today.subtract(const Duration(days: 1));
+    if (target == yesterday) return '昨日';
+
+    final weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    final weekday = weekdays[date.weekday - 1];
+    return '${date.month}/${date.day}（$weekday）';
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -172,7 +224,10 @@ class _AddScreenState extends State<AddScreen> {
                     // ④ メモ（任意）
                     _buildMemoSection(),
                     const SizedBox(height: 24),
-                    // ⑤ 内訳（任意）
+                    // ⑤ 支出日（デフォルト今日）
+                    _buildDateSelector(),
+                    const SizedBox(height: 24),
+                    // ⑥ 内訳（任意）
                     _buildBreakdownSection(),
                   ],
                 ),
@@ -765,7 +820,79 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
-  /// ⑤ 内訳セクション
+  /// ⑤ 支出日セクション
+  Widget _buildDateSelector() {
+    final isToday = _formatExpenseDate(_expenseDate) == '今日';
+
+    return GestureDetector(
+      onTap: _selectExpenseDate,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isToday
+                ? Colors.black.withValues(alpha: 0.06)
+                : AppColors.accentBlue.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            // カレンダーアイコン
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isToday
+                    ? AppColors.bgPrimary
+                    : AppColors.accentBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.calendar_today_outlined,
+                size: 20,
+                color: isToday ? AppColors.textSecondary : AppColors.accentBlue,
+              ),
+            ),
+            const SizedBox(width: 14),
+            // ラベルと日付
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '支出日',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _formatExpenseDate(_expenseDate),
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: isToday ? AppColors.textPrimary : AppColors.accentBlue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 矢印
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.textSecondary,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// ⑥ 内訳セクション
   Widget _buildBreakdownSection() {
     final remainingAmount = _expenseAmount - _breakdownsTotal;
     final hasOverflow = remainingAmount < 0;
@@ -1241,6 +1368,7 @@ class _AddScreenState extends State<AddScreen> {
       _smartCombos = [];
       _breakdowns = [];
       _memoController.clear();
+      _expenseDate = DateTime.now();
     });
   }
 
@@ -1250,6 +1378,15 @@ class _AddScreenState extends State<AddScreen> {
 
     final appState = context.read<AppState>();
     final now = DateTime.now();
+    // 選択した日付に現在の時刻を組み合わせる
+    final expenseDateTime = DateTime(
+      _expenseDate.year,
+      _expenseDate.month,
+      _expenseDate.day,
+      now.hour,
+      now.minute,
+      now.second,
+    );
 
     bool success;
     int savedCount = 0;
@@ -1262,7 +1399,7 @@ class _AddScreenState extends State<AddScreen> {
         category: _selectedCategory!,
         grade: _selectedGrade,
         memo: _memoController.text.isEmpty ? null : _memoController.text,
-        createdAt: now,
+        createdAt: expenseDateTime,
       );
       success = await appState.addExpense(expense);
       savedCount = 1;
@@ -1277,7 +1414,7 @@ class _AddScreenState extends State<AddScreen> {
             categoryId: breakdown['categoryId'] as int,
             category: breakdown['category'] as String,
             grade: breakdown['type'] as String? ?? _selectedGrade,
-            createdAt: now,
+            createdAt: expenseDateTime,
           );
           await appState.addExpense(breakdownExpense);
           savedCount++;
@@ -1292,7 +1429,7 @@ class _AddScreenState extends State<AddScreen> {
             category: _selectedCategory!,
             grade: _selectedGrade,
             memo: _memoController.text.isEmpty ? null : _memoController.text,
-            createdAt: now,
+            createdAt: expenseDateTime,
           );
           await appState.addExpense(remainingExpense);
           savedCount++;

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/theme.dart';
 import '../config/home_constants.dart';
 import '../services/app_state.dart';
+import '../services/performance_service.dart';
 import '../models/expense.dart';
 import '../models/quick_entry.dart';
 import '../models/scheduled_expense.dart';
@@ -29,7 +30,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
+  @override
+  String get screenTraceName => 'Home';
+
   bool _hasOpenedReflectionToday = false;
 
   @override
@@ -509,6 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
         isPremium: appState.isPremium,
         categoryBudgets: appState.categoryBudgets,
         currencyFormat: appState.currencyFormat,
+        thisMonthTotal: appState.thisMonthTotal,
       ),
       builder: (context, data, child) {
         // Premiumでない場合は非表示
@@ -1255,11 +1260,13 @@ class _CategoryBudgetSectionData {
   final bool isPremium;
   final List<dynamic> categoryBudgets;
   final String currencyFormat;
+  final int thisMonthTotal; // 支出変更を検知するために追加
 
   const _CategoryBudgetSectionData({
     required this.isPremium,
     required this.categoryBudgets,
     required this.currencyFormat,
+    required this.thisMonthTotal,
   });
 
   @override
@@ -1269,11 +1276,13 @@ class _CategoryBudgetSectionData {
           runtimeType == other.runtimeType &&
           isPremium == other.isPremium &&
           categoryBudgets.length == other.categoryBudgets.length &&
-          currencyFormat == other.currencyFormat;
+          currencyFormat == other.currencyFormat &&
+          thisMonthTotal == other.thisMonthTotal;
 
   @override
   int get hashCode =>
       isPremium.hashCode ^
       categoryBudgets.length.hashCode ^
-      currencyFormat.hashCode;
+      currencyFormat.hashCode ^
+      thisMonthTotal.hashCode;
 }

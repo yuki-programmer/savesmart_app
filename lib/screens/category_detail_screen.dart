@@ -3,7 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../config/theme.dart';
+import '../config/category_icons.dart';
 import '../services/app_state.dart';
+import '../services/performance_service.dart';
 import '../utils/formatters.dart';
 
 /// カテゴリ詳細分析画面（PLUSプラン専用）
@@ -25,7 +27,10 @@ class CategoryDetailScreen extends StatefulWidget {
 }
 
 class _CategoryDetailScreenState extends State<CategoryDetailScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, ScreenTraceMixin {
+  @override
+  String get screenTraceName => 'CategoryDetail';
+
   // 表示モード: 0 = 回数, 1 = 金額
   int _displayMode = 0;
 
@@ -41,6 +46,10 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
   static const _standardColor = Color(0xFF6B7B8C); // ブルーグレー
   static const _rewardColor = Color(0xFFD4A853); // ゴールド
 
+  // 分析データのキャッシュ（遅延ロード）
+  Map<String, dynamic>? _analysisData;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -52,10 +61,23 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       parent: _animationController,
       curve: Curves.easeOutQuart,
     );
-    // 画面表示時にアニメーション開始
+    // 画面表示時にアニメーション開始＆データ読み込み
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
+      _loadAnalysisData();
     });
+  }
+
+  /// 分析データを読み込む（遷移アニメーション後に実行）
+  void _loadAnalysisData() {
+    final appState = context.read<AppState>();
+    final analysis = appState.getCategoryDetailAnalysis(widget.categoryName);
+    if (mounted) {
+      setState(() {
+        _analysisData = analysis;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -79,48 +101,57 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
-        child: Consumer<AppState>(
-          builder: (context, appState, child) {
-            final analysis = appState.getCategoryDetailAnalysis(widget.categoryName);
-            final thisMonth = analysis['thisMonth'] as Map<String, Map<String, int>>;
-            final last6MonthsAvg = analysis['last6MonthsAvg'] as Map<String, Map<String, int>>;
-            final totalAmount = analysis['totalAmount'] as int;
-            final totalCount = analysis['totalCount'] as int;
-
-            return Column(
-              children: [
-                // ヘッダー
-                _buildHeader(context),
-                // コンテンツ
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // カテゴリ名カード
-                        _buildCategoryNameCard(),
-                        const SizedBox(height: 24),
-                        // 回数/金額トグル
-                        _buildDisplayModeToggle(),
-                        const SizedBox(height: 24),
-                        // MBTI風3セグメントバー
-                        _buildMbtiBar(thisMonth, totalAmount, totalCount),
-                        const SizedBox(height: 32),
-                        // 詳細リスト
-                        _buildDetailList(thisMonth, last6MonthsAvg),
-                        const SizedBox(height: 32),
-                        // 時系列グラフ
-                        _buildMonthlyTrendSection(appState),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
+        child: Column(
+          children: [
+            // ヘッダー
+            _buildHeader(context),
+            // コンテンツ
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.accentBlue,
+                      ),
+                    )
+                  : _buildContent(),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  /// メインコンテンツ（データ読み込み後に表示）
+  Widget _buildContent() {
+    final analysis = _analysisData!;
+    final thisMonth = analysis['thisMonth'] as Map<String, Map<String, int>>;
+    final last6MonthsAvg = analysis['last6MonthsAvg'] as Map<String, Map<String, int>>;
+    final totalAmount = analysis['totalAmount'] as int;
+    final totalCount = analysis['totalCount'] as int;
+    final appState = context.read<AppState>();
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // カテゴリ名カード
+          _buildCategoryNameCard(),
+          const SizedBox(height: 24),
+          // 回数/金額トグル
+          _buildDisplayModeToggle(),
+          const SizedBox(height: 24),
+          // MBTI風3セグメントバー
+          _buildMbtiBar(thisMonth, totalAmount, totalCount),
+          const SizedBox(height: 32),
+          // 詳細リスト
+          _buildDetailList(thisMonth, last6MonthsAvg),
+          const SizedBox(height: 32),
+          // 時系列グラフ
+          _buildMonthlyTrendSection(appState),
+        ],
       ),
     );
   }
@@ -184,44 +215,44 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          child: Builder(
+            builder: (context) {
+              // カテゴリのアイコンを取得
+              final appState = context.read<AppState>();
+              final category = appState.categories.firstWhere(
+                (c) => c.name == widget.categoryName,
+                orElse: () => appState.categories.first,
+              );
+              final iconData = CategoryIcons.getIcon(category.icon);
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 16,
-                    height: 16,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
+                      color: widget.categoryColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      iconData,
+                      size: 22,
                       color: widget.categoryColor,
-                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      widget.categoryName,
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    widget.categoryName,
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '支出性格分析',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textMuted.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),

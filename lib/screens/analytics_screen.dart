@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../config/theme.dart';
 import '../models/expense.dart';
 import '../services/app_state.dart';
+import '../services/performance_service.dart';
 import '../utils/formatters.dart';
 import '../widgets/burn_rate_chart.dart';
 import '../widgets/analytics/category_pace_sheet.dart';
@@ -19,7 +20,11 @@ class AnalyticsScreen extends StatefulWidget {
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> {
+class _AnalyticsScreenState extends State<AnalyticsScreen>
+    with ScreenTraceMixin {
+  @override
+  String get screenTraceName => 'Analytics';
+
   // アコーディオンの開閉状態
   bool _categoryExpanded = false;
   bool _paceExpanded = false;
@@ -67,7 +72,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         setState(() => _categoryExpanded = expanded);
                       }
                     },
-                    content: _buildCategoryContent(isPremium),
+                    contentBuilder: (_) => _buildCategoryContent(isPremium),
                     icon: Icons.pie_chart_outline,
                     summary: _getCategorySummary(appState),
                     maskedSummary: _getCategoryMaskedSummary(appState),
@@ -85,7 +90,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         setState(() => _paceExpanded = expanded);
                       }
                     },
-                    content: _buildPaceContent(appState),
+                    contentBuilder: (_) => _buildPaceContent(appState),
                     icon: Icons.speed,
                     summary: _getPaceSummary(appState),
                     maskedSummary: '1日 約¥--- / 週 約¥---',
@@ -103,7 +108,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         setState(() => _burnRateExpanded = expanded);
                       }
                     },
-                    content: _buildBurnRateContent(appState),
+                    contentBuilder: (_) => _buildBurnRateContent(appState),
                     icon: Icons.show_chart,
                     summary: _getBurnRateSummary(appState),
                     maskedSummary: '消化率 --%',
@@ -121,7 +126,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         setState(() => _budgetMarginExpanded = expanded);
                       }
                     },
-                    content: _buildBudgetMarginContent(appState),
+                    contentBuilder: (_) => _buildBudgetMarginContent(appState),
                     icon: Icons.savings_outlined,
                     summary: _getBudgetMarginSummary(appState),
                     maskedSummary: '¥--- の余裕',
@@ -412,13 +417,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   /// アコーディオンカード（アイコン+サマリー付き）
+  /// contentBuilder: 遅延ビルド用。展開時のみビルドされる
   Widget _buildAccordionCard({
     required String title,
     required String subtitle,
     required bool isExpanded,
     required bool isPremium,
     required ValueChanged<bool> onExpansionChanged,
-    required Widget content,
+    required WidgetBuilder contentBuilder,
     required IconData icon,
     required String summary,
     required String maskedSummary,
@@ -441,7 +447,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               title: title,
               isExpanded: isExpanded,
               onExpansionChanged: onExpansionChanged,
-              content: content,
+              contentBuilder: contentBuilder,
               icon: icon,
               summary: summary,
             )
@@ -455,11 +461,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   /// Premium ユーザー用: 開閉可能なアコーディオン（アイコン+サマリー付き）
+  /// contentBuilder: 遅延ビルド用。展開時のみビルドされる
   Widget _buildPremiumAccordion({
     required String title,
     required bool isExpanded,
     required ValueChanged<bool> onExpansionChanged,
-    required Widget content,
+    required WidgetBuilder contentBuilder,
     required IconData icon,
     required String summary,
   }) {
@@ -508,7 +515,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         onExpansionChanged: onExpansionChanged,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        children: [content],
+        // 遅延ビルド: 展開時のみcontentBuilderが呼ばれる
+        children: [if (isExpanded) contentBuilder(context)],
       ),
     );
   }
@@ -690,7 +698,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         _buildFixedCostsToggle(),
         const SizedBox(height: 16),
         // 円グラフ
-        _buildCategoryPieChart(items, total),
+        _buildCategoryPieChart(items, total, isPremium),
         const SizedBox(height: 20),
         // カテゴリリスト
         _buildCategoryList(items, total, isPremium),
@@ -787,77 +795,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  // タッチされたセクションのインデックス
-  int _touchedIndex = -1;
-
-  /// 円グラフウィジェット（タップ対応）
-  Widget _buildCategoryPieChart(List<Map<String, dynamic>> items, int total) {
-    final appState = context.read<AppState>();
-    final isPremium = appState.isPremium;
-
-    return SizedBox(
-      height: 180,
-      child: PieChart(
-        PieChartData(
-          sectionsSpace: 2,
-          centerSpaceRadius: 40,
-          pieTouchData: isPremium
-              ? PieTouchData(
-                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                    setState(() {
-                      if (!event.isInterestedForInteractions ||
-                          pieTouchResponse == null ||
-                          pieTouchResponse.touchedSection == null) {
-                        _touchedIndex = -1;
-                        return;
-                      }
-                      _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                    });
-
-                    // タップ終了時（指を離したとき）に詳細画面へ遷移
-                    if (event is FlTapUpEvent &&
-                        pieTouchResponse != null &&
-                        pieTouchResponse.touchedSection != null) {
-                      final index = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                      if (index >= 0 && index < items.length) {
-                        final item = items[index];
-                        final categoryName = item['category'] as String;
-                        final color = item['color'] as Color;
-                        // カテゴリIDを取得
-                        final categoryObj = appState.categories.firstWhere(
-                          (c) => c.name == categoryName,
-                          orElse: () => appState.categories.first,
-                        );
-                        if (categoryObj.id != null) {
-                          showCategoryDetailScreen(context, categoryObj.id!, categoryName, color);
-                        }
-                      }
-                    }
-                  },
-                )
-              : null,
-          sections: items.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final amount = item['amount'] as int;
-            final percentage = (amount / total) * 100;
-            final color = item['color'] as Color;
-            final isTouched = isPremium && index == _touchedIndex;
-
-            return PieChartSectionData(
-              value: amount.toDouble(),
-              title: '${percentage.round()}%',
-              color: color,
-              radius: isTouched ? 58 : 50, // タッチ時に少し拡大
-              titleStyle: GoogleFonts.ibmPlexSans(
-                fontSize: isTouched ? 14 : 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+  /// 円グラフウィジェット（独立したStatefulWidgetを使用）
+  Widget _buildCategoryPieChart(List<Map<String, dynamic>> items, int total, bool isPremium) {
+    return _CategoryPieChart(
+      items: items,
+      total: total,
+      isPremium: isPremium,
     );
   }
 
@@ -2055,6 +1998,96 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             duration: const Duration(milliseconds: 200),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 円グラフウィジェット（独立したStateを持つ）
+/// タッチ処理をAnalyticsScreen全体から分離し、パフォーマンスを改善
+class _CategoryPieChart extends StatefulWidget {
+  final List<Map<String, dynamic>> items;
+  final int total;
+  final bool isPremium;
+
+  const _CategoryPieChart({
+    required this.items,
+    required this.total,
+    required this.isPremium,
+  });
+
+  @override
+  State<_CategoryPieChart> createState() => _CategoryPieChartState();
+}
+
+class _CategoryPieChartState extends State<_CategoryPieChart> {
+  int _touchedIndex = -1;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 180,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 40,
+          pieTouchData: widget.isPremium
+              ? PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions ||
+                          pieTouchResponse == null ||
+                          pieTouchResponse.touchedSection == null) {
+                        _touchedIndex = -1;
+                        return;
+                      }
+                      _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                    });
+
+                    // タップ終了時（指を離したとき）に詳細画面へ遷移
+                    if (event is FlTapUpEvent &&
+                        pieTouchResponse != null &&
+                        pieTouchResponse.touchedSection != null) {
+                      final index = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                      if (index >= 0 && index < widget.items.length) {
+                        final item = widget.items[index];
+                        final categoryName = item['category'] as String;
+                        final color = item['color'] as Color;
+                        // カテゴリIDを取得
+                        final appState = context.read<AppState>();
+                        final categoryObj = appState.categories.firstWhere(
+                          (c) => c.name == categoryName,
+                          orElse: () => appState.categories.first,
+                        );
+                        if (categoryObj.id != null) {
+                          showCategoryDetailScreen(context, categoryObj.id!, categoryName, color);
+                        }
+                      }
+                    }
+                  },
+                )
+              : null,
+          sections: widget.items.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final amount = item['amount'] as int;
+            final percentage = (amount / widget.total) * 100;
+            final color = item['color'] as Color;
+            final isTouched = widget.isPremium && index == _touchedIndex;
+
+            return PieChartSectionData(
+              value: amount.toDouble(),
+              title: '${percentage.round()}%',
+              color: color,
+              radius: isTouched ? 58 : 50,
+              titleStyle: GoogleFonts.ibmPlexSans(
+                fontSize: isTouched ? 14 : 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

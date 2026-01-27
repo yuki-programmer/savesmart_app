@@ -158,7 +158,7 @@ class _DayContent extends StatelessWidget {
 
     return Column(
       children: [
-        // ラベル + 残り日数
+        // ラベル + ヘルプアイコン + 残り日数
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -169,6 +169,15 @@ class _DayContent extends StatelessWidget {
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () => _showHelpDialog(context),
+              child: Icon(
+                Icons.help_outline,
+                size: 16,
+                color: Colors.grey[400],
               ),
             ),
             const SizedBox(width: 8),
@@ -235,6 +244,29 @@ class _DayContent extends StatelessWidget {
       ],
     );
   }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '今日使えるお金とは？',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        content: const Text(
+          '残り使えるお金を残りの日数で割った金額です。\n\n毎朝計算され、1日の中では変わりません。',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('わかった'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 夜Content（修正版：答えを残す）
@@ -290,6 +322,15 @@ class _NightContent extends StatelessWidget {
                     fontSize: 12,
                     color: HomeConstants.nightPrimaryText.withValues(alpha: 0.7),
                     letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: () => _showHelpDialog(context),
+                  child: Icon(
+                    Icons.help_outline,
+                    size: 14,
+                    color: HomeConstants.nightPrimaryText.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -394,6 +435,29 @@ class _NightContent extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '今日使えるお金とは？',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        content: const Text(
+          '残り使えるお金を残りの日数で割った金額です。\n\n毎朝計算され、1日の中では変わりません。',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('わかった'),
+          ),
+        ],
+      ),
     );
   }
 }

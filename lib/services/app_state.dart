@@ -101,7 +101,9 @@ class AppState extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   /// プレミアム判定（全画面でこれを参照する）
-  bool get isPremium => _devPremiumOverride ?? _storePremium;
+  /// PREMIUM_TEST=true の場合は常に true を返す
+  bool get isPremium =>
+      DevConfig.premiumTestEnabled || (_devPremiumOverride ?? _storePremium);
 
   /// 開発者モードが解放されているか
   bool get isDevModeUnlocked => _devModeUnlocked;
