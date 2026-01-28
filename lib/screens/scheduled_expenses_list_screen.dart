@@ -39,10 +39,13 @@ class ScheduledExpensesListScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Consumer<AppState>(
-        builder: (context, appState, child) {
-          final currentExpenses = appState.unconfirmedScheduledExpenses;
-          final format = appState.currencyFormat;
+      body: Selector<AppState, (List<ScheduledExpense>, String)>(
+        selector: (_, appState) => (
+          appState.unconfirmedScheduledExpenses,
+          appState.currencyFormat,
+        ),
+        builder: (context, data, child) {
+          final (currentExpenses, format) = data;
 
           if (currentExpenses.isEmpty) {
             return Center(

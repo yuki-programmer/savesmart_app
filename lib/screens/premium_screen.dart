@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/app_state.dart';
+import '../services/purchase_service.dart';
 
 /// プラン種別
 enum PlanType { monthly, yearly }
@@ -874,19 +875,62 @@ class _PremiumScreenState extends State<PremiumScreen> {
     );
   }
 
-  void _handleSubscribe() {
-    // TODO: RevenueCat / StoreKit 連携
-    // _selectedPlan に応じて購入処理を実行
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _selectedPlan == PlanType.yearly
-              ? '年額プランの購入処理を開始します'
-              : '月額プランの購入処理を開始します',
+  Future<void> _handleSubscribe() async {
+    final purchaseService = PurchaseService.instance;
+
+    // ストアが利用可能か確認
+    if (!purchaseService.isAvailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ストアに接続できません'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // 選択されたプランに応じて購入処理を実行
+    final success = _selectedPlan == PlanType.yearly
+        ? await purchaseService.purchaseYearly()
+        : await purchaseService.purchaseMonthly();
+
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('購入処理を開始できませんでした'),
+          backgroundColor: Colors.red,
         ),
-        backgroundColor: _accentBlue,
-      ),
-    );
+      );
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    final purchaseService = PurchaseService.instance;
+
+    if (!purchaseService.isAvailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ストアに接続できません'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    await purchaseService.restorePurchases();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('購入履歴を復元しています...'),
+          backgroundColor: _accentBlue,
+        ),
+      );
+    }
   }
 
   /// フッター
@@ -905,6 +949,26 @@ class _PremiumScreenState extends State<PremiumScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          // 購入を復元ボタン
+          GestureDetector(
+            onTap: _handleRestore,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              decoration: BoxDecoration(
+                border: Border.all(color: _borderLight),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '購入を復元',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _textSecondary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

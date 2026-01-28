@@ -21,6 +21,7 @@ import 'widgets/category_budget_report_dialog.dart';
 import 'services/app_state.dart';
 import 'services/remote_config_service.dart';
 import 'services/performance_service.dart';
+import 'services/purchase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +54,9 @@ Future<void> main() async {
     await RemoteConfigService.instance.initialize();
     await PerformanceService.instance.initialize();
   }
+
+  // アプリ内購入サービス初期化
+  await PurchaseService.instance.initialize();
 
   runApp(const SaveSmartApp());
 }

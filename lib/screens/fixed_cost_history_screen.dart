@@ -16,8 +16,10 @@ class FixedCostHistoryScreen extends StatefulWidget {
 class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(
-      builder: (context, appState, child) {
+    return Selector<AppState, (bool, List<FixedCost>)>(
+      selector: (_, appState) => (appState.isLoading, appState.fixedCosts),
+      builder: (context, data, child) {
+        final (isLoading, fixedCosts) = data;
         return Scaffold(
           backgroundColor: AppColors.bgPrimary,
           body: SafeArea(
@@ -25,9 +27,9 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
               children: [
                 _buildHeader(),
                 Expanded(
-                  child: appState.isLoading
+                  child: isLoading
                       ? const Center(child: CircularProgressIndicator())
-                      : _buildFixedCostList(appState.fixedCosts),
+                      : _buildFixedCostList(fixedCosts),
                 ),
               ],
             ),

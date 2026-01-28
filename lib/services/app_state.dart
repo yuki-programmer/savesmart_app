@@ -13,6 +13,7 @@ import '../core/dev_config.dart';
 import '../core/financial_cycle.dart';
 import 'database_service.dart';
 import 'performance_monitor.dart';
+import 'purchase_service.dart';
 
 class CategoryStats {
   final String category;
@@ -42,8 +43,6 @@ class AppState extends ChangeNotifier {
   bool _isLoading = true;
 
   // === Premium / Entitlement ===
-  // ignore: prefer_final_fields - 将来の実課金判定で変更予定
-  bool _storePremium = false;
   bool? _devPremiumOverride; // null=override無し, true/false=強制
   bool _devModeUnlocked = false; // バージョン10回タップで解放
 
@@ -83,6 +82,10 @@ class AppState extends ChangeNotifier {
   String? _cachedThisMonthExpensesCycleKey;
   int? _cachedThisMonthExpensesCount;
 
+  // === categoryStatsキャッシュ（SQLベース） ===
+  Map<String, CategoryStats>? _cachedCategoryStats;
+  String? _cachedCategoryStatsCycleKey;
+
   // Getters
   List<Expense> get expenses => _expenses;
   List<Category> get categories => _categories;
@@ -97,7 +100,8 @@ class AppState extends ChangeNotifier {
   /// プレミアム判定（全画面でこれを参照する）
   /// PREMIUM_TEST=true の場合は常に true を返す
   bool get isPremium =>
-      DevConfig.premiumTestEnabled || (_devPremiumOverride ?? _storePremium);
+      DevConfig.premiumTestEnabled ||
+      (_devPremiumOverride ?? PurchaseService.instance.isPremium);
 
   /// 開発者モードが解放されているか
   bool get isDevModeUnlocked => _devModeUnlocked;
@@ -418,51 +422,73 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// カテゴリ別統計（キャッシュ版）
+  /// 初回アクセス時やキャッシュ無効時は空を返す（非同期でリフレッシュ）
   Map<String, CategoryStats> get categoryStats {
-    final Map<String, CategoryStats> stats = {};
-    final monthExpenses = thisMonthExpenses;
+    final currentCycleKey = _financialCycle.getCycleKey(DateTime.now());
 
-    // カテゴリごとにグループ化（「その他」は除外）
-    final Map<String, List<Expense>> byCategory = {};
-    for (final expense in monthExpenses) {
-      // カテゴリ未選択（その他）は分析対象外
-      if (expense.category == 'その他') continue;
-      byCategory.putIfAbsent(expense.category, () => []);
-      byCategory[expense.category]!.add(expense);
+    // キャッシュが有効ならそのまま返す
+    if (_cachedCategoryStats != null &&
+        _cachedCategoryStatsCycleKey == currentCycleKey) {
+      return _cachedCategoryStats!;
     }
 
-    // 各カテゴリの統計を計算
-    for (final entry in byCategory.entries) {
-      final expenses = entry.value;
-      final totalAmount = expenses.fold(0, (sum, e) => sum + e.amount);
+    // キャッシュが無効な場合は非同期でリフレッシュをトリガー
+    // （UIには空または古いキャッシュを返して、後でnotifyListenersで更新）
+    _refreshCategoryStats();
+    return _cachedCategoryStats ?? {};
+  }
+
+  /// カテゴリ統計をSQLから非同期でリフレッシュ
+  Future<void> _refreshCategoryStats() async {
+    final now = DateTime.now();
+    final currentCycleKey = _financialCycle.getCycleKey(now);
+
+    // 既にリフレッシュ中または最新なら何もしない
+    if (_cachedCategoryStatsCycleKey == currentCycleKey &&
+        _cachedCategoryStats != null) {
+      return;
+    }
+
+    final cycleStart = _financialCycle.getStartDate(now);
+    final cycleEnd = _financialCycle.getEndDate(now);
+
+    final sqlStats = await _db.getCategoryStats(
+      cycleStartDate: cycleStart,
+      cycleEndDate: cycleEnd,
+    );
+
+    final Map<String, CategoryStats> stats = {};
+
+    for (final row in sqlStats) {
+      final category = row['category'] as String;
+      final totalAmount = row['total_amount'] as int;
+      final expenseCount = row['expense_count'] as int;
+      final savingAmount = row['saving_amount'] as int;
+      final standardAmount = row['standard_amount'] as int;
+      final rewardAmount = row['reward_amount'] as int;
+      final savingCount = row['saving_count'] as int;
+      final rewardCount = row['reward_count'] as int;
 
       // スタンダード平均を計算（全支出をスタンダードと仮定した場合）
-      int standardTotal = 0;
-      for (final expense in expenses) {
-        switch (expense.grade) {
-          case 'saving':
-            standardTotal += (expense.amount / 0.7).round();
-            break;
-          case 'reward':
-            standardTotal += (expense.amount / 1.3).round();
-            break;
-          default:
-            standardTotal += expense.amount;
-        }
-      }
-      final standardAverage = expenses.isNotEmpty
-          ? (standardTotal / expenses.length).round()
-          : 0;
+      final standardTotal =
+          (savingCount > 0 ? (savingAmount / 0.7).round() : 0) +
+              standardAmount +
+              (rewardCount > 0 ? (rewardAmount / 1.3).round() : 0);
+      final standardAverage =
+          expenseCount > 0 ? (standardTotal / expenseCount).round() : 0;
 
-      stats[entry.key] = CategoryStats(
-        category: entry.key,
+      stats[category] = CategoryStats(
+        category: category,
         totalAmount: totalAmount,
         standardAverage: standardAverage,
-        expenseCount: expenses.length,
+        expenseCount: expenseCount,
       );
     }
 
-    return stats;
+    _cachedCategoryStats = stats;
+    _cachedCategoryStatsCycleKey = currentCycleKey;
+    notifyListeners();
   }
 
   /// カテゴリ別統計を取得（非同期版 - SQL集計）
@@ -547,6 +573,9 @@ class AppState extends ChangeNotifier {
 
       // 今日の固定予算をロード（データロード後に実行）
       await _loadOrCreateTodayAllowance();
+
+      // カテゴリ統計をプリロード（SQLベース、非同期）
+      await _refreshCategoryStats();
     } catch (e) {
       debugPrint('Error loading data: $e');
     }
@@ -558,10 +587,10 @@ class AppState extends ChangeNotifier {
 
   // === 部分リロードメソッド（パフォーマンス最適化） ===
 
-  Future<void> _reloadExpenses() async {
+  Future<void> _reloadExpenses({bool notify = true}) async {
     _expenses = await _db.getExpenses();
     _invalidateExpensesCaches();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   /// 支出関連のキャッシュを無効化
@@ -574,41 +603,44 @@ class AppState extends ChangeNotifier {
     _cachedTodayExpensesDate = null;
     _cachedTodayTotal = null;
     _cachedTodayTotalDate = null;
+    // カテゴリ統計キャッシュもクリア
+    _cachedCategoryStats = null;
+    _cachedCategoryStatsCycleKey = null;
   }
 
-  Future<void> _reloadCategories() async {
+  Future<void> _reloadCategories({bool notify = true}) async {
     _categories = await _db.getCategories();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
-  Future<void> _reloadFixedCosts() async {
+  Future<void> _reloadFixedCosts({bool notify = true}) async {
     _fixedCosts = await _db.getFixedCosts();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
-  Future<void> _reloadFixedCostCategories() async {
+  Future<void> _reloadFixedCostCategories({bool notify = true}) async {
     _fixedCostCategories = await _db.getFixedCostCategories();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
-  Future<void> _reloadBudget() async {
+  Future<void> _reloadBudget({bool notify = true}) async {
     _currentBudget = await _db.getCurrentBudget();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
-  Future<void> _reloadQuickEntries() async {
+  Future<void> _reloadQuickEntries({bool notify = true}) async {
     _quickEntries = await _db.getQuickEntries();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
-  Future<void> _reloadScheduledExpenses() async {
+  Future<void> _reloadScheduledExpenses({bool notify = true}) async {
     _scheduledExpenses = await _db.getUnconfirmedScheduledExpenses();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
-  Future<void> _reloadCategoryBudgets() async {
+  Future<void> _reloadCategoryBudgets({bool notify = true}) async {
     _categoryBudgets = await _db.getCategoryBudgets();
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   Future<bool> addExpense(Expense expense) async {
@@ -724,12 +756,13 @@ class AppState extends ChangeNotifier {
         category.icon = icon;
         await _db.updateCategory(category);
       }
-      // 全関連データをリロード
-      await _reloadCategories();
-      await _reloadExpenses();
-      await _reloadQuickEntries();
-      await _reloadScheduledExpenses();
-      await _reloadCategoryBudgets();
+      // 全関連データをリロード（notifyはバッチ化して最後に1回だけ）
+      await _reloadCategories(notify: false);
+      await _reloadExpenses(notify: false);
+      await _reloadQuickEntries(notify: false);
+      await _reloadScheduledExpenses(notify: false);
+      await _reloadCategoryBudgets(notify: false);
+      notifyListeners();
       return true;
     } catch (e) {
       debugPrint('Error updating category: $e');
@@ -742,12 +775,13 @@ class AppState extends ChangeNotifier {
     try {
       // DBトランザクションで全関連データを一括削除
       await _db.deleteCategoryWithExpenses(id);
-      // 全関連データをリロード
-      await _reloadCategories();
-      await _reloadExpenses();
-      await _reloadQuickEntries();
-      await _reloadScheduledExpenses();
-      await _reloadCategoryBudgets();
+      // 全関連データをリロード（notifyはバッチ化して最後に1回だけ）
+      await _reloadCategories(notify: false);
+      await _reloadExpenses(notify: false);
+      await _reloadQuickEntries(notify: false);
+      await _reloadScheduledExpenses(notify: false);
+      await _reloadCategoryBudgets(notify: false);
+      notifyListeners();
       return true;
     } catch (e) {
       debugPrint('Error deleting category: $e');

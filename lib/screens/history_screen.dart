@@ -205,8 +205,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(
-      builder: (context, appState, child) {
+    return Selector<AppState, int>(
+      selector: (_, appState) => appState.mainSalaryDay,
+      builder: (context, mainSalaryDay, child) {
         return Scaffold(
           backgroundColor: AppColors.bgPrimary,
           body: SafeArea(
@@ -215,7 +216,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 _buildHeader(),
                 if (_isSearching) _buildSearchBar(),
                 Expanded(
-                  child: _buildContent(appState),
+                  child: _buildContent(mainSalaryDay),
                 ),
               ],
             ),
@@ -225,7 +226,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildContent(AppState appState) {
+  Widget _buildContent(int mainSalaryDay) {
     // 初期ロード中
     if (_isLoading && _allExpenses.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -233,11 +234,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     // 検索中
     if (_isSearching && _searchController.text.isNotEmpty) {
-      return _buildSearchResults(appState);
+      return _buildSearchResults(mainSalaryDay);
     }
 
     // 全履歴表示
-    return _buildFullHistoryList(appState);
+    return _buildFullHistoryList(mainSalaryDay);
   }
 
   Widget _buildHeader() {
@@ -396,12 +397,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   /// 全履歴リスト（サイクル境界ヘッダー付き）
-  Widget _buildFullHistoryList(AppState appState) {
+  Widget _buildFullHistoryList(int mainSalaryDay) {
     if (_allExpenses.isEmpty) {
       return _buildEmptyState();
     }
-
-    final mainSalaryDay = appState.mainSalaryDay;
     final groupedExpenses = _groupExpensesByDate(_allExpenses);
     final sortedDates = groupedExpenses.keys.toList()
       ..sort((a, b) => b.compareTo(a)); // 降順
@@ -524,7 +523,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   /// 検索結果表示
-  Widget _buildSearchResults(AppState appState) {
+  Widget _buildSearchResults(int mainSalaryDay) {
     if (_isSearchLoading && _searchResults.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -553,8 +552,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
       );
     }
-
-    final mainSalaryDay = appState.mainSalaryDay;
 
     return Column(
       children: [
