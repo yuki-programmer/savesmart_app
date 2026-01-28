@@ -133,10 +133,15 @@ class CategoryBudgetSection extends StatelessWidget {
     final ratePercent = (rate * 100).round();
     final rateText = isOverBudget ? '超過' : '$ratePercent%';
 
-    // バーの色
-    final barColor = isOverBudget
-        ? AppColors.accentRed
-        : AppColors.accentBlue;
+    // バーの色（50%超: オレンジ、85%超: 赤）
+    final Color barColor;
+    if (isOverBudget || rate > 0.85) {
+      barColor = AppColors.accentRed;
+    } else if (rate > 0.5) {
+      barColor = AppColors.accentOrange;
+    } else {
+      barColor = AppColors.accentBlue;
+    }
 
     // バーの塗りつぶし率（超過時は1.0、通常時は消費率）
     final fillRate = isOverBudget ? 1.0 : rate.clamp(0.0, 1.0);
@@ -166,9 +171,9 @@ class CategoryBudgetSection extends StatelessWidget {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: isOverBudget
-                      ? AppColors.accentRed
-                      : AppColors.textSecondary,
+                  color: barColor == AppColors.accentBlue
+                      ? AppColors.textSecondary
+                      : barColor,
                 ),
               ),
             ],
@@ -225,9 +230,9 @@ class CategoryBudgetSection extends StatelessWidget {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isOverBudget
-                        ? AppColors.accentRed
-                        : AppColors.textSecondary,
+                    color: barColor == AppColors.accentBlue
+                        ? AppColors.textSecondary
+                        : barColor,
                   ),
                 ),
               ),

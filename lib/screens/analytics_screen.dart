@@ -11,6 +11,7 @@ import '../widgets/burn_rate_chart.dart';
 import '../widgets/analytics/category_pace_sheet.dart';
 import '../widgets/analytics/monthly_expense_trend_chart.dart';
 import 'category_detail_screen.dart';
+import 'fixed_cost_history_screen.dart';
 import 'premium_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -1922,6 +1923,38 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  // 編集ボタン
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FixedCostHistoryScreen(),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
+                        children: [
+                          Text(
+                            '編集',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.accentBlue.withValues(alpha: 0.8),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 16,
+                            color: AppColors.accentBlue.withValues(alpha: 0.6),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   AnimatedRotation(
