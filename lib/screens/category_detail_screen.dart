@@ -32,7 +32,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
   String get screenTraceName => 'CategoryDetail';
 
   // 表示モード: 0 = 回数, 1 = 金額
-  int _displayMode = 0;
+  int _displayMode = 1;
 
   // アニメーションコントローラー
   late AnimationController _animationController;

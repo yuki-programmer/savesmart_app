@@ -221,7 +221,6 @@ Premium-only accordion sections with icon + 1-line summary:
 - **カテゴリ別の支出割合**: Pie chart + category list (top category summary)
 - **1日あたりの支出**: Daily/weekly pace based on elapsed days (cycle start to today)
 - **支出ペース**: Burn rate chart with previous cycle comparison
-- **家計の余裕**: Pace buffer and upgrade suggestions
 
 **Free users: Accordion sections show masked summaries (e.g., "●●が最多", "¥---") and navigate to PremiumScreen on tap**
 
@@ -234,7 +233,7 @@ Premium-only accordion sections with icon + 1-line summary:
 ### Premium Screen (有料プランについて)
 - Access: Settings → 有料プランについて, or tap locked features
 - Non-subscribed view: Hero section, feature cards (horizontal scroll), plan selection, trial info, CTA
-- Feature cards: 将来の支出を先取り登録, 今週どれくらい使える?, カテゴリ別支出割合, 支出ペースグラフ, 家計の余裕, カテゴリに予算を設定
+- Feature cards: 将来の支出を先取り登録, 今週どれくらい使える?, カテゴリ別支出割合, 支出ペースグラフ, カテゴリに予算を設定
 - **Pricing**: 月額 ¥400/月、年額 ¥3,600/年（3ヶ月分おトク）
 - Subscribed view: Status card (green), current plan info, renewal date, upgrade option (monthly→yearly), subscription management link
 - Widget: `PremiumScreen` (`lib/screens/premium_screen.dart`)

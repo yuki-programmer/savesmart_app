@@ -171,24 +171,13 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 - カテゴリ別 + 全体の日割り・週割りを表示
 - 支出総額降順でソート
 
-### 5.5 家計の余白
-- **Premiumのみ**
-- ペースバッファ（余剰額）の表示
-  - 計算式: `予算ペース - 実支出`
-  - アニメーション付きカウントアップ表示
-- 格上げカテゴリ提案（最大3件）
-  - 条件: バッファ > 0 かつ 標準/ご褒美 各1件以上
-  - 全期間のご褒美上位から選択
-  - カード表示: カテゴリ名、標準平均、ご褒美平均、差額、可能回数
-  - タップでカテゴリ詳細画面へ遷移（Hero アニメーション）
-
-### 5.6 固定費セクション（Free版でも表示）
+### 5.5 固定費セクション（Free版でも表示）
 - アコーディオン形式で表示（分析画面の最下部）
 - ヘッダー: 「固定費」+ 合計金額
 - 展開時: 登録済み固定費を一覧表示
 - 固定費がない場合は「固定費が登録されていません」と表示
 
-### 5.7 カテゴリ別支出
+### 5.6 カテゴリ別支出
 - **Premiumのみ**
 - 円グラフでカテゴリ比率を可視化（fl_chart使用）
 - 固定費込み/抜き切り替えトグル
@@ -379,7 +368,6 @@ Future<bool> confirmScheduledExpenseWithModification(int id, int amount, String 
 - 今週あと使える（ホーム画面、Free版は非表示）
 - 消費ペースグラフ
 - 1日あたりの支出分析
-- 家計の余白計算
 - カテゴリ別円グラフ
 
 ---
@@ -511,7 +499,7 @@ Future<bool> confirmScheduledExpenseWithModification(int id, int amount, String 
 ### 16.1 概要
 - **Premiumのみ**
 - カテゴリ別の詳細な支出分析画面
-- 円グラフのカテゴリタップまたは格上げカテゴリカードから遷移
+- 円グラフのカテゴリタップから遷移
 
 ### 16.2 MBTI風3セグメントバー
 - 節約/標準/ご褒美の比率を3セグメントで可視化
@@ -648,11 +636,6 @@ Future<List<Map<String, dynamic>>> getCategoryMonthlyTrend(String categoryName, 
 // 月間支出推移（全カテゴリ、グレード別積み上げ）
 Future<List<Map<String, dynamic>>> getMonthlyExpenseTrend({int months = 12})
   // 返り値: [{ 'month': 'YYYY-MM', 'monthLabel': 'M月', 'saving': int, 'standard': int, 'reward': int, 'total': int }, ...]
-
-// 格上げ可能カテゴリ（最大3件）
-List<Map<String, dynamic>> getUpgradeCategories()
-  // 返り値: [{ 'category': String, 'diff': int, 'possibleCount': int, 'standardAvg': int, 'rewardAvg': int }, ...]
-  // 条件: buffer > 0 && 標準1件以上 && ご褒美1件以上
 ```
 
 ### 18.4 サイクル・予算系ゲッター
@@ -666,7 +649,6 @@ int? get thisMonthAvailableAmount     // 今月の使える金額（収入合計
 int? get disposableAmount             // 可処分金額（収入 - 固定費）
 int? get fixedTodayAllowance          // 今日の固定額（日割り、日中不変）
 int? get dynamicTomorrowForecast      // 明日の予測（支出で変動）
-int? get paceBuffer                   // 余裕額（予算ペース - 実支出）
 
 int get thisMonthTotal                // 変動費合計
 int get todayTotal                    // 今日の支出合計
@@ -799,7 +781,6 @@ FutureBuilder<Map<String, dynamic>?>(
   - カテゴリ別支出（円グラフ）
   - 1日あたりの支出分析
   - 支出ペース（バーンレートチャート）
-  - 家計の余白（格上げカテゴリ提案）
 - CategoryDetailScreen（カテゴリ詳細分析）
   - MBTI風3セグメントバー
   - 月別トレンドチャート（12ヶ月）
@@ -821,7 +802,6 @@ FutureBuilder<Map<String, dynamic>?>(
   - 今週どれくらい使える？（週単位で予算を把握）
   - カテゴリ別支出割合
   - 支出ペースグラフ（予算のペースを可視化）
-  - 家計の余裕（あといくら使える？）
   - カテゴリに予算を設定（使いすぎを事前に防ぐ）
 - プラン選択セクション:
   - 年額プラン（¥3,600/年、「おすすめ」バッジ、3ヶ月分おトク）

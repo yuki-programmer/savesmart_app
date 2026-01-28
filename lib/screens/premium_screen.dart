@@ -27,12 +27,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
   static const Color _accentGold = Color(0xFFF59E0B);
   static const Color _accentGoldDark = Color(0xFFD97706);
   static const Color _accentGreen = Color(0xFF22C55E);
-  static const Color _accentPurple = Color(0xFFA855F7);
   static const Color _borderLight = Color(0xFFE5E7EB);
   static const Color _iconBgBlue = Color(0xFFEFF6FF);
   static const Color _iconBgGreen = Color(0xFFF0FDF4);
   static const Color _iconBgOrange = Color(0xFFFFF7ED);
-  static const Color _iconBgPurple = Color(0xFFFAF5FF);
   static const Color _iconBgPink = Color(0xFFFCE7F3);
   static const Color _accentPink = Color(0xFFEC4899);
   static const Color _trialBgStart = Color(0xFFEFF6FF);
@@ -486,13 +484,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
         iconColor: _accentGold,
         title: '支出ペース\nグラフ',
         desc: '予算のペースを可視化',
-      ),
-      _FeatureItem(
-        icon: Icons.account_balance_wallet_outlined,
-        iconBgColor: _iconBgPurple,
-        iconColor: _accentPurple,
-        title: '家計の余裕',
-        desc: 'あといくら使える？',
       ),
       _FeatureItem(
         icon: Icons.tune_outlined,

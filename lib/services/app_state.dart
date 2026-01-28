@@ -83,12 +83,6 @@ class AppState extends ChangeNotifier {
   String? _cachedThisMonthExpensesCycleKey;
   int? _cachedThisMonthExpensesCount;
 
-  List<Expense>? _cachedLast6MonthsExpenses;
-  String? _cachedLast6MonthsKey; // YYYY-MM format
-
-  Map<String, Map<String, Map<String, int>>>? _cachedCategoryGradeAverages;
-  String? _cachedCategoryGradeAveragesKey;
-
   // Getters
   List<Expense> get expenses => _expenses;
   List<Category> get categories => _categories;
@@ -575,10 +569,6 @@ class AppState extends ChangeNotifier {
     _cachedThisMonthExpenses = null;
     _cachedThisMonthExpensesCycleKey = null;
     _cachedThisMonthExpensesCount = null;
-    _cachedLast6MonthsExpenses = null;
-    _cachedLast6MonthsKey = null;
-    _cachedCategoryGradeAverages = null;
-    _cachedCategoryGradeAveragesKey = null;
     // 今日の支出キャッシュもクリア
     _cachedTodayExpenses = null;
     _cachedTodayExpensesDate = null;
@@ -1406,174 +1396,6 @@ class AppState extends ChangeNotifier {
     if (categoryId == null) return null;
     final category = _fixedCostCategories.where((c) => c.id == categoryId);
     return category.isNotEmpty ? category.first.name : null;
-  }
-
-  // === 家計の余白（Budget Margin）計算 Methods ===
-
-  /// ペースバッファ（余裕額）を計算
-  /// = (可処分金額 * (経過日数 / サイクル日数)) - 現在の累積支出額
-  /// 可処分金額が未設定の場合は null を返す
-  int? get paceBuffer {
-    final disposable = disposableAmount;
-    if (disposable == null) return null;
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final cycleStart = cycleStartDate;
-
-    // サイクル総日数
-    final totalDays = _financialCycle.getTotalDays(now);
-    // 経過日数（今日を含む）
-    final elapsedDays = today.difference(cycleStart).inDays + 1;
-
-    // 経過日数に応じた予算ペース
-    final expectedBudget = (disposable * elapsedDays / totalDays).round();
-    // 余裕額 = 予算ペース - 実際の支出
-    return expectedBudget - thisMonthTotal;
-  }
-
-  /// 直近6ヶ月の支出を取得（メモ化）
-  List<Expense> get _last6MonthsExpenses {
-    final now = DateTime.now();
-    final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
-
-    // キャッシュが有効かチェック（同一月 & 同一件数）
-    if (_cachedLast6MonthsExpenses != null &&
-        _cachedLast6MonthsKey == monthKey &&
-        _cachedLast6MonthsExpenses!.length <= _expenses.length) {
-      // 件数が増えていなければキャッシュを返す
-      // 注: 厳密な検証ではないが、パフォーマンス優先
-      return _cachedLast6MonthsExpenses!;
-    }
-
-    final sixMonthsAgo = DateTime(now.year, now.month - 6, 1);
-    final result = _expenses.where((e) => e.createdAt.isAfter(sixMonthsAgo)).toList();
-
-    // キャッシュを更新
-    _cachedLast6MonthsExpenses = result;
-    _cachedLast6MonthsKey = monthKey;
-
-    return result;
-  }
-
-  /// カテゴリ別・グレード別の平均単価を計算（直近6ヶ月、メモ化）
-  /// 返り値: { 'カテゴリ名': { 'standard': {'avg': int, 'count': int}, 'reward': {...} } }
-  Map<String, Map<String, Map<String, int>>> get _categoryGradeAverages {
-    final now = DateTime.now();
-    final cacheKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${_expenses.length}';
-
-    // キャッシュが有効かチェック
-    if (_cachedCategoryGradeAverages != null &&
-        _cachedCategoryGradeAveragesKey == cacheKey) {
-      return _cachedCategoryGradeAverages!;
-    }
-
-    final result = <String, Map<String, Map<String, int>>>{};
-    final recentExpenses = _last6MonthsExpenses;
-
-    for (final expense in recentExpenses) {
-      if (expense.category == 'その他') continue;
-      final grade = expense.grade;
-      if (grade != 'standard' && grade != 'reward') continue;
-
-      result.putIfAbsent(expense.category, () => {
-        'standard': {'total': 0, 'count': 0},
-        'reward': {'total': 0, 'count': 0},
-      });
-
-      result[expense.category]![grade]!['total'] =
-          result[expense.category]![grade]!['total']! + expense.amount;
-      result[expense.category]![grade]!['count'] =
-          result[expense.category]![grade]!['count']! + 1;
-    }
-
-    // total/count を avg に変換
-    final averages = <String, Map<String, Map<String, int>>>{};
-    for (final entry in result.entries) {
-      averages[entry.key] = {};
-      for (final gradeEntry in entry.value.entries) {
-        final total = gradeEntry.value['total']!;
-        final count = gradeEntry.value['count']!;
-        averages[entry.key]![gradeEntry.key] = {
-          'avg': count > 0 ? (total / count).round() : 0,
-          'count': count,
-        };
-      }
-    }
-
-    // キャッシュを更新
-    _cachedCategoryGradeAverages = averages;
-    _cachedCategoryGradeAveragesKey = cacheKey;
-
-    return averages;
-  }
-
-  /// 全期間の「ご褒美」回数をカテゴリ別に集計
-  Map<String, int> get _rewardCountsByCategory {
-    final counts = <String, int>{};
-    for (final expense in _expenses) {
-      if (expense.category == 'その他') continue;
-      if (expense.grade != 'reward') continue;
-      counts[expense.category] = (counts[expense.category] ?? 0) + 1;
-    }
-    return counts;
-  }
-
-  /// 格上げ可能カテゴリのデータを取得
-  /// 返り値: List<{ 'category': String, 'diff': int, 'possibleCount': int, 'standardAvg': int, 'rewardAvg': int }>
-  /// 条件: 「標準」「ご褒美」各1件以上、全期間ご褒美回数上位2カテゴリ
-  List<Map<String, dynamic>> getUpgradeCategories() {
-    final buffer = paceBuffer;
-    if (buffer == null || buffer <= 0) return [];
-
-    final averages = _categoryGradeAverages;
-    final rewardCounts = _rewardCountsByCategory;
-
-    // 条件を満たすカテゴリを抽出（各グレード1件以上）
-    final eligibleCategories = <String>[];
-    for (final entry in averages.entries) {
-      final standardCount = entry.value['standard']?['count'] ?? 0;
-      final rewardCount = entry.value['reward']?['count'] ?? 0;
-      if (standardCount >= 1 && rewardCount >= 1) {
-        eligibleCategories.add(entry.key);
-      }
-    }
-
-    if (eligibleCategories.isEmpty) return [];
-
-    // ご褒美回数でソートして上位3つを取得
-    eligibleCategories.sort((a, b) {
-      final countA = rewardCounts[a] ?? 0;
-      final countB = rewardCounts[b] ?? 0;
-      return countB.compareTo(countA);
-    });
-
-    final topCategories = eligibleCategories.take(3).toList();
-
-    // 各カテゴリの格上げコストと回数を計算
-    final result = <Map<String, dynamic>>[];
-    for (final category in topCategories) {
-      final standardAvg = averages[category]!['standard']!['avg']!;
-      final rewardAvg = averages[category]!['reward']!['avg']!;
-      final diff = rewardAvg - standardAvg;
-
-      // diff が 0 以下の場合はスキップ（格上げコストなし）
-      if (diff <= 0) continue;
-
-      final possibleCount = (buffer / diff).floor();
-      // 0回の場合は表示しない
-      if (possibleCount <= 0) continue;
-
-      result.add({
-        'category': category,
-        'diff': diff,
-        'possibleCount': possibleCount,
-        'standardAvg': standardAvg,
-        'rewardAvg': rewardAvg,
-      });
-    }
-
-    return result;
   }
 
   /// スマート・コンボ予測を取得
