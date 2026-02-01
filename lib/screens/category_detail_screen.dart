@@ -768,7 +768,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
                   child: Row(
                     children: [
                       Text(
-                        '過去6ヶ月平均より',
+                        '過去6サイクル平均より',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,

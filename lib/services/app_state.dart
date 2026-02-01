@@ -830,71 +830,82 @@ class AppState extends ChangeNotifier {
   /// }
   Map<String, dynamic> getCategoryDetailAnalysis(String categoryName) {
     perfMonitor.startTimer('AppState.getCategoryDetailAnalysis');
-    final now = DateTime.now();
 
-    // 今月のデータ
-    final thisMonthData = <String, Map<String, int>>{
+    // 今サイクルの期間
+    final cycleStart = cycleStartDate;
+    final cycleEnd = cycleEndDate;
+
+    // 今サイクルのデータ
+    final thisCycleData = <String, Map<String, int>>{
       'saving': {'amount': 0, 'count': 0},
       'standard': {'amount': 0, 'count': 0},
       'reward': {'amount': 0, 'count': 0},
     };
 
-    final thisMonthExpenses = _expenses.where((e) {
+    final thisCycleExpenses = _expenses.where((e) {
+      final expenseDate = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
+      final startDate = DateTime(cycleStart.year, cycleStart.month, cycleStart.day);
+      final endDate = DateTime(cycleEnd.year, cycleEnd.month, cycleEnd.day);
       return e.category == categoryName &&
-          e.createdAt.year == now.year &&
-          e.createdAt.month == now.month;
+          !expenseDate.isBefore(startDate) &&
+          !expenseDate.isAfter(endDate);
     });
 
-    for (final expense in thisMonthExpenses) {
+    for (final expense in thisCycleExpenses) {
       final grade = expense.grade;
-      if (thisMonthData.containsKey(grade)) {
-        thisMonthData[grade]!['amount'] = thisMonthData[grade]!['amount']! + expense.amount;
-        thisMonthData[grade]!['count'] = thisMonthData[grade]!['count']! + 1;
+      if (thisCycleData.containsKey(grade)) {
+        thisCycleData[grade]!['amount'] = thisCycleData[grade]!['amount']! + expense.amount;
+        thisCycleData[grade]!['count'] = thisCycleData[grade]!['count']! + 1;
       }
     }
 
-    // 今月の平均単価を計算
-    final thisMonthWithAvg = <String, Map<String, int>>{};
-    for (final entry in thisMonthData.entries) {
+    // 今サイクルの平均単価を計算
+    final thisCycleWithAvg = <String, Map<String, int>>{};
+    for (final entry in thisCycleData.entries) {
       final count = entry.value['count']!;
       final amount = entry.value['amount']!;
-      thisMonthWithAvg[entry.key] = {
+      thisCycleWithAvg[entry.key] = {
         'amount': amount,
         'count': count,
         'avg': count > 0 ? (amount / count).round() : 0,
       };
     }
 
-    // 過去6ヶ月のデータ（今月を除く）
-    final sixMonthsAgo = DateTime(now.year, now.month - 6, 1);
-    final startOfThisMonth = DateTime(now.year, now.month, 1);
-
-    final last6MonthsData = <String, Map<String, int>>{
+    // 過去6サイクルのデータ（今サイクルを除く）
+    final last6CyclesData = <String, Map<String, int>>{
       'saving': {'total': 0, 'count': 0},
       'standard': {'total': 0, 'count': 0},
       'reward': {'total': 0, 'count': 0},
     };
 
-    final last6MonthsExpenses = _expenses.where((e) {
-      return e.category == categoryName &&
-          e.createdAt.isAfter(sixMonthsAgo) &&
-          e.createdAt.isBefore(startOfThisMonth);
-    });
+    // offset 1〜6 で過去6サイクル分を集計
+    for (var offset = 1; offset <= 6; offset++) {
+      final cycleDates = getCycleDatesForOffset(offset);
+      final prevCycleStart = DateTime(cycleDates.start.year, cycleDates.start.month, cycleDates.start.day);
+      final prevCycleEnd = DateTime(cycleDates.end.year, cycleDates.end.month, cycleDates.end.day);
 
-    for (final expense in last6MonthsExpenses) {
-      final grade = expense.grade;
-      if (last6MonthsData.containsKey(grade)) {
-        last6MonthsData[grade]!['total'] = last6MonthsData[grade]!['total']! + expense.amount;
-        last6MonthsData[grade]!['count'] = last6MonthsData[grade]!['count']! + 1;
+      final cycleExpenses = _expenses.where((e) {
+        final expenseDate = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
+        return e.category == categoryName &&
+            !expenseDate.isBefore(prevCycleStart) &&
+            !expenseDate.isAfter(prevCycleEnd);
+      });
+
+      for (final expense in cycleExpenses) {
+        final grade = expense.grade;
+        if (last6CyclesData.containsKey(grade)) {
+          last6CyclesData[grade]!['total'] = last6CyclesData[grade]!['total']! + expense.amount;
+          last6CyclesData[grade]!['count'] = last6CyclesData[grade]!['count']! + 1;
+        }
       }
     }
 
-    // 過去6ヶ月の平均単価を計算
-    final last6MonthsAvg = <String, Map<String, int>>{};
-    for (final entry in last6MonthsData.entries) {
+    // 過去6サイクルの平均単価を計算
+    final last6CyclesAvg = <String, Map<String, int>>{};
+    for (final entry in last6CyclesData.entries) {
       final count = entry.value['count']!;
       final total = entry.value['total']!;
-      last6MonthsAvg[entry.key] = {
+      last6CyclesAvg[entry.key] = {
         'avg': count > 0 ? (total / count).round() : 0,
         'count': count,
       };
@@ -903,15 +914,15 @@ class AppState extends ChangeNotifier {
     // 合計
     int totalAmount = 0;
     int totalCount = 0;
-    for (final data in thisMonthWithAvg.values) {
+    for (final data in thisCycleWithAvg.values) {
       totalAmount += data['amount']!;
       totalCount += data['count']!;
     }
 
     perfMonitor.stopTimer('AppState.getCategoryDetailAnalysis');
     return {
-      'thisMonth': thisMonthWithAvg,
-      'last6MonthsAvg': last6MonthsAvg,
+      'thisMonth': thisCycleWithAvg,
+      'last6MonthsAvg': last6CyclesAvg,
       'totalAmount': totalAmount,
       'totalCount': totalCount,
     };

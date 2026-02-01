@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../config/theme.dart';
+import '../config/category_icons.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
 import '../widgets/analytics/cycle_indicator.dart';
@@ -377,16 +378,29 @@ class _CyclePageContentState extends State<_CyclePageContent>
   }) {
     final isCurrentCycle = widget.cycleOffset == 0;
 
+    // カテゴリのアイコンを取得
+    final appState = context.read<AppState>();
+    final categoryObj = appState.categories.firstWhere(
+      (c) => c.name == category,
+      orElse: () => appState.categories.first,
+    );
+    final iconData = CategoryIcons.getIcon(categoryObj.icon);
+
     Widget content = Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           Container(
-            width: 14,
-            height: 14,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(
+              iconData,
+              size: 16,
               color: color,
-              borderRadius: BorderRadius.circular(4),
             ),
           ),
           const SizedBox(width: 12),

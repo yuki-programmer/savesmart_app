@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../config/theme.dart';
+import '../../config/category_icons.dart';
 import '../../services/app_state.dart';
 import '../../screens/category_breakdown_detail_screen.dart';
 import '../../screens/premium_screen.dart';
@@ -148,11 +149,13 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
     final total = items.fold(0, (sum, item) => sum + (item['amount'] as int));
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const SizedBox(width: 20),
         // 円グラフ
         SizedBox(
-          width: 100,
-          height: 100,
+          width: 110,
+          height: 110,
           child: PieChart(
             PieChartData(
               sections: items.take(6).map((item) {
@@ -160,58 +163,82 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
                 return PieChartSectionData(
                   value: percentage * 100,
                   color: item['color'] as Color,
-                  radius: 40,
+                  radius: 44,
                   showTitle: false,
                 );
               }).toList(),
               sectionsSpace: 1,
-              centerSpaceRadius: 20,
+              centerSpaceRadius: 22,
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 50),
         // 上位カテゴリ
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: items.take(3).map((item) {
-              final percentage = ((item['amount'] as int) / total * 100).round();
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: item['color'] as Color,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item['category'] as String,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary.withValues(alpha: 0.85),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(
-                      '$percentage%',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 140),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: items.take(3).map((item) {
+                final percentage = ((item['amount'] as int) / total * 100).round();
+                final categoryName = item['category'] as String;
+                final displayName = categoryName.length > 10
+                    ? '${categoryName.substring(0, 10)}...'
+                    : categoryName;
+                final color = item['color'] as Color;
+
+              // カテゴリのアイコンを取得
+              final categoryObj = widget.appState.categories.firstWhere(
+                (c) => c.name == categoryName,
+                orElse: () => widget.appState.categories.first,
               );
-            }).toList(),
+              final iconData = CategoryIcons.getIcon(categoryObj.icon);
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          iconData,
+                          size: 12,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          displayName,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 48,
+                        child: Text(
+                          '$percentage%',
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ],
@@ -236,11 +263,13 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
         final total = items.fold(0.0, (sum, item) => sum + (item['animatedAmount'] as double));
 
         return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            const SizedBox(width: 20),
             // ダミー円グラフ
             SizedBox(
-              width: 100,
-              height: 100,
+              width: 110,
+              height: 110,
               child: PieChart(
                 PieChartData(
                   sections: items.map((item) {
@@ -248,56 +277,63 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
                     return PieChartSectionData(
                       value: percentage * 100,
                       color: (item['color'] as Color).withValues(alpha: 0.5),
-                      radius: 40,
+                      radius: 44,
                       showTitle: false,
                     );
                   }).toList(),
                   sectionsSpace: 1,
-                  centerSpaceRadius: 20,
+                  centerSpaceRadius: 22,
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 50),
             // ダミーカテゴリ
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: _dummyData.take(3).map((item) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: (item['color'] as Color).withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Container(
-                            height: 12,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 140),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _dummyData.take(3).map((item) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
                             decoration: BoxDecoration(
-                              color: AppColors.textMuted.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(2),
+                              color: (item['color'] as Color).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '--%',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textMuted.withValues(alpha: 0.4),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Container(
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: AppColors.textMuted.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            width: 48,
+                            child: Text(
+                              '--%',
+                              textAlign: TextAlign.right,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textMuted.withValues(alpha: 0.4),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ],
