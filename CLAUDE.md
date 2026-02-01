@@ -311,14 +311,16 @@ Hero(
 )
 ```
 
-## Wheel Picker (金額入力)
+## Amount Input (金額入力)
 
-Add screen uses a wheel picker for amount input (`lib/screens/add_screen.dart`):
-- Units: 10円, 100円, 1000円, 1万, 10万, 100万
-- Max amount: 1000万円 (unified across all units)
-- Reset button (↻) on the left resets amount to 0
-- Unit switching preserves the current amount (does not reset)
-- Smart combo auto-select adjusts unit based on selected quick entry amount
+All amount inputs use `AmountTextField` (`lib/widgets/amount_text_field.dart`):
+- OS standard number keyboard (`TextInputType.number`)
+- Prefix "¥" always displayed
+- Focus indicator: colored underline (accentColor)
+- Max amount: 1000万円 (10,000,000円)
+- External value changes (presets, combos) sync via `didUpdateWidget`
+- Used in: Add screen, Fixed cost, Split modal, Breakdown modal, Quick entry edit, Category budget, Scheduled expense, Edit amount modal
+- **Do NOT use ValueKey with amount** - causes widget recreation and keyboard dismissal
 
 ## Performance Optimization
 

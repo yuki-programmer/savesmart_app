@@ -5,7 +5,7 @@ import '../config/theme.dart';
 import '../models/expense.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
-import 'wheel_picker.dart';
+import 'amount_text_field.dart';
 
 class EditAmountModal extends StatefulWidget {
   final Expense expense;
@@ -23,20 +23,11 @@ class EditAmountModal extends StatefulWidget {
 
 class _EditAmountModalState extends State<EditAmountModal> {
   late int _newAmount;
-  late int _unit;
 
   @override
   void initState() {
     super.initState();
     _newAmount = widget.expense.amount;
-    // 金額に応じて適切な単位を選択
-    if (widget.expense.amount >= 10000) {
-      _unit = 1000;
-    } else if (widget.expense.amount >= 1000) {
-      _unit = 100;
-    } else {
-      _unit = 10;
-    }
   }
 
   @override
@@ -138,24 +129,25 @@ class _EditAmountModalState extends State<EditAmountModal> {
           ),
           const SizedBox(height: 12),
 
-          // 単位選択
-          _buildUnitSelector(),
-          const SizedBox(height: 8),
-
-          // ホイールピッカー
-          SizedBox(
-            height: 150,
-            child: WheelPicker(
-              key: ValueKey('edit_$_unit'),
-              unit: _unit,
-              maxMultiplier: _unit == 1000 ? 100 : 99,
+          // 金額入力
+          Center(
+            child: AmountTextField(
               initialValue: _newAmount,
-              highlightColor: AppColors.accentOrangeLight,
+              fontSize: 30,
+              accentColor: AppColors.accentOrange,
               onChanged: (value) {
                 setState(() {
                   _newAmount = value;
                 });
               },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'タップして金額を入力',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textMuted,
             ),
           ),
           const SizedBox(height: 24),
@@ -253,55 +245,6 @@ class _EditAmountModalState extends State<EditAmountModal> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildUnitSelector() {
-    final units = [10, 100, 1000];
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: units.map((unit) {
-          final isSelected = _unit == unit;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _unit = unit;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Text(
-                '$unit円',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

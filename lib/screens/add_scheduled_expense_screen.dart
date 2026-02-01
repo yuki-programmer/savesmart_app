@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../config/category_icons.dart';
 import '../utils/formatters.dart';
-import '../widgets/wheel_picker.dart';
+import '../widgets/amount_text_field.dart';
 import '../services/app_state.dart';
 import '../models/scheduled_expense.dart';
 
@@ -32,7 +32,6 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
   int? _selectedCategoryId;
   String? _selectedCategory;
   int _expenseAmount = 0;
-  int _expenseUnit = 100;
   late String _selectedGrade;
   final TextEditingController _memoController = TextEditingController();
   DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
@@ -77,7 +76,6 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       _selectedGrade = e.grade;
       _memoController.text = e.memo ?? '';
       _scheduledDate = e.scheduledDate;
-      _expenseUnit = _determineUnit(e.amount);
     }
   }
 
@@ -95,15 +93,6 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
   void dispose() {
     _memoController.dispose();
     super.dispose();
-  }
-
-  int _determineUnit(int amount) {
-    if (amount >= 1000000) return 1000000;
-    if (amount >= 100000) return 100000;
-    if (amount >= 10000) return 10000;
-    if (amount >= 1000) return 1000;
-    if (amount >= 100) return 100;
-    return 10;
   }
 
   bool get _canSubmit => _selectedCategoryId != null && _selectedCategory != null && _expenseAmount > 0;
@@ -445,79 +434,23 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       ),
       child: Column(
         children: [
-          // 金額表示
+          // 金額入力
+          AmountTextField(
+            initialValue: _expenseAmount,
+            fontSize: 32,
+            accentColor: _selectedGradeData['color'] as Color,
+            onChanged: (value) {
+              setState(() {
+                _expenseAmount = value;
+              });
+            },
+          ),
+          const SizedBox(height: 8),
           Text(
-            formatCurrency(_expenseAmount, currencyFormat),
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 32,
-              fontWeight: FontWeight.w600,
-              color: _expenseAmount > 0
-                  ? AppColors.textPrimary
-                  : AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // ホイールピッカー
-          SizedBox(
-            height: 100,
-            child: WheelPicker(
-              unit: _expenseUnit,
-              initialValue: _expenseAmount,
-              onChanged: (value) {
-                setState(() {
-                  _expenseAmount = value;
-                });
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // 単位選択（横スクロール可能）
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [10, 100, 1000, 10000, 100000, 1000000].map((unit) {
-                final isSelected = _expenseUnit == unit;
-                String label;
-                if (unit >= 10000) {
-                  label = '${unit ~/ 10000}万';
-                } else {
-                  label = '$unit円';
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _expenseUnit = unit;
-                      });
-                    },
-                    child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.accentBlue
-                            : AppColors.bgPrimary,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        label,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color:
-                              isSelected ? Colors.white : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            'タップして金額を入力',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textMuted,
             ),
           ),
         ],

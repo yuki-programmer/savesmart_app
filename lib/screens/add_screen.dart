@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../config/category_icons.dart';
 import '../utils/formatters.dart';
-import '../widgets/wheel_picker.dart';
+import '../widgets/amount_text_field.dart';
 import '../widgets/expense/add_breakdown_modal.dart';
 import '../widgets/income_sheet.dart';
 import '../services/app_state.dart';
@@ -32,7 +32,6 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
   int? _selectedCategoryId;
   String? _selectedCategory;
   int _expenseAmount = 0;
-  int _expenseUnit = 100;
   late String _selectedGrade; // 設定から初期化
   final TextEditingController _memoController = TextEditingController();
   bool _isInitialized = false;
@@ -115,20 +114,6 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
     setState(() {
       _expenseAmount = combo['amount'] as int;
       _selectedGrade = combo['grade'] as String;
-      // 適切な単位を自動選択
-      if (_expenseAmount >= 1000000) {
-        _expenseUnit = 1000000;
-      } else if (_expenseAmount >= 100000) {
-        _expenseUnit = 100000;
-      } else if (_expenseAmount >= 10000) {
-        _expenseUnit = 10000;
-      } else if (_expenseAmount >= 1000) {
-        _expenseUnit = 1000;
-      } else if (_expenseAmount >= 100) {
-        _expenseUnit = 100;
-      } else {
-        _expenseUnit = 10;
-      }
     });
   }
 
@@ -562,32 +547,11 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
   Widget _buildAmountSection() {
     return Column(
       children: [
-        // 金額表示（中央に大きく）
+        // 金額入力（タップでキーボード表示）
         Center(
-          child: Text(
-            '¥${formatNumber(_expenseAmount)}',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: _expenseAmount > 0
-                  ? AppColors.textPrimary
-                  : AppColors.textMuted,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // 単位切替チップ
-        _buildUnitSelector(),
-        const SizedBox(height: 8),
-        // ホイールピッカー（クイック登録と同じ高さ100に統一）
-        SizedBox(
-          height: 100,
-          child: WheelPicker(
-            key: ValueKey('expense_${_expenseUnit}_$_expenseAmount'),
-            unit: _expenseUnit,
-            maxMultiplier: 10000000 ~/ _expenseUnit, // 上限1000万円で統一
+          child: AmountTextField(
             initialValue: _expenseAmount,
-            highlightColor: AppColors.bgPrimary,
+            accentColor: _selectedGradeData['color'] as Color,
             onChanged: (value) {
               setState(() {
                 _expenseAmount = value;
@@ -595,85 +559,16 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             },
           ),
         ),
-      ],
-    );
-  }
-
-  /// 単位選択UI
-  Widget _buildUnitSelector() {
-    final units = [10, 100, 1000, 10000, 100000, 1000000];
-    final labels = ['10円', '100円', '1000円', '1万', '10万', '100万'];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.all(4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // リセットボタン（0円に戻す）
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _expenseAmount = 0;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.refresh,
-                  size: 16,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-            // 区切り線
-            Container(
-              width: 1,
-              height: 20,
-              color: Colors.black.withValues(alpha: 0.08),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-            ),
-            // 単位ボタン
-            ...List.generate(units.length, (index) {
-              final unit = units[index];
-              final isSelected = _expenseUnit == unit;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _expenseUnit = unit;
-                    // 金額はリセットしない（そのまま維持）
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.bgPrimary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    labels[index],
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ],
+        const SizedBox(height: 8),
+        // 入力ヒント
+        Text(
+          'タップして金額を入力',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: AppColors.textMuted,
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -1363,7 +1258,6 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       _selectedCategoryId = null;
       _selectedCategory = null;
       _expenseAmount = 0;
-      _expenseUnit = 100;
       _selectedGrade = appState.defaultExpenseGrade;
       _smartCombos = [];
       _breakdowns = [];

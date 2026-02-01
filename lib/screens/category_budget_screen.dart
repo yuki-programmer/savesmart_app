@@ -5,7 +5,7 @@ import '../config/theme.dart';
 import '../models/category_budget.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
-import '../widgets/wheel_picker.dart';
+import '../widgets/amount_text_field.dart';
 
 /// カテゴリ予算管理画面（リスト編集モード）
 class CategoryBudgetScreen extends StatefulWidget {
@@ -289,7 +289,6 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
   int? _selectedCategoryId;
   String? _selectedCategory;
   int _budgetAmount = 0;
-  int _budgetUnit = 10000;
   String _periodType = 'recurring'; // 'recurring' or 'one_time'
 
   bool get _isEditing => widget.editingBudget != null;
@@ -303,18 +302,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
       _selectedCategory = budget.categoryName;
       _budgetAmount = budget.budgetAmount;
       _periodType = budget.periodType;
-      // 適切な単位を設定
-      _budgetUnit = _getAppropriateUnit(_budgetAmount);
     }
-  }
-
-  int _getAppropriateUnit(int amount) {
-    if (amount >= 1000000) return 1000000;
-    if (amount >= 100000) return 100000;
-    if (amount >= 10000) return 10000;
-    if (amount >= 1000) return 1000;
-    if (amount >= 100) return 100;
-    return 10;
   }
 
   bool get _canSubmit =>
@@ -469,84 +457,26 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
       ),
       child: Column(
         children: [
-          // 金額表示
+          // 金額入力
+          AmountTextField(
+            initialValue: _budgetAmount,
+            fontSize: 32,
+            accentColor: AppColors.accentBlue,
+            onChanged: (value) {
+              setState(() {
+                _budgetAmount = value;
+              });
+            },
+          ),
+          const SizedBox(height: 8),
           Text(
-            formatCurrency(_budgetAmount, currencyFormat),
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 32,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+            'タップして金額を入力',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textMuted,
             ),
           ),
-          const SizedBox(height: 16),
-
-          // ホイールピッカー
-          SizedBox(
-            height: 120,
-            child: WheelPicker(
-              unit: _budgetUnit,
-              initialValue: _budgetAmount,
-              onChanged: (value) {
-                setState(() {
-                  _budgetAmount = value;
-                });
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // 単位選択
-          _buildUnitSelector(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildUnitSelector() {
-    final units = [
-      {'value': 10, 'label': '10'},
-      {'value': 100, 'label': '100'},
-      {'value': 1000, 'label': '1000'},
-      {'value': 10000, 'label': '1万'},
-      {'value': 100000, 'label': '10万'},
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: units.map((unit) {
-          final isSelected = _budgetUnit == unit['value'];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _budgetUnit = unit['value'] as int;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.accentBlue
-                      : AppColors.bgPrimary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  unit['label'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

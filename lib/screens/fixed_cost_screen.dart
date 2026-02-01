@@ -7,6 +7,7 @@ import '../models/fixed_cost_category.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
 import '../widgets/fixed_cost/category_edit_sheet.dart';
+import '../widgets/amount_text_field.dart';
 
 class FixedCostScreen extends StatefulWidget {
   const FixedCostScreen({super.key});
@@ -21,54 +22,22 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
   // 選択中のカテゴリID（nullは「その他」扱い）
   int? _selectedCategoryId;
 
-  // 金額状態（1000円単位 + 100円単位）
-  int _amount1000 = 0; // 0〜300 (0円〜300,000円)
-  int _amount100 = 0; // 0〜9 (0円〜900円)
-
-  // ホイールコントローラー
-  late FixedExtentScrollController _controller1000;
-  late FixedExtentScrollController _controller100;
-
-  int get _totalAmount => _amount1000 * 1000 + _amount100 * 100;
+  // 金額
+  int _amount = 0;
 
   // 金額>0 のみで保存可能（カテゴリ選択は任意）
-  bool get _canSave => _totalAmount > 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller1000 = FixedExtentScrollController(initialItem: _amount1000);
-    _controller100 = FixedExtentScrollController(initialItem: _amount100);
-  }
+  bool get _canSave => _amount > 0;
 
   @override
   void dispose() {
     _memoController.dispose();
-    _controller1000.dispose();
-    _controller100.dispose();
     super.dispose();
   }
 
   void _setPresetAmount(int amount) {
-    final new1000 = amount ~/ 1000;
-    final new100 = (amount % 1000) ~/ 100;
-
     setState(() {
-      _amount1000 = new1000.clamp(0, 300);
-      _amount100 = new100.clamp(0, 9);
+      _amount = amount;
     });
-
-    // ホイール位置を同期
-    _controller1000.animateToItem(
-      _amount1000,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
-    _controller100.animateToItem(
-      _amount100,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
   }
 
   Future<void> _save() async {
@@ -85,7 +54,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final fixedCost = FixedCost(
       categoryId: _selectedCategoryId,
       categoryNameSnapshot: categoryNameSnapshot,
-      amount: _totalAmount,
+      amount: _amount,
       memo: _memoController.text.trim().isEmpty
           ? null
           : _memoController.text.trim(),
@@ -178,29 +147,15 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
 
               const SizedBox(height: 24),
 
-              // 金額表示
-              Center(
-                child: Text(
-                  '¥${formatNumber(_totalAmount)}',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.accentBlue,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
               // プリセットボタン
               _buildPresetChips(),
 
               const SizedBox(height: 16),
 
-              // 2つのホイールピッカー
+              // 金額入力
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -212,60 +167,27 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     ),
                   ],
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    // 1000円単位ホイール
-                    Expanded(
-                      flex: 2,
-                      child: _buildWheel(
-                        controller: _controller1000,
-                        itemCount: 301, // 0〜300
-                        selectedIndex: _amount1000,
-                        formatValue: (index) => '${index * 1000}',
-                        suffix: '',
-                        onChanged: (index) {
-                          setState(() => _amount1000 = index);
-                        },
-                      ),
+                    AmountTextField(
+                      initialValue: _amount,
+                      fontSize: 36,
+                      accentColor: AppColors.accentBlue,
+                      onChanged: (value) {
+                        setState(() {
+                          _amount = value;
+                        });
+                      },
                     ),
-                    // 区切り
+                    const SizedBox(height: 8),
                     Text(
-                      '+',
+                      'タップして金額を入力',
                       style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w300,
-                        color: AppColors.textMuted.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    // 100円単位ホイール
-                    Expanded(
-                      flex: 1,
-                      child: _buildWheel(
-                        controller: _controller100,
-                        itemCount: 10, // 0〜9
-                        selectedIndex: _amount100,
-                        formatValue: (index) => '${index * 100}',
-                        suffix: '',
-                        onChanged: (index) {
-                          setState(() => _amount100 = index);
-                        },
+                        fontSize: 12,
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],
-                ),
-              ),
-
-              // ホイール説明
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Center(
-                  child: Text(
-                    '左: 1,000円単位　右: 100円単位',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.textMuted.withValues(alpha: 0.6),
-                    ),
-                  ),
                 ),
               ),
 
@@ -474,7 +396,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: presets.map((amount) {
-          final isSelected = _totalAmount == amount;
+          final isSelected = _amount == amount;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
@@ -506,65 +428,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
             ),
           );
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildWheel({
-    required FixedExtentScrollController controller,
-    required int itemCount,
-    required int selectedIndex,
-    required String Function(int) formatValue,
-    required String suffix,
-    required Function(int) onChanged,
-  }) {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        children: [
-          // 中央ハイライト
-          Center(
-            child: Container(
-              height: 44,
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                color: AppColors.accentBlueLight.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-          // ホイール
-          ListWheelScrollView.useDelegate(
-            controller: controller,
-            itemExtent: 44,
-            perspective: 0.005,
-            diameterRatio: 1.5,
-            physics: const FixedExtentScrollPhysics(),
-            onSelectedItemChanged: onChanged,
-            childDelegate: ListWheelChildBuilderDelegate(
-              childCount: itemCount,
-              builder: (context, index) {
-                final isSelected = index == selectedIndex;
-                return Center(
-                  child: Text(
-                    '¥${formatValue(index)}$suffix',
-                    style: isSelected
-                        ? GoogleFonts.ibmPlexSans(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          )
-                        : GoogleFonts.ibmPlexSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.normal,
-                            color: AppColors.textMuted,
-                          ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }

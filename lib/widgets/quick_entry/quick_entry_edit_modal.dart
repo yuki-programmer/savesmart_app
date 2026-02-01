@@ -4,8 +4,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/quick_entry.dart';
 import '../../services/app_state.dart';
-import '../../utils/formatters.dart';
-import '../wheel_picker.dart';
+import '../amount_text_field.dart';
 
 /// クイック登録の追加・編集モーダル
 Future<void> showQuickEntryEditModal(
@@ -34,7 +33,6 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
   int? _selectedCategoryId;
   String? _selectedCategory;
   int _amount = 0;
-  int _unit = 100;
   String _selectedGrade = 'standard';
 
   bool get _isEditing => widget.entry != null;
@@ -69,19 +67,6 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
     _selectedCategory = widget.entry?.category;
     _amount = widget.entry?.amount ?? 0;
     _selectedGrade = widget.entry?.grade ?? 'standard';
-
-    // 初期金額に基づいて単位を設定
-    if (_amount > 0) {
-      if (_amount >= 10000) {
-        _unit = 10000;
-      } else if (_amount >= 1000) {
-        _unit = 1000;
-      } else if (_amount >= 100) {
-        _unit = 100;
-      } else {
-        _unit = 10;
-      }
-    }
   }
 
   @override
@@ -264,33 +249,23 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
               ),
               const SizedBox(height: 8),
               Center(
-                child: Text(
-                  '¥${formatNumber(_amount)}',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: _amount > 0
-                        ? AppColors.textPrimary
-                        : AppColors.textMuted,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildUnitSelector(),
-              const SizedBox(height: 4),
-              SizedBox(
-                height: 100,
-                child: WheelPicker(
-                  key: ValueKey('quick_entry_$_unit'),
-                  unit: _unit,
-                  maxMultiplier: _unit >= 1000 ? 100 : 99,
+                child: AmountTextField(
                   initialValue: _amount,
-                  highlightColor: AppColors.bgPrimary,
+                  fontSize: 36,
+                  accentColor: _selectedGradeData['color'] as Color,
                   onChanged: (value) {
                     setState(() {
                       _amount = value;
                     });
                   },
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'タップして金額を入力',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
                 ),
               ),
               const SizedBox(height: 16),
@@ -395,52 +370,6 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
               ],
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUnitSelector() {
-    final units = [10, 100, 1000, 10000];
-    final labels = ['10円', '100円', '1000円', '1万円'];
-
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(units.length, (index) {
-            final unit = units[index];
-            final isSelected = _unit == unit;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _unit = unit;
-                  _amount = 0;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.bgPrimary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Text(
-                  labels[index],
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
-                  ),
-                ),
-              ),
-            );
-          }),
         ),
       ),
     );

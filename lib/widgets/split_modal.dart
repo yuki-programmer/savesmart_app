@@ -6,7 +6,7 @@ import '../config/constants.dart';
 import '../models/expense.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
-import 'wheel_picker.dart';
+import 'amount_text_field.dart';
 
 class SplitModal extends StatefulWidget {
   final Expense expense;
@@ -24,7 +24,6 @@ class SplitModal extends StatefulWidget {
 
 class _SplitModalState extends State<SplitModal> {
   int _splitAmount = 0;
-  int _splitUnit = 100;
   int? _targetCategoryId;
   String? _targetCategory;
   late String _targetGrade;
@@ -164,26 +163,27 @@ class _SplitModalState extends State<SplitModal> {
           ),
           const SizedBox(height: 12),
 
-          // 単位選択
-          _buildUnitSelector(),
-          const SizedBox(height: 8),
-
-          // ホイールピッカー
-          SizedBox(
-            height: 150,
-            child: WheelPicker(
-              key: ValueKey('split_$_splitUnit'),
-              unit: _splitUnit,
-              maxMultiplier: (_maxSplitAmount / _splitUnit).floor(),
+          // 金額入力
+          Center(
+            child: AmountTextField(
               initialValue: _splitAmount,
-              highlightColor: AppColors.accentBlueLight,
+              fontSize: 28,
+              accentColor: AppColors.accentBlue,
               onChanged: (value) {
-                if (value <= _maxSplitAmount) {
-                  setState(() {
-                    _splitAmount = value;
-                  });
-                }
+                // 最大値を超えないように制限
+                final clampedValue = value > _maxSplitAmount ? _maxSplitAmount : value;
+                setState(() {
+                  _splitAmount = clampedValue;
+                });
               },
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '最大: ¥${formatNumber(_maxSplitAmount)}',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textMuted,
             ),
           ),
           const SizedBox(height: 16),
@@ -481,56 +481,6 @@ class _SplitModalState extends State<SplitModal> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildUnitSelector() {
-    final units = [10, 100, 1000];
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: units.map((unit) {
-          final isSelected = _splitUnit == unit;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _splitUnit = unit;
-                _splitAmount = 0;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Text(
-                '$unit円',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
     );
   }
 
