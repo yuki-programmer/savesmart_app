@@ -1735,6 +1735,54 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// N個前のサイクルの期間を取得
+  /// offset: 0 = 現在のサイクル, 1 = 1つ前のサイクル, ...
+  ({DateTime start, DateTime end}) getCycleDatesForOffset(int offset) {
+    var date = DateTime.now();
+    for (var i = 0; i < offset; i++) {
+      final currentStart = _financialCycle.getStartDate(date);
+      date = currentStart.subtract(const Duration(days: 1));
+    }
+    return (
+      start: _financialCycle.getStartDate(date),
+      end: _financialCycle.getEndDate(date),
+    );
+  }
+
+  /// N個前のサイクルのカテゴリ別統計を取得
+  Future<List<Map<String, dynamic>>> getCategoryStatsForCycle(int offset) async {
+    final dates = getCycleDatesForOffset(offset);
+    return await _db.getCategoryStats(
+      cycleStartDate: dates.start,
+      cycleEndDate: dates.end,
+    );
+  }
+
+  /// N個前のサイクルの日別支出を取得
+  Future<Map<int, int>> getDailyExpensesForCycle(int offset) async {
+    final dates = getCycleDatesForOffset(offset);
+    return await _db.getDailyExpensesByCycle(
+      cycleStartDate: dates.start,
+      cycleEndDate: dates.end,
+    );
+  }
+
+  /// N個前のサイクルの収入合計を取得
+  Future<int> getCycleIncomeTotal(int offset) async {
+    final dates = getCycleDatesForOffset(offset);
+    final cycleKey = _financialCycle.getCycleKey(dates.start);
+    return await _db.getCycleIncomeTotal(cycleKey);
+  }
+
+  /// N個前のサイクルの支出合計を取得
+  Future<int> getCycleTotalExpenses(int offset) async {
+    final dates = getCycleDatesForOffset(offset);
+    return await _db.getCycleTotalExpenses(
+      cycleStartDate: dates.start,
+      cycleEndDate: dates.end,
+    );
+  }
+
   /// 今サイクルと前サイクルの同時点での差額を計算
   /// 返り値: 正の値 = 今サイクルの方が支出が少ない（節約中）
   ///         負の値 = 今サイクルの方が支出が多い（使いすぎ）
