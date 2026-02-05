@@ -153,15 +153,6 @@ class _SplitModalState extends State<SplitModal> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            '¥${formatNumber(_splitAmount)}',
-            style: GoogleFonts.ibmPlexSans(
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accentBlue,
-            ),
-          ),
-          const SizedBox(height: 12),
 
           // 金額入力
           Center(
@@ -170,20 +161,22 @@ class _SplitModalState extends State<SplitModal> {
               fontSize: 28,
               accentColor: AppColors.accentBlue,
               onChanged: (value) {
-                // 最大値を超えないように制限
-                final clampedValue = value > _maxSplitAmount ? _maxSplitAmount : value;
                 setState(() {
-                  _splitAmount = clampedValue;
+                  _splitAmount = value;
                 });
               },
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            '最大: ¥${formatNumber(_maxSplitAmount)}',
+            _splitAmount > _maxSplitAmount
+                ? '最大金額(¥${formatNumber(_maxSplitAmount)})を超えています'
+                : '最大: ¥${formatNumber(_maxSplitAmount)}',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: _splitAmount > _maxSplitAmount
+                  ? AppColors.accentRed
+                  : AppColors.textMuted,
             ),
           ),
           const SizedBox(height: 16),
@@ -256,7 +249,7 @@ class _SplitModalState extends State<SplitModal> {
           const SizedBox(height: 22),
 
           // プレビュー
-          if (_splitAmount > 0 && _targetCategory != null)
+          if (_splitAmount > 0 && _splitAmount <= _maxSplitAmount && _targetCategory != null)
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -349,13 +342,13 @@ class _SplitModalState extends State<SplitModal> {
               const SizedBox(width: 10),
               Expanded(
                 child: GestureDetector(
-                  onTap: _splitAmount > 0 && _targetCategory != null
+                  onTap: _splitAmount > 0 && _splitAmount <= _maxSplitAmount && _targetCategory != null
                       ? _performSplit
                       : null,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: _splitAmount > 0 && _targetCategory != null
+                      color: _splitAmount > 0 && _splitAmount <= _maxSplitAmount && _targetCategory != null
                           ? AppColors.accentBlue.withValues(alpha: 0.9)
                           : AppColors.textMuted.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
