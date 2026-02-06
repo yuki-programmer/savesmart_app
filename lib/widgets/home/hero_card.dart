@@ -16,33 +16,48 @@ enum HeroCardTimeMode {
 
 /// HeroCardの状態
 class _HeroCardState {
-  final HeroCardTimeMode timeMode;
+  final HeroCardTimeMode displayMode;
+  final bool useNightDecoration;
   final bool canOpenReflection;  // 夜 && 未開封
 
   _HeroCardState({
-    required this.timeMode,
+    required this.displayMode,
+    required this.useNightDecoration,
     required this.canOpenReflection,
   });
 
-  factory _HeroCardState.fromDateTime(DateTime now, bool hasTodayExpense, bool hasOpenedReflection) {
+  factory _HeroCardState.fromDateTime(
+    DateTime now,
+    bool hasTodayExpense,
+    bool hasOpenedReflection, {
+    required bool isDarkMode,
+  }) {
     final hour = now.hour;
-    final HeroCardTimeMode timeMode;
+    final HeroCardTimeMode displayMode;
+    final bool useNightDecoration;
 
-    if (hour >= 6 && hour < 10) {
-      timeMode = HeroCardTimeMode.morning;
+    if (isDarkMode) {
+      displayMode = HeroCardTimeMode.day;
+      useNightDecoration = true;
+    } else if (hour >= 6 && hour < 10) {
+      displayMode = HeroCardTimeMode.morning;
+      useNightDecoration = false;
     } else if (hour >= 19 || hour < 4) {
-      timeMode = HeroCardTimeMode.night;
+      displayMode = HeroCardTimeMode.night;
+      useNightDecoration = true;
     } else {
-      timeMode = HeroCardTimeMode.day;
+      displayMode = HeroCardTimeMode.day;
+      useNightDecoration = false;
     }
 
     // 振り返り起動可否（夜テーマ && 既存ロジック && 未開封）
-    final canOpenReflection = timeMode == HeroCardTimeMode.night &&
+    final canOpenReflection = displayMode == HeroCardTimeMode.night &&
         NightReflectionDialog.shouldShowNightCard(hasTodayExpense: hasTodayExpense) &&
         !hasOpenedReflection;
 
     return _HeroCardState(
-      timeMode: timeMode,
+      displayMode: displayMode,
+      useNightDecoration: useNightDecoration,
       canOpenReflection: canOpenReflection,
     );
   }
@@ -115,28 +130,33 @@ class _HeroCardWidgetState extends State<HeroCard> {
       now,
       widget.todayTotal > 0,
       widget.hasOpenedReflection,
+      isDarkMode: Theme.of(context).brightness == Brightness.dark,
     );
 
+    final canTapReflection =
+        state.canOpenReflection && Theme.of(context).brightness != Brightness.dark;
+
     return GestureDetector(
-      onTap: state.canOpenReflection ? widget.onTapReflection : null,
+      onTap: canTapReflection ? widget.onTapReflection : null,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(HomeConstants.heroCardPadding),
-        decoration: _buildDecoration(context, state.timeMode),
+        decoration: _buildDecoration(
+          context,
+          state.useNightDecoration ? HeroCardTimeMode.night : state.displayMode,
+        ),
         child: _buildContent(context, state),
       ),
     );
   }
 
   BoxDecoration _buildDecoration(BuildContext context, HeroCardTimeMode mode) {
-    final showOutline = context.isWhiteBackground;
-
     switch (mode) {
       case HeroCardTimeMode.night:
         return BoxDecoration(
           color: HomeConstants.nightCardBackground,
           borderRadius: BorderRadius.circular(HomeConstants.heroCardRadius),
-          boxShadow: HomeConstants.nightCardShadow,
+          boxShadow: context.cardElevationShadow,
         );
 
       case HeroCardTimeMode.morning:
@@ -147,22 +167,20 @@ class _HeroCardWidgetState extends State<HeroCard> {
             colors: HomeConstants.morningGradient,
           ),
           borderRadius: BorderRadius.circular(HomeConstants.heroCardRadius),
-          boxShadow: context.cardShadow(baseAlpha: 0.04, baseBlur: 10),
-          border: showOutline ? Border.all(color: context.cardOutlineSide.color) : null,
+          boxShadow: context.cardElevationShadow,
         );
 
       case HeroCardTimeMode.day:
         return BoxDecoration(
           color: HomeConstants.cardBackground,
           borderRadius: BorderRadius.circular(HomeConstants.heroCardRadius),
-          boxShadow: context.cardShadow(baseAlpha: 0.04, baseBlur: 10),
-          border: showOutline ? Border.all(color: context.cardOutlineSide.color) : null,
+          boxShadow: context.cardElevationShadow,
         );
     }
   }
 
   Widget _buildContent(BuildContext context, _HeroCardState state) {
-    switch (state.timeMode) {
+    switch (state.displayMode) {
       case HeroCardTimeMode.night:
         return _NightContent(
           fixedTodayAllowance: widget.fixedTodayAllowance,
@@ -181,7 +199,8 @@ class _HeroCardWidgetState extends State<HeroCard> {
           fixedTodayAllowance: widget.fixedTodayAllowance,
           dynamicTomorrowForecast: widget.dynamicTomorrowForecast,
           remainingDays: widget.remainingDays,
-          isMorningGlow: state.timeMode == HeroCardTimeMode.morning,
+          isMorningGlow: state.displayMode == HeroCardTimeMode.morning,
+          useNightStyle: state.useNightDecoration,
           currencyFormat: widget.currencyFormat,
           historyData: _historyData,
           isLoadingHistory: _isLoadingHistory,
@@ -196,6 +215,7 @@ class _DayContent extends StatelessWidget {
   final int? dynamicTomorrowForecast;
   final int remainingDays;
   final bool isMorningGlow;
+  final bool useNightStyle;
   final String currencyFormat;
   final List<Map<String, dynamic>> historyData;
   final bool isLoadingHistory;
@@ -205,6 +225,7 @@ class _DayContent extends StatelessWidget {
     required this.dynamicTomorrowForecast,
     required this.remainingDays,
     required this.isMorningGlow,
+    required this.useNightStyle,
     required this.currencyFormat,
     required this.historyData,
     required this.isLoadingHistory,
@@ -213,6 +234,23 @@ class _DayContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncreasing = (dynamicTomorrowForecast ?? 0) > (fixedTodayAllowance ?? 0);
+    final labelColor =
+        useNightStyle ? HomeConstants.nightPrimaryText.withValues(alpha: 0.8) : Colors.grey[600]!;
+    final helpIconColor =
+        useNightStyle ? HomeConstants.nightPrimaryText.withValues(alpha: 0.6) : Colors.grey[400]!;
+    final amountColor =
+        useNightStyle ? HomeConstants.nightPrimaryText : HomeConstants.primaryText;
+    final subTextColor =
+        useNightStyle ? HomeConstants.nightPrimaryText.withValues(alpha: 0.7) : Colors.grey[600]!;
+    final badgeBgColor = useNightStyle
+        ? HomeConstants.nightPrimaryText.withValues(alpha: 0.15)
+        : AppColors.accentBlue.withValues(alpha: 0.1);
+    final badgeTextColor = useNightStyle
+        ? HomeConstants.nightPrimaryText.withValues(alpha: 0.85)
+        : AppColors.accentBlue.withValues(alpha: 0.8);
+    final lineColor = useNightStyle
+        ? HomeConstants.nightPrimaryText.withValues(alpha: 0.45)
+        : AppColors.accentBlue.withValues(alpha: 0.6);
 
     return Column(
       children: [
@@ -224,7 +262,7 @@ class _DayContent extends StatelessWidget {
               '今日使えるお金',
               style: TextStyle(
                 fontSize: HomeConstants.heroLabelSize,
-                color: Colors.grey[600],
+                color: labelColor,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.5,
               ),
@@ -235,14 +273,14 @@ class _DayContent extends StatelessWidget {
               child: Icon(
                 Icons.help_outline,
                 size: 16,
-                color: Colors.grey[400],
+                color: helpIconColor,
               ),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.accentBlue.withValues(alpha: 0.1),
+                color: badgeBgColor,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -250,7 +288,7 @@ class _DayContent extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.accentBlue.withValues(alpha: 0.8),
+                  color: badgeTextColor,
                 ),
               ),
             ),
@@ -261,12 +299,12 @@ class _DayContent extends StatelessWidget {
         // 金額（主役）
         Text(
           formatCurrency(fixedTodayAllowance ?? 0, currencyFormat),
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'IBMPlexSans',
             fontSize: HomeConstants.heroAmountSize,
             fontWeight: FontWeight.w600,
             height: 1.1,
-            color: HomeConstants.primaryText,
+            color: amountColor,
           ),
         ),
         const SizedBox(height: 12),
@@ -282,7 +320,7 @@ class _DayContent extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
+                  color: labelColor,
                   letterSpacing: 0.3,
                 ),
               ),
@@ -292,7 +330,7 @@ class _DayContent extends StatelessWidget {
                 child: Icon(
                   Icons.help_outline,
                   size: 14,
-                  color: Colors.grey[400],
+                  color: helpIconColor,
                 ),
               ),
             ],
@@ -302,7 +340,7 @@ class _DayContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: DailyAllowanceSparkline(
               historyData: historyData,
-              lineColor: AppColors.accentBlue.withValues(alpha: 0.6),
+              lineColor: lineColor,
               height: 32,
               currencyFormat: currencyFormat,
             ),
@@ -318,7 +356,7 @@ class _DayContent extends StatelessWidget {
               'このままなら明日は ',
               style: TextStyle(
                 fontSize: HomeConstants.heroSubtextSize,
-                color: Colors.grey[600],
+                color: subTextColor,
               ),
             ),
             Text(

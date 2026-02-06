@@ -239,13 +239,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _accentGold.withValues(alpha: 0.3), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: _accentGold.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: context.cardElevationShadow,
         ),
         child: Row(
           children: [
@@ -409,13 +403,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 colors: [_heroIconBgStart, _heroIconBgEnd],
               ),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: _accentGold.withValues(alpha: 0.2),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              boxShadow: context.cardElevationShadow,
             ),
             child: const Icon(
               Icons.star_rounded,
@@ -520,13 +508,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -785,13 +767,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               decoration: BoxDecoration(
                 color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: context.cardElevationShadow,
               ),
               child: const Icon(
                 Icons.schedule,
@@ -852,13 +828,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               colors: [_accentBlue, _accentBlueDark],
             ),
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: _accentBlue.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: context.cardElevationShadow,
           ),
           child: Center(
             child: Text(

@@ -254,13 +254,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               decoration: BoxDecoration(
                 color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+                boxShadow: context.cardElevationShadow,
               ),
               child: Icon(
                 Icons.arrow_back_ios_new_rounded,
@@ -313,13 +307,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ? AppColors.accentBlueLight.withValues(alpha: 0.7)
                     : context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+                boxShadow: context.cardElevationShadow,
               ),
               child: Icon(
                 Icons.search_rounded,

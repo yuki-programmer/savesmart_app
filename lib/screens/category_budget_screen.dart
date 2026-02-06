@@ -119,13 +119,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

@@ -549,13 +549,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: SafeArea(
         top: false,

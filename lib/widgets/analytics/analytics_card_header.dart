@@ -124,10 +124,7 @@ BoxDecoration analyticsCardDecoration(BuildContext context) {
   return BoxDecoration(
     color: context.appTheme.bgCard,
     borderRadius: BorderRadius.circular(12),
-    boxShadow: context.cardShadow(),
-    border: context.isWhiteBackground
-        ? Border.fromBorderSide(context.cardOutlineSide)
-        : null,
+    boxShadow: context.cardElevationShadow,
   );
 }
 

@@ -67,10 +67,7 @@ class CategoryBudgetSection extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.appTheme.bgCard,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6, baseOffset: const Offset(0, 1)),
-            border: context.isWhiteBackground
-                ? Border.fromBorderSide(context.cardOutlineSide)
-                : null,
+            boxShadow: context.cardElevationShadow,
           ),
           child: budgetStatusList.isEmpty
               ? _buildEmptyState()

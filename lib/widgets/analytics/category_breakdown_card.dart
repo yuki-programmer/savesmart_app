@@ -187,12 +187,17 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
                     : categoryName;
                 final color = item['color'] as Color;
 
-              // カテゴリのアイコンを取得
-              final categoryObj = widget.appState.categories.firstWhere(
-                (c) => c.name == categoryName,
-                orElse: () => widget.appState.categories.first,
-              );
-              final iconData = CategoryIcons.getIcon(categoryObj.icon);
+                // カテゴリのアイコンを取得
+                final iconData = widget.appState.categories.isEmpty
+                    ? Icons.category_outlined
+                    : CategoryIcons.getIcon(
+                        widget.appState.categories
+                            .firstWhere(
+                              (c) => c.name == categoryName,
+                              orElse: () => widget.appState.categories.first,
+                            )
+                            .icon,
+                      );
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),

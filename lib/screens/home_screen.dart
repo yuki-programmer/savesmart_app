@@ -600,13 +600,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           decoration: BoxDecoration(
             color: context.appTheme.bgCard,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            boxShadow: context.cardElevationShadow,
           ),
           child: IconButton(
             icon: Icon(Icons.settings_outlined, size: 18, color: context.appTheme.textMuted.withValues(alpha: 0.6)),
@@ -792,13 +786,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
             color: gradeColor.withValues(alpha: 0.2),
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: gradeColor.withValues(alpha: 0.06),
-              blurRadius: 6,
-              offset: const Offset(0, 1),
-            ),
-          ],
+          boxShadow: context.cardElevationShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -990,13 +978,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Row(
         children: [

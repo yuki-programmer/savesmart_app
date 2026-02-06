@@ -207,13 +207,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           decoration: BoxDecoration(
             color: context.appTheme.bgCard,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: context.cardElevationShadow,
           ),
           child: Builder(
             builder: (context) {
@@ -346,13 +340,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [
@@ -640,13 +628,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             color: color.withValues(alpha: 0.3),
             width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: context.cardElevationShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -890,13 +872,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [

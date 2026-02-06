@@ -65,10 +65,6 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
                 decoration: BoxDecoration(
                   color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
-                  border: context.isWhiteBackground
-                      ? Border.fromBorderSide(context.cardOutlineSide)
-                      : null,
-                  boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
                 ),
                 child: const Center(
                   child: CircularProgressIndicator(strokeWidth: 2),
@@ -82,10 +78,6 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
                 decoration: BoxDecoration(
                   color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
-                  border: context.isWhiteBackground
-                      ? Border.fromBorderSide(context.cardOutlineSide)
-                      : null,
-                  boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
                 ),
                 child: Center(
                   child: Text(
@@ -107,10 +99,6 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
                 decoration: BoxDecoration(
                   color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
-                  border: context.isWhiteBackground
-                      ? Border.fromBorderSide(context.cardOutlineSide)
-                      : null,
-                  boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
                 ),
                 child: Center(
                   child: Text(
@@ -153,10 +141,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: context.cardShadow(baseAlpha: 0.02),
-        border: context.isWhiteBackground
-            ? Border.fromBorderSide(context.cardOutlineSide)
-            : null,
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [

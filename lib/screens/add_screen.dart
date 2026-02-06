@@ -1204,13 +1204,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: context.appTheme.bgPrimary,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: SafeArea(
         top: false,

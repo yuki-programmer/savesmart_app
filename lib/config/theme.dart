@@ -208,28 +208,19 @@ extension BuildContextTheme on BuildContext {
   AppThemeColors get appTheme =>
       Theme.of(this).extension<AppThemeColors>()!;
 
-  bool get isWhiteBackground => appTheme.bgPrimary.value == Colors.white.value;
+  bool get _isDarkMode => Theme.of(this).brightness == Brightness.dark;
+  bool get _isWhiteBackground => appTheme.bgPrimary.value == Colors.white.value;
 
-  BorderSide get cardOutlineSide => BorderSide(
-        color: isWhiteBackground
-            ? appTheme.borderSubtle.withValues(alpha: 0.6)
-            : Colors.transparent,
-        width: 1,
-      );
-
-  List<BoxShadow> cardShadow({
-    double baseAlpha = 0.03,
-    double baseBlur = 8,
-    Offset baseOffset = const Offset(0, 2),
-  }) {
-    final adjustedAlpha = isWhiteBackground ? (baseAlpha + 0.03) : baseAlpha;
-    final adjustedBlur = isWhiteBackground ? (baseBlur + 2) : baseBlur;
-
-    return [
+  List<BoxShadow> get cardElevationShadow {
+    if (_isDarkMode || !_isWhiteBackground) {
+      return const [];
+    }
+    return const [
       BoxShadow(
-        color: Colors.black.withValues(alpha: adjustedAlpha),
-        blurRadius: adjustedBlur,
-        offset: baseOffset,
+        color: Color(0x2E000000), // opacity: 0.18
+        blurRadius: 16,
+        offset: Offset(0, 4),
+        spreadRadius: 0,
       ),
     ];
   }

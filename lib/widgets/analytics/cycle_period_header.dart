@@ -25,10 +25,7 @@ class CyclePeriodHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
-        border: context.isWhiteBackground
-            ? Border.fromBorderSide(context.cardOutlineSide)
-            : null,
+        boxShadow: context.cardElevationShadow,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

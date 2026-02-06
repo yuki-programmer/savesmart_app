@@ -55,10 +55,7 @@ class WeeklyBudgetCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: context.cardShadow(),
-        border: context.isWhiteBackground
-            ? Border.fromBorderSide(context.cardOutlineSide)
-            : null,
+        boxShadow: context.cardElevationShadow,
       ),
       child: Row(
         children: [
@@ -185,13 +182,10 @@ class WeeklyBudgetCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: context.appTheme.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: context.cardShadow(),
-          border: context.isWhiteBackground
-              ? Border.fromBorderSide(context.cardOutlineSide)
-              : null,
-        ),
+        color: context.appTheme.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: context.cardElevationShadow,
+      ),
         child: Row(
           children: [
             // 左側アイコン（グレー）

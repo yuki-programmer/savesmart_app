@@ -118,13 +118,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,13 +286,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [

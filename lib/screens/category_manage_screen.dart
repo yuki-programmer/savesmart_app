@@ -94,13 +94,7 @@ class CategoryManageScreen extends StatelessWidget {
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: context.appTheme.borderSubtle.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Row(
         children: [

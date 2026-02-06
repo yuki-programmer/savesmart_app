@@ -75,13 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             decoration: BoxDecoration(
               color: context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-              ],
+              boxShadow: context.cardElevationShadow,
             ),
             child: Icon(
               Icons.chevron_left,
@@ -164,13 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [
@@ -836,13 +824,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [
@@ -979,17 +961,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.accentOrange.withValues(alpha: 0.1),
-              AppColors.accentOrange.withValues(alpha: 0.05),
-            ],
-          ),
+          color: const Color(0xFFF3EEFF),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.accentOrange.withValues(alpha: 0.2),
+            color: const Color(0xFFC4B5FD),
             width: 1,
           ),
         ),
@@ -998,13 +973,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.accentOrange.withValues(alpha: 0.15),
+                color: const Color(0xFFE4D8FF),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
                 Icons.workspace_premium_outlined,
                 size: 24,
-                color: AppColors.accentOrange,
+                color: Color(0xFF7C3AED),
               ),
             ),
             const SizedBox(width: 14),
@@ -1034,7 +1009,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: AppColors.accentOrange.withValues(alpha: 0.7),
+              color: Color(0xFF7C3AED),
             ),
           ],
         ),
@@ -1047,13 +1022,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [
@@ -1322,13 +1291,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [
@@ -1391,17 +1354,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: appState.isPremium
-                        ? AppColors.accentOrangeLight.withValues(alpha: 0.7)
+                        ? const Color(0xFFF3EEFF)
                         : context.appTheme.bgPrimary,
                     borderRadius: BorderRadius.circular(6),
+                    border: appState.isPremium
+                        ? Border.all(color: const Color(0xFFC4B5FD))
+                        : null,
                   ),
                   child: Text(
-                    appState.isPremium ? 'Premium' : 'Free',
+                    appState.isPremium ? 'Plus' : 'Free',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: appState.isPremium
-                          ? AppColors.accentOrange
+                          ? const Color(0xFF7C3AED)
                           : context.appTheme.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
@@ -1423,13 +1389,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           color: AppColors.accentOrange.withValues(alpha: 0.2),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentOrange.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: context.cardElevationShadow,
       ),
       child: Column(
         children: [

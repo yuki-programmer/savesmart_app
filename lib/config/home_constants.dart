@@ -37,9 +37,9 @@ class HomeConstants {
   /// 標準カードの影（控えめ）
   static const List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Color(0x0A000000), // opacity: 0.04
-      blurRadius: 8,
-      offset: Offset(0, 2),
+      color: Color(0x2E000000), // opacity: 0.18
+      blurRadius: 16,
+      offset: Offset(0, 4),
       spreadRadius: 0,
     ),
   ];
