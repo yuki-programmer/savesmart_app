@@ -29,7 +29,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       body: SafeArea(
         child: Consumer<AppState>(
           builder: (context, appState, child) {
@@ -91,7 +91,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       style: GoogleFonts.inter(
         fontSize: 22,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary.withValues(alpha: 0.9),
+        color: context.appTheme.textPrimary.withValues(alpha: 0.9),
         height: 1.3,
       ),
     );
@@ -116,7 +116,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -137,7 +137,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withValues(alpha: 0.8),
+                  color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                   height: 1.4,
                 ),
               ),
@@ -161,15 +161,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.bgPrimary,
+                  color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: context.appTheme.borderSubtle,
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   'あと$remainingDays日',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
               ),
@@ -189,7 +193,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withValues(alpha: 0.8),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.8),
                       height: 1.4,
                     ),
                   ),
@@ -199,7 +203,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 26,
                       fontWeight: FontWeight.w600,
-                      color: remaining < 0 ? AppColors.accentRed : AppColors.textPrimary.withValues(alpha: 0.9),
+                      color: remaining < 0 ? AppColors.accentRed : context.appTheme.textPrimary.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
@@ -212,8 +216,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.bgPrimary.withValues(alpha: 0.7),
+              color: context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: context.appTheme.borderSubtle,
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
@@ -225,7 +233,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                        color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                       ),
                     ),
                     const Spacer(),
@@ -238,7 +246,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         fontWeight: FontWeight.w600,
                         color: availableAmount != null
                             ? AppColors.accentBlue
-                            : AppColors.textMuted.withValues(alpha: 0.6),
+                            : context.appTheme.textMuted.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -252,7 +260,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                        color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                       ),
                     ),
                     const Spacer(),
@@ -261,7 +269,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary.withValues(alpha: 0.85),
+                        color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
@@ -282,7 +290,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -309,7 +317,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   Icon(
                     Icons.receipt_long_outlined,
                     size: 20,
-                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                    color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -321,7 +329,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary.withValues(alpha: 0.9),
+                            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -330,7 +338,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                            color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -374,7 +382,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     child: Icon(
                       Icons.expand_more,
                       size: 20,
-                      color: AppColors.textMuted.withValues(alpha: 0.6),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -403,7 +411,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w400,
-                                        color: AppColors.textSecondary.withValues(alpha: 0.9),
+                                        color: context.appTheme.textSecondary.withValues(alpha: 0.9),
                                       ),
                                     ),
                                   ),
@@ -414,7 +422,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
-                                      color: AppColors.textPrimary.withValues(alpha: 0.85),
+                                      color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                                     ),
                                   ),
                                 ],
@@ -427,7 +435,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                             '固定費が登録されていません',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: AppColors.textMuted.withValues(alpha: 0.7),
+                              color: context.appTheme.textMuted.withValues(alpha: 0.7),
                             ),
                           ),
                         ),

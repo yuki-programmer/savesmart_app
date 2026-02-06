@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../config/theme.dart';
 import '../services/app_state.dart';
 import '../services/purchase_service.dart';
 
@@ -19,7 +20,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
   PlanType _selectedPlan = PlanType.yearly;
 
   // カラー定義
-  static const Color _screenBackground = Color(0xFFF7F7F5);
   static const Color _textPrimary = Color(0xFF1A1A1A);
   static const Color _textSecondary = Color(0xFF6B7280);
   static const Color _textMuted = Color(0xFF9CA3AF);
@@ -44,7 +44,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
     final isPremium = context.watch<AppState>().isPremium;
 
     return Scaffold(
-      backgroundColor: _screenBackground,
+      backgroundColor: context.appTheme.bgPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -129,7 +129,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.appTheme.bgCard,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -164,7 +164,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: _borderLight),
               ),
@@ -236,7 +236,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _accentGold.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
@@ -373,7 +373,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _borderLight),
             ),
@@ -517,7 +517,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       width: 140,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _borderLight),
         boxShadow: [
@@ -632,7 +632,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF8FAFF) : Colors.white,
+              color: isSelected ? const Color(0xFFF8FAFF) : context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected ? _accentBlue : _borderLight,
@@ -658,9 +658,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
                           child: Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.white,
+                              color: context.appTheme.bgCard,
                             ),
                           ),
                         )
@@ -783,7 +783,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(

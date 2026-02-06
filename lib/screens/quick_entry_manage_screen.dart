@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../models/quick_entry.dart';
+import '../screens/premium_screen.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
 import '../widgets/quick_entry/quick_entry_edit_modal.dart';
@@ -12,17 +13,21 @@ import '../widgets/quick_entry/quick_entry_edit_modal.dart';
 class QuickEntryManageScreen extends StatelessWidget {
   const QuickEntryManageScreen({super.key});
 
+  static const int _freeQuickEntryLimit = 2;
+  static const String _limitMessage =
+      'クイック登録は2枠までです。Plusプランで無制限に追加できます';
+
   @override
   Widget build(BuildContext context) {
     final quickEntries = context.watch<AppState>().quickEntries;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.bgPrimary,
+        backgroundColor: context.appTheme.bgPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: context.appTheme.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -30,7 +35,7 @@ class QuickEntryManageScreen extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -46,7 +51,7 @@ class QuickEntryManageScreen extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
           ),
@@ -73,7 +78,7 @@ class QuickEntryManageScreen extends StatelessWidget {
       ),
       // 追加ボタン（FAB）
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showEditModal(context, null),
+        onPressed: () => _handleAddTap(context, quickEntries.length),
         backgroundColor: AppColors.accentBlue,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
@@ -97,7 +102,7 @@ class QuickEntryManageScreen extends StatelessWidget {
           Icon(
             Icons.bookmark_outline,
             size: 48,
-            color: AppColors.textMuted.withValues(alpha: 0.5),
+            color: context.appTheme.textMuted.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -105,7 +110,7 @@ class QuickEntryManageScreen extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: context.appTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -113,7 +118,7 @@ class QuickEntryManageScreen extends StatelessWidget {
             '下のボタンから追加してください',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
           const SizedBox(height: 80), // FABの分のスペース
@@ -132,13 +137,65 @@ class QuickEntryManageScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _handleAddTap(
+    BuildContext context,
+    int currentCount,
+  ) async {
+    final appState = context.read<AppState>();
+    if (!appState.isPremium && currentCount >= _freeQuickEntryLimit) {
+      await _showUpgradePrompt(context);
+      return;
+    }
+
+    _showEditModal(context, null);
+  }
+
+  Future<void> _showUpgradePrompt(BuildContext context) async {
+    final shouldOpen = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          'クイック登録の上限',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          _limitMessage,
+          style: GoogleFonts.inter(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              '今はしない',
+              style: GoogleFonts.inter(),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              'Plusを見る',
+              style: GoogleFonts.inter(color: AppColors.accentBlue),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldOpen == true && context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PremiumScreen()),
+      );
+    }
+  }
+
   /// 削除確認ダイアログを表示
   Future<void> _showDeleteConfirmation(
       BuildContext context, QuickEntry entry) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: context.appTheme.bgCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -147,7 +204,7 @@ class QuickEntryManageScreen extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         content: Text(
@@ -155,7 +212,7 @@ class QuickEntryManageScreen extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: AppColors.textSecondary,
+            color: context.appTheme.textSecondary,
             height: 1.5,
           ),
         ),
@@ -167,7 +224,7 @@ class QuickEntryManageScreen extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
           ),
@@ -215,7 +272,7 @@ class _QuickEntryListItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
       ),
@@ -232,7 +289,7 @@ class _QuickEntryListItem extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -245,14 +302,14 @@ class _QuickEntryListItem extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                        color: context.appTheme.textSecondary,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Container(
                       width: 1,
                       height: 12,
-                      color: AppColors.textMuted.withValues(alpha: 0.3),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.3),
                     ),
                     const SizedBox(width: 8),
                     // 金額
@@ -261,7 +318,7 @@ class _QuickEntryListItem extends StatelessWidget {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: context.appTheme.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -293,7 +350,7 @@ class _QuickEntryListItem extends StatelessWidget {
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_horiz,
-              color: AppColors.textSecondary.withValues(alpha: 0.6),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.6),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -313,10 +370,10 @@ class _QuickEntryListItem extends StatelessWidget {
                 value: 'edit',
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.edit_outlined,
                       size: 18,
-                      color: AppColors.textSecondary,
+                      color: context.appTheme.textSecondary,
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -324,7 +381,7 @@ class _QuickEntryListItem extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                        color: context.appTheme.textPrimary,
                       ),
                     ),
                   ],

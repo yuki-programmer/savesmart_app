@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' hide Category;
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
@@ -8,6 +8,7 @@ import '../models/fixed_cost_category.dart';
 import '../models/quick_entry.dart';
 import '../models/scheduled_expense.dart';
 import '../models/category_budget.dart';
+import '../config/theme.dart';
 import '../config/constants.dart';
 import '../core/dev_config.dart';
 import '../core/financial_cycle.dart';
@@ -67,6 +68,12 @@ class AppState extends ChangeNotifier {
   String _currencyFormat = 'prefix'; // デフォルト: ¥記号前置
   static const String _keyCurrencyFormat = 'currency_format';
 
+  // === テーマ設定 ===
+  bool _isDark = false;
+  ColorPattern _colorPattern = ColorPattern.pink;
+  static const String _keyIsDark = 'theme_is_dark';
+  static const String _keyColorPattern = 'theme_color_pattern';
+
   // === タブ切り替え & incomeSheet自動起動 ===
   int? _requestedTabIndex;
   bool _openIncomeSheetRequested = false;
@@ -96,6 +103,14 @@ class AppState extends ChangeNotifier {
   List<CategoryBudget> get categoryBudgets => _categoryBudgets;
   Budget? get currentBudget => _currentBudget;
   bool get isLoading => _isLoading;
+
+  // === テーマ ===
+  bool get isDark => _isDark;
+  ColorPattern get colorPattern => _colorPattern;
+  ColorPattern get _effectiveColorPattern =>
+      isPremium ? _colorPattern : ColorPattern.white;
+  ThemeData get currentTheme =>
+      AppTheme.build(isDark: _isDark, pattern: _effectiveColorPattern);
 
   /// プレミアム判定（全画面でこれを参照する）
   /// PREMIUM_TEST=true の場合は常に true を返す
@@ -1284,6 +1299,48 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error setting currency format: $e');
+    }
+  }
+
+  // ============================================================
+  // テーマ設定
+  // ============================================================
+
+  /// テーマ設定を読み込み
+  Future<void> loadThemeSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isDark = prefs.getBool(_keyIsDark) ?? false;
+      final patternKey = prefs.getString(_keyColorPattern);
+      if (patternKey != null) {
+        _colorPattern = ColorPatternInfo.fromKey(patternKey);
+      }
+    } catch (e) {
+      debugPrint('Error loading theme settings: $e');
+    }
+  }
+
+  /// ダークモード切り替え
+  Future<void> setDarkMode(bool isDark) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyIsDark, isDark);
+      _isDark = isDark;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error setting dark mode: $e');
+    }
+  }
+
+  /// 背景色パターン切り替え
+  Future<void> setColorPattern(ColorPattern pattern) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyColorPattern, pattern.key);
+      _colorPattern = pattern;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error setting color pattern: $e');
     }
   }
 

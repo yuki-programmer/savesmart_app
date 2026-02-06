@@ -65,15 +65,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.bgPrimary,
+        backgroundColor: context.appTheme.bgPrimary,
         elevation: 0,
         leading: IconButton(
           icon: Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
@@ -85,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: Icon(
               Icons.chevron_left,
-              color: AppColors.textSecondary.withValues(alpha: 0.8),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.8),
               size: 18,
             ),
           ),
@@ -96,7 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withValues(alpha: 0.9),
+            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
           ),
         ),
         centerTitle: true,
@@ -110,6 +110,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSectionHeader('家計設定'),
               const SizedBox(height: 12),
               _buildFinancialSettingsCard(appState),
+              const SizedBox(height: 24),
+
+              // 表示設定セクション
+              _buildSectionHeader('表示設定'),
+              const SizedBox(height: 12),
+              _buildDisplaySettingsCard(appState),
               const SizedBox(height: 24),
 
               // データ管理セクション
@@ -147,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary.withValues(alpha: 0.7),
+        color: context.appTheme.textSecondary.withValues(alpha: 0.7),
         height: 1.4,
       ),
     );
@@ -156,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildFinancialSettingsCard(AppState appState) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -174,10 +180,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppColors.bgPrimary,
+                    color: context.appTheme.bgPrimary,
                     width: 1,
                   ),
                 ),
@@ -194,7 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textPrimary.withValues(alpha: 0.9),
+                            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                             height: 1.4,
                           ),
                         ),
@@ -204,7 +210,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withValues(alpha: 0.7),
+                            color: context.appTheme.textMuted.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -224,7 +230,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(
                         Icons.chevron_right,
                         size: 18,
-                        color: AppColors.textMuted.withValues(alpha: 0.5),
+                        color: context.appTheme.textMuted.withValues(alpha: 0.5),
                       ),
                     ],
                   ),
@@ -238,10 +244,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppColors.bgPrimary,
+                    color: context.appTheme.bgPrimary,
                     width: 1,
                   ),
                 ),
@@ -258,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textPrimary.withValues(alpha: 0.9),
+                            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                             height: 1.4,
                           ),
                         ),
@@ -268,7 +274,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withValues(alpha: 0.7),
+                            color: context.appTheme.textMuted.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -295,7 +301,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(
                         Icons.chevron_right,
                         size: 18,
-                        color: AppColors.textMuted.withValues(alpha: 0.5),
+                        color: context.appTheme.textMuted.withValues(alpha: 0.5),
                       ),
                     ],
                   ),
@@ -309,10 +315,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppColors.bgPrimary,
+                    color: context.appTheme.bgPrimary,
                     width: 1,
                   ),
                 ),
@@ -329,7 +335,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textPrimary.withValues(alpha: 0.9),
+                            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                             height: 1.4,
                           ),
                         ),
@@ -339,7 +345,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withValues(alpha: 0.7),
+                            color: context.appTheme.textMuted.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -359,7 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(
                         Icons.chevron_right,
                         size: 18,
-                        color: AppColors.textMuted.withValues(alpha: 0.5),
+                        color: context.appTheme.textMuted.withValues(alpha: 0.5),
                       ),
                     ],
                   ),
@@ -388,14 +394,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textPrimary.withValues(alpha: 0.9),
+                      color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                       height: 1.4,
                     ),
                   ),
                   Icon(
                     Icons.chevron_right,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.5),
                   ),
                 ],
               ),
@@ -427,9 +433,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: context.appTheme.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: SafeArea(
           child: Column(
@@ -441,7 +447,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: context.appTheme.textMuted.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -453,7 +459,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
               ),
@@ -463,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'アプリ全体の金額表示に適用されます。',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -501,7 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: isSelected ? AppColors.accentBlue.withValues(alpha: 0.1) : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? AppColors.accentBlue : AppColors.borderSubtle.withValues(alpha: 0.3),
+                            color: isSelected ? AppColors.accentBlue : context.appTheme.borderSubtle.withValues(alpha: 0.3),
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -516,7 +522,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
-                                      color: isSelected ? AppColors.accentBlue : AppColors.textPrimary,
+                                      color: isSelected ? AppColors.accentBlue : context.appTheme.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -524,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     format['description'] as String,
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
-                                      color: AppColors.textSecondary,
+                                      color: context.appTheme.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -588,9 +594,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: context.appTheme.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: SafeArea(
           child: Column(
@@ -602,7 +608,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: context.appTheme.textMuted.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -614,7 +620,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
               ),
@@ -624,7 +630,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   '支出を登録するときに最初に選択されているタイプです。',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -663,7 +669,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? color : AppColors.borderSubtle.withValues(alpha: 0.3),
+                            color: isSelected ? color : context.appTheme.borderSubtle.withValues(alpha: 0.3),
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -672,7 +678,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Icon(
                               grade['icon'] as IconData,
                               size: 22,
-                              color: isSelected ? color : AppColors.textMuted,
+                              color: isSelected ? color : context.appTheme.textMuted,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -681,7 +687,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 15,
                                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                  color: isSelected ? color : AppColors.textPrimary,
+                                  color: isSelected ? color : context.appTheme.textPrimary,
                                 ),
                               ),
                             ),
@@ -711,9 +717,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: context.appTheme.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: SafeArea(
           child: Column(
@@ -725,7 +731,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: context.appTheme.textMuted.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -737,7 +743,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
               ),
@@ -747,7 +753,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   '給料日を設定すると、その日から翌給料日前日までが1ヶ月のサイクルになります。',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -798,7 +804,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           border: isSelected
                               ? null
                               : Border.all(
-                                  color: AppColors.borderSubtle.withValues(alpha: 0.3),
+                                  color: context.appTheme.borderSubtle.withValues(alpha: 0.3),
                                 ),
                         ),
                         child: Text(
@@ -809,7 +815,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 isSelected ? FontWeight.w600 : FontWeight.w500,
                             color: isSelected
                                 ? Colors.white
-                                : AppColors.textPrimary.withValues(alpha: 0.8),
+                                : context.appTheme.textPrimary.withValues(alpha: 0.8),
                           ),
                         ),
                       ),
@@ -821,6 +827,143 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDisplaySettingsCard(AppState appState) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ダークモード
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: context.appTheme.bgPrimary,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ダークモード',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: context.appTheme.textPrimary.withValues(alpha: 0.9),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '画面の明暗を切り替える',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: context.appTheme.textMuted.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: appState.isDark,
+                  onChanged: (value) => appState.setDarkMode(value),
+                  activeTrackColor: AppColors.accentBlue,
+                ),
+              ],
+            ),
+          ),
+
+          // 背景色パターン（ライトモード時のみ・Premium限定）
+          if (!appState.isDark && appState.isPremium)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '背景色',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: context.appTheme.textPrimary.withValues(alpha: 0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'アプリの背景色を選択',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: context.appTheme.textMuted.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: ColorPattern.values.map((pattern) {
+                      final isSelected = appState.colorPattern == pattern;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: GestureDetector(
+                          onTap: () => appState.setColorPattern(pattern),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: pattern.bgColor,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppColors.accentBlue
+                                        : context.appTheme.borderSubtle,
+                                    width: isSelected ? 2.5 : 1,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                pattern.label,
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: isSelected
+                                      ? AppColors.accentBlue
+                                      : context.appTheme.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -874,7 +1017,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary.withValues(alpha: 0.9),
+                      color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -882,7 +1025,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Plusプランで全ての機能をアンロック',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                      color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -902,7 +1045,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildDataManagementCard(AppState appState) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -920,10 +1063,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppColors.bgPrimary,
+                    color: context.appTheme.bgPrimary,
                     width: 1,
                   ),
                 ),
@@ -945,7 +1088,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textPrimary.withValues(alpha: 0.9),
+                            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                             height: 1.4,
                           ),
                         ),
@@ -955,7 +1098,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withValues(alpha: 0.7),
+                            color: context.appTheme.textMuted.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -964,7 +1107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Icon(
                     Icons.chevron_right,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.5),
                   ),
                 ],
               ),
@@ -993,7 +1136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textPrimary.withValues(alpha: 0.9),
+                            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                             height: 1.4,
                           ),
                         ),
@@ -1003,7 +1146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withValues(alpha: 0.7),
+                            color: context.appTheme.textMuted.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -1012,7 +1155,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Icon(
                     Icons.chevron_right,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.5),
                   ),
                 ],
               ),
@@ -1089,7 +1232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           '現在のデータはすべて上書きされます。\nこの操作は取り消せません。\n\n続行しますか？',
           style: GoogleFonts.inter(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: context.appTheme.textSecondary,
             height: 1.5,
           ),
         ),
@@ -1099,7 +1242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1177,7 +1320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildInfoCard(AppState appState) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -1194,10 +1337,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => _onVersionTap(appState),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppColors.bgPrimary,
+                    color: context.appTheme.bgPrimary,
                     width: 1,
                   ),
                 ),
@@ -1210,7 +1353,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textPrimary.withValues(alpha: 0.9),
+                      color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                       height: 1.4,
                     ),
                   ),
@@ -1219,7 +1362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                      color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -1237,7 +1380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textPrimary.withValues(alpha: 0.9),
+                    color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                     height: 1.4,
                   ),
                 ),
@@ -1249,7 +1392,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: appState.isPremium
                         ? AppColors.accentOrangeLight.withValues(alpha: 0.7)
-                        : AppColors.bgPrimary,
+                        : context.appTheme.bgPrimary,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1259,7 +1402,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fontWeight: FontWeight.w500,
                       color: appState.isPremium
                           ? AppColors.accentOrange
-                          : AppColors.textSecondary.withValues(alpha: 0.7),
+                          : context.appTheme.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -1274,7 +1417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildDeveloperSection(AppState appState) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.accentOrange.withValues(alpha: 0.2),
@@ -1328,7 +1471,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary.withValues(alpha: 0.9),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.9),
               ),
             ),
             subtitle: Text(
@@ -1340,7 +1483,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary.withValues(alpha: 0.7),
+                color: context.appTheme.textSecondary.withValues(alpha: 0.7),
               ),
             ),
             value: appState.devPremiumOverride ?? false,
@@ -1372,7 +1515,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: AppColors.bgPrimary,
+                      backgroundColor: context.appTheme.bgPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1383,7 +1526,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary.withValues(alpha: 0.7),
+                        color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -1399,7 +1542,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary.withValues(alpha: 0.9),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.9),
               ),
             ),
             subtitle: Text(
@@ -1407,7 +1550,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary.withValues(alpha: 0.7),
+                color: context.appTheme.textSecondary.withValues(alpha: 0.7),
               ),
             ),
             value: perfMonitor.isEnabled,
@@ -1466,7 +1609,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: AppColors.bgPrimary,
+                      backgroundColor: context.appTheme.bgPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1477,7 +1620,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary.withValues(alpha: 0.7),
+                        color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -1533,7 +1676,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '回数: ${stat['count']}  平均: ${stat['avg']}ms  最大: ${stat['max']}ms',
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: context.appTheme.textSecondary,
                             ),
                           ),
                         ],

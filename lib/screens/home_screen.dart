@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/theme.dart';
-import '../config/home_constants.dart';
 import '../services/app_state.dart';
 import '../services/performance_service.dart';
 import '../models/expense.dart';
@@ -99,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
       selector: (_, appState) => appState.isLoading,
       builder: (context, isLoading, child) {
         return Scaffold(
-          backgroundColor: HomeConstants.screenBackground,
+          backgroundColor: context.appTheme.bgPrimary,
           body: SafeArea(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -232,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
                 if (hasMore)
@@ -252,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                     '${allExpenses.length}件',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: context.appTheme.textSecondary,
                     ),
                   ),
               ],
@@ -262,9 +261,9 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
             // 予定支出リスト
             Container(
               decoration: BoxDecoration(
-                color: AppColors.bgCard,
+                color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(color: context.appTheme.borderSubtle),
               ),
               child: Column(
                 children: displayExpenses.asMap().entries.map((entry) {
@@ -338,8 +337,8 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
         decoration: BoxDecoration(
           border: isLast
               ? null
-              : const Border(
-                  bottom: BorderSide(color: AppColors.borderSubtle),
+              : Border(
+                  bottom: BorderSide(color: context.appTheme.borderSubtle),
                 ),
         ),
         child: Row(
@@ -375,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
+                            color: context.appTheme.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -408,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                     dateStr,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: context.appTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -421,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appTheme.textPrimary,
               ),
             ),
           ],
@@ -437,9 +436,9 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: context.appTheme.bgCard,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SafeArea(
             child: Column(
@@ -451,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textMuted.withValues(alpha: 0.3),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -459,12 +458,12 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
 
                 // 編集
                 ListTile(
-                  leading: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+                  leading: Icon(Icons.edit_outlined, color: context.appTheme.textSecondary),
                   title: Text(
                     '編集',
                     style: GoogleFonts.inter(
                       fontSize: 16,
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                   ),
                   onTap: () {
@@ -591,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: AppColors.textSecondary.withValues(alpha: 0.7),
+            color: context.appTheme.textSecondary.withValues(alpha: 0.7),
             height: 1.3,
           ),
         ),
@@ -599,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.appTheme.bgCard,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -610,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
             ],
           ),
           child: IconButton(
-            icon: Icon(Icons.settings_outlined, size: 18, color: AppColors.textMuted.withValues(alpha: 0.6)),
+            icon: Icon(Icons.settings_outlined, size: 18, color: context.appTheme.textMuted.withValues(alpha: 0.6)),
             onPressed: () {
               Navigator.push(
                 context,
@@ -637,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withValues(alpha: 0.85),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                 height: 1.4,
               ),
             ),
@@ -724,7 +723,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: AppColors.accentBlue.withValues(alpha: 0.2),
@@ -745,7 +744,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                color: context.appTheme.textSecondary.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -787,7 +786,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
         width: 130,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: gradeColor.withValues(alpha: 0.2),
@@ -810,7 +809,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withValues(alpha: 0.9),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.9),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -824,7 +823,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withValues(alpha: 0.85),
+                    color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -915,7 +914,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withValues(alpha: 0.85),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                 height: 1.4,
               ),
             ),
@@ -942,7 +941,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
@@ -951,7 +950,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textMuted.withValues(alpha: 0.8),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.8),
                   height: 1.4,
                 ),
               ),
@@ -989,7 +988,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
@@ -1026,7 +1025,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary.withValues(alpha: 0.9),
+                      color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                       height: 1.4,
                     ),
                   ),
@@ -1040,7 +1039,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withValues(alpha: 0.8),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.8),
                       height: 1.4,
                     ),
                   ),
@@ -1053,7 +1052,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withValues(alpha: 0.9),
+              color: context.appTheme.textPrimary.withValues(alpha: 0.9),
             ),
           ),
         ],

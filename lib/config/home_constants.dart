@@ -6,9 +6,6 @@ class HomeConstants {
   // 配色
   // ========================================
 
-  /// 画面背景色（ニュアンス白）
-  static const Color screenBackground = Color(0xFFF7F7F5);
-
   /// カード背景色
   static const Color cardBackground = Colors.white;
 

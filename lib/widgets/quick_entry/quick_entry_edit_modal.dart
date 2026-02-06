@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/quick_entry.dart';
 import '../../services/app_state.dart';
+import '../../screens/premium_screen.dart';
 import '../amount_text_field.dart';
 
 /// クイック登録の追加・編集モーダル
@@ -29,6 +30,10 @@ class QuickEntryEditModal extends StatefulWidget {
 }
 
 class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
+  static const int _freeQuickEntryLimit = 2;
+  static const String _limitMessage =
+      'クイック登録は2枠までです。Plusプランで無制限に追加できます';
+
   late TextEditingController _titleController;
   int? _selectedCategoryId;
   String? _selectedCategory;
@@ -93,9 +98,9 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgPrimary,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgPrimary,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(bottom: bottomPadding),
       child: SingleChildScrollView(
@@ -111,7 +116,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textMuted.withValues(alpha: 0.3),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -124,7 +129,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
               ),
@@ -136,7 +141,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -146,10 +151,10 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   hintText: '空欄ならカテゴリ名を使用',
                   hintStyle: GoogleFonts.inter(
                     fontSize: 14,
-                    color: AppColors.textMuted.withValues(alpha: 0.7),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.7),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.appTheme.bgCard,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
@@ -172,7 +177,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                 ),
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -184,7 +189,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -213,7 +218,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? _selectedGradeData['lightColor'] as Color
-                            : Colors.white,
+                            : context.appTheme.bgCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isSelected
@@ -229,7 +234,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                           color: isSelected
                               ? _selectedGradeData['color'] as Color
-                              : AppColors.textSecondary,
+                              : context.appTheme.textSecondary,
                         ),
                       ),
                     ),
@@ -244,7 +249,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -265,7 +270,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                 'タップして金額を入力',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.textMuted,
+                  color: context.appTheme.textMuted,
                 ),
               ),
               const SizedBox(height: 16),
@@ -276,7 +281,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -299,7 +304,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: isSelected ? lightColor : Colors.white,
+                          color: isSelected ? lightColor : context.appTheme.bgCard,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected
@@ -315,7 +320,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                               fontSize: 13,
                               fontWeight:
                                   isSelected ? FontWeight.w600 : FontWeight.w500,
-                              color: isSelected ? color : AppColors.textSecondary,
+                              color: isSelected ? color : context.appTheme.textSecondary,
                             ),
                           ),
                         ),
@@ -335,7 +340,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   decoration: BoxDecoration(
                     color: _canSave
                         ? _selectedGradeData['color'] as Color
-                        : AppColors.textMuted.withValues(alpha: 0.3),
+                        : context.appTheme.textMuted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -344,7 +349,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: _canSave ? Colors.white : AppColors.textMuted,
+                        color: _canSave ? Colors.white : context.appTheme.textMuted,
                       ),
                     ),
                   ),
@@ -379,6 +384,13 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
     if (!_canSave) return;
 
     final appState = context.read<AppState>();
+    if (!_isEditing &&
+        !appState.isPremium &&
+        appState.quickEntries.length >= _freeQuickEntryLimit) {
+      await _showUpgradePrompt();
+      return;
+    }
+
     final entry = QuickEntry(
       id: widget.entry?.id,
       title: _effectiveTitle,
@@ -413,6 +425,47 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
     }
   }
 
+  Future<void> _showUpgradePrompt() async {
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    final shouldOpen = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          'クイック登録の上限',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          _limitMessage,
+          style: GoogleFonts.inter(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              '今はしない',
+              style: GoogleFonts.inter(),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              'Plusを見る',
+              style: GoogleFonts.inter(color: AppColors.accentBlue),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+    if (shouldOpen == true) {
+      Navigator.of(context).pop();
+      rootNavigator.push(
+        MaterialPageRoute(builder: (_) => const PremiumScreen()),
+      );
+    }
+  }
+
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -430,7 +483,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'キャンセル',
-              style: GoogleFonts.inter(color: AppColors.textSecondary),
+              style: GoogleFonts.inter(color: context.appTheme.textSecondary),
             ),
           ),
           TextButton(
