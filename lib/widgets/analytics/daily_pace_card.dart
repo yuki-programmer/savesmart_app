@@ -70,7 +70,7 @@ class _DailyPaceCardState extends State<DailyPaceCard>
     return GestureDetector(
       onTap: _handleTap,
       child: Container(
-        decoration: analyticsCardDecoration(),
+        decoration: analyticsCardDecoration(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -174,7 +174,7 @@ class _DailyPaceCardState extends State<DailyPaceCard>
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withValues(alpha: 0.7),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 4),
@@ -187,7 +187,7 @@ class _DailyPaceCardState extends State<DailyPaceCard>
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary.withValues(alpha: 0.7),
+                  color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 2),
@@ -256,7 +256,7 @@ class _DailyPaceCardState extends State<DailyPaceCard>
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: AppColors.textMuted.withValues(alpha: 0.5),
+              color: context.appTheme.textMuted.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 4),
@@ -269,7 +269,7 @@ class _DailyPaceCardState extends State<DailyPaceCard>
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.4),
                 ),
               ),
               const SizedBox(width: 2),
@@ -297,7 +297,7 @@ class _DailyPaceCardState extends State<DailyPaceCard>
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w400,
-            color: AppColors.textMuted.withValues(alpha: 0.7),
+            color: context.appTheme.textMuted.withValues(alpha: 0.7),
           ),
         ),
       ),

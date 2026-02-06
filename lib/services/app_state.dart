@@ -278,6 +278,49 @@ class AppState extends ChangeNotifier {
     return (remainingBudget / remainingDaysFromTomorrow).round();
   }
 
+  /// 過去N日分の「今日使えるお金」履歴を取得（Sparkline用）
+  /// 返り値: List<Map<String, dynamic>> [{ 'date': DateTime, 'amount': int }, ...]
+  Future<List<Map<String, dynamic>>> getDailyAllowanceHistory(int days) async {
+    final now = DateTime.now();
+    final baseDate = DateTime(now.year, now.month, now.day);
+    final result = <Map<String, dynamic>>[];
+
+    for (int i = 0; i < days; i++) {
+      final targetDate = baseDate.subtract(Duration(days: days - 1 - i));
+      final savedAmount = await _db.getDailyBudget(targetDate);
+      final amount = savedAmount ?? await _calculateAllowanceForDate(targetDate);
+      if (amount != null) {
+        result.add({
+          'date': targetDate,
+          'amount': amount,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /// 指定日の「今日使えるお金」を計算（履歴補完用）
+  Future<int?> _calculateAllowanceForDate(DateTime date) async {
+    final income = thisMonthAvailableAmount;
+    if (income == null) return null;
+
+    final cycleStart = _financialCycle.getStartDate(date);
+    final expensesUntilDate = await _db.getExpenseTotalUntilDate(
+      cycleStartDate: cycleStart,
+      endDateExclusive: date,
+    );
+
+    // 現在サイクル内の未確定予定支出合計（同期計算）
+    final scheduledTotal = _scheduledExpensesTotalInCurrentCycle;
+
+    final remainingBudget = income - expensesUntilDate - fixedCostsTotal - scheduledTotal;
+    final remainingDays = _financialCycle.getDaysRemaining(date);
+    if (remainingDays <= 0) return null;
+
+    return (remainingBudget / remainingDays).round();
+  }
+
   /// 今日がサイクル最終日かどうか
   bool get isLastDayOfMonth {
     final now = DateTime.now();

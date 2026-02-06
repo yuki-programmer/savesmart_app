@@ -101,20 +101,20 @@ class _AmountTextFieldState extends State<AmountTextField> {
         style: GoogleFonts.ibmPlexSans(
           fontSize: widget.fontSize,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: context.appTheme.textPrimary,
         ),
         decoration: InputDecoration(
           prefixText: '¥',
           prefixStyle: GoogleFonts.ibmPlexSans(
             fontSize: widget.fontSize,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
           hintText: '0',
           hintStyle: GoogleFonts.ibmPlexSans(
             fontSize: widget.fontSize,
             fontWeight: FontWeight.bold,
-            color: AppColors.textMuted.withValues(alpha: 0.4),
+            color: context.appTheme.textMuted.withValues(alpha: 0.4),
           ),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,

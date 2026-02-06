@@ -21,12 +21,12 @@ class ScheduledExpensesListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.bgPrimary,
+        backgroundColor: context.appTheme.bgPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: context.appTheme.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -34,7 +34,7 @@ class ScheduledExpensesListScreen extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -52,17 +52,17 @@ class ScheduledExpensesListScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.event_available,
                     size: 48,
-                    color: AppColors.textMuted,
+                    color: context.appTheme.textMuted,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     '予定支出はありません',
                     style: GoogleFonts.inter(
                       fontSize: 16,
-                      color: AppColors.textSecondary,
+                      color: context.appTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -92,9 +92,9 @@ class ScheduledExpensesListScreen extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.bgCard,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        decoration: BoxDecoration(
+          color: context.appTheme.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: SafeArea(
           child: Column(
@@ -106,7 +106,7 @@ class ScheduledExpensesListScreen extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.3),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -230,9 +230,9 @@ class _ScheduledExpenseCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.bgCard,
+          color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderSubtle),
+          border: Border.all(color: context.appTheme.borderSubtle),
         ),
         child: Row(
           children: [
@@ -267,7 +267,7 @@ class _ScheduledExpenseCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
+                            color: context.appTheme.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -298,17 +298,17 @@ class _ScheduledExpenseCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today,
                         size: 12,
-                        color: AppColors.textSecondary,
+                        color: context.appTheme.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         dateStr,
                         style: GoogleFonts.inter(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: context.appTheme.textSecondary,
                         ),
                       ),
                       if (scheduled.category.isNotEmpty &&
@@ -318,7 +318,7 @@ class _ScheduledExpenseCard extends StatelessWidget {
                           scheduled.category,
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: AppColors.textMuted,
+                            color: context.appTheme.textMuted,
                           ),
                         ),
                       ],
@@ -334,7 +334,7 @@ class _ScheduledExpenseCard extends StatelessWidget {
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appTheme.textPrimary,
               ),
             ),
           ],

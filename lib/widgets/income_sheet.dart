@@ -134,9 +134,9 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: SafeArea(
         child: _isLoading
@@ -153,7 +153,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                         width: 36,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppColors.textMuted.withValues(alpha: 0.25),
+                          color: context.appTheme.textMuted.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -166,7 +166,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                       style: GoogleFonts.inter(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary.withValues(alpha: 0.9),
+                        color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                         height: 1.3,
                       ),
                     ),
@@ -206,7 +206,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary.withValues(alpha: 0.8),
+                              color: context.appTheme.textPrimary.withValues(alpha: 0.8),
                             ),
                           ),
                           Text(
@@ -229,7 +229,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: AppColors.bgPrimary,
+                          color: context.appTheme.bgPrimary,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -238,7 +238,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: context.appTheme.textSecondary,
                             ),
                           ),
                         ),
@@ -262,7 +262,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withValues(alpha: 0.8),
+            color: context.appTheme.textPrimary.withValues(alpha: 0.8),
           ),
         ),
         const SizedBox(height: 10),
@@ -279,11 +279,11 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 decoration: InputDecoration(
                   hintText: '例：250000',
                   hintStyle: GoogleFonts.inter(
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.5),
                     fontSize: 16,
                   ),
                   filled: true,
-                  fillColor: AppColors.bgPrimary,
+                  fillColor: context.appTheme.bgPrimary,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -296,7 +296,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
             ),
@@ -306,7 +306,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
             const SizedBox(width: 12),
@@ -318,7 +318,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 decoration: BoxDecoration(
                   color: _isMainValid
                       ? AppColors.accentBlue
-                      : AppColors.textMuted.withValues(alpha: 0.3),
+                      : context.appTheme.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -328,7 +328,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     fontWeight: FontWeight.w600,
                     color: _isMainValid
                         ? Colors.white
-                        : AppColors.textMuted.withValues(alpha: 0.6),
+                        : context.appTheme.textMuted.withValues(alpha: 0.6),
                   ),
                 ),
               ),
@@ -351,7 +351,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withValues(alpha: 0.8),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.8),
               ),
             ),
             if (!_showSubIncomeForm)
@@ -407,7 +407,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 'ボーナスや臨時収入があれば追加できます',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.textMuted.withValues(alpha: 0.6),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -421,7 +421,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
+        color: context.appTheme.bgPrimary,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -435,7 +435,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary.withValues(alpha: 0.85),
+                    color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -474,7 +474,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
+        color: context.appTheme.bgPrimary,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.accentGreen.withValues(alpha: 0.3),
@@ -491,11 +491,11 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
             decoration: InputDecoration(
               hintText: '名目（例：ボーナス）',
               hintStyle: GoogleFonts.inter(
-                color: AppColors.textMuted.withValues(alpha: 0.5),
+                color: context.appTheme.textMuted.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.appTheme.bgCard,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
@@ -508,7 +508,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
+              color: context.appTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 10),
@@ -527,11 +527,11 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   decoration: InputDecoration(
                     hintText: '金額',
                     hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted.withValues(alpha: 0.5),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.5),
                       fontSize: 14,
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.appTheme.bgCard,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide.none,
@@ -544,7 +544,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
               ),
@@ -554,7 +554,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
+                  color: context.appTheme.textSecondary,
                 ),
               ),
             ],
@@ -577,7 +577,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.appTheme.bgCard,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
@@ -586,7 +586,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+                          color: context.appTheme.textSecondary,
                         ),
                       ),
                     ),
@@ -602,7 +602,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     decoration: BoxDecoration(
                       color: _isSubValid
                           ? AppColors.accentGreen
-                          : AppColors.textMuted.withValues(alpha: 0.3),
+                          : context.appTheme.textMuted.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
@@ -613,7 +613,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                           fontWeight: FontWeight.w600,
                           color: _isSubValid
                               ? Colors.white
-                              : AppColors.textMuted.withValues(alpha: 0.6),
+                              : context.appTheme.textMuted.withValues(alpha: 0.6),
                         ),
                       ),
                     ),

@@ -79,7 +79,7 @@ class _BurnRateCardState extends State<BurnRateCard>
     return GestureDetector(
       onTap: _handleTap,
       child: Container(
-        decoration: analyticsCardDecoration(),
+        decoration: analyticsCardDecoration(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -229,7 +229,7 @@ class _BurnRateCardState extends State<BurnRateCard>
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withValues(alpha: 0.7),
+                  color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -327,7 +327,7 @@ class _BurnRateCardState extends State<BurnRateCard>
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -349,7 +349,7 @@ class _BurnRateCardState extends State<BurnRateCard>
           Icon(
             icon,
             size: 32,
-            color: AppColors.textMuted.withValues(alpha: 0.4),
+            color: context.appTheme.textMuted.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 8),
           Text(
@@ -357,7 +357,7 @@ class _BurnRateCardState extends State<BurnRateCard>
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withValues(alpha: 0.8),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 2),
@@ -366,7 +366,7 @@ class _BurnRateCardState extends State<BurnRateCard>
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w400,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         ],

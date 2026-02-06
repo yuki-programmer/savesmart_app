@@ -49,7 +49,7 @@ class AnalyticsCardHeader extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withValues(alpha: 0.9),
+                    color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -58,25 +58,25 @@ class AnalyticsCardHeader extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textMuted.withValues(alpha: 0.7),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.7),
                   ),
                 ),
               ],
             ),
           ),
           // トレイリングアイコン
-          _buildTrailingIcon(),
+          _buildTrailingIcon(context),
         ],
       ),
     );
   }
 
-  Widget _buildTrailingIcon() {
+  Widget _buildTrailingIcon(BuildContext context) {
     if (isPremium) {
       return Icon(
         Icons.chevron_right,
         size: 20,
-        color: AppColors.textMuted.withValues(alpha: 0.5),
+        color: context.appTheme.textMuted.withValues(alpha: 0.5),
       );
     } else {
       return const PremiumLockBadge();
@@ -120,17 +120,14 @@ class PremiumLockBadge extends StatelessWidget {
 }
 
 /// アナリティクスカード用の共通コンテナデコレーション
-BoxDecoration analyticsCardDecoration() {
+BoxDecoration analyticsCardDecoration(BuildContext context) {
   return BoxDecoration(
-    color: Colors.white,
+    color: context.appTheme.bgCard,
     borderRadius: BorderRadius.circular(12),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.03),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ],
+    boxShadow: context.cardShadow(),
+    border: context.isWhiteBackground
+        ? Border.fromBorderSide(context.cardOutlineSide)
+        : null,
   );
 }
 
@@ -143,7 +140,7 @@ class AnalyticsCardDivider extends StatelessWidget {
     return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.textMuted.withValues(alpha: 0.15),
+      color: context.appTheme.textMuted.withValues(alpha: 0.15),
     );
   }
 }

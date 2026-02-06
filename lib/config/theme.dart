@@ -207,4 +207,30 @@ class AppTheme {
 extension BuildContextTheme on BuildContext {
   AppThemeColors get appTheme =>
       Theme.of(this).extension<AppThemeColors>()!;
+
+  bool get isWhiteBackground => appTheme.bgPrimary.value == Colors.white.value;
+
+  BorderSide get cardOutlineSide => BorderSide(
+        color: isWhiteBackground
+            ? appTheme.borderSubtle.withValues(alpha: 0.6)
+            : Colors.transparent,
+        width: 1,
+      );
+
+  List<BoxShadow> cardShadow({
+    double baseAlpha = 0.03,
+    double baseBlur = 8,
+    Offset baseOffset = const Offset(0, 2),
+  }) {
+    final adjustedAlpha = isWhiteBackground ? (baseAlpha + 0.03) : baseAlpha;
+    final adjustedBlur = isWhiteBackground ? (baseBlur + 2) : baseBlur;
+
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: adjustedAlpha),
+        blurRadius: adjustedBlur,
+        offset: baseOffset,
+      ),
+    ];
+  }
 }

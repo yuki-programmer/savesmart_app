@@ -66,9 +66,9 @@ class _SplitModalState extends State<SplitModal> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(22),
@@ -80,7 +80,7 @@ class _SplitModalState extends State<SplitModal> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textMuted.withValues(alpha: 0.25),
+              color: context.appTheme.textMuted.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -92,7 +92,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withValues(alpha: 0.9),
+              color: context.appTheme.textPrimary.withValues(alpha: 0.9),
               height: 1.3,
             ),
             textAlign: TextAlign.center,
@@ -103,7 +103,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary.withValues(alpha: 0.75),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -114,7 +114,7 @@ class _SplitModalState extends State<SplitModal> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
+              color: context.appTheme.bgPrimary,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -125,7 +125,7 @@ class _SplitModalState extends State<SplitModal> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary.withValues(alpha: 0.9),
+                    color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                     height: 1.4,
                   ),
                 ),
@@ -134,7 +134,7 @@ class _SplitModalState extends State<SplitModal> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withValues(alpha: 0.9),
+                    color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -148,7 +148,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withValues(alpha: 0.75),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -176,7 +176,7 @@ class _SplitModalState extends State<SplitModal> {
               fontSize: 12,
               color: _splitAmount > _maxSplitAmount
                   ? AppColors.accentRed
-                  : AppColors.textMuted,
+                  : context.appTheme.textMuted,
             ),
           ),
           const SizedBox(height: 16),
@@ -187,7 +187,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withValues(alpha: 0.75),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -195,7 +195,7 @@ class _SplitModalState extends State<SplitModal> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
+              color: context.appTheme.bgPrimary,
               borderRadius: BorderRadius.circular(10),
             ),
             child: DropdownButton<String>(
@@ -205,7 +205,7 @@ class _SplitModalState extends State<SplitModal> {
               hint: Text(
                 'カテゴリを選択',
                 style: GoogleFonts.inter(
-                  color: AppColors.textMuted,
+                  color: context.appTheme.textMuted,
                 ),
               ),
               items: _availableCategories.map((category) {
@@ -214,7 +214,7 @@ class _SplitModalState extends State<SplitModal> {
                   child: Text(
                     category,
                     style: GoogleFonts.inter(
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                   ),
                 );
@@ -240,7 +240,7 @@ class _SplitModalState extends State<SplitModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withValues(alpha: 0.75),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -266,7 +266,7 @@ class _SplitModalState extends State<SplitModal> {
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w400,
-                          color: AppColors.textPrimary.withValues(alpha: 0.85),
+                          color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                           height: 1.4,
                         ),
                       ),
@@ -275,7 +275,7 @@ class _SplitModalState extends State<SplitModal> {
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary.withValues(alpha: 0.9),
+                          color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -291,7 +291,7 @@ class _SplitModalState extends State<SplitModal> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: AppColors.textPrimary.withValues(alpha: 0.85),
+                              color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                               height: 1.4,
                             ),
                           ),
@@ -323,7 +323,7 @@ class _SplitModalState extends State<SplitModal> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: AppColors.bgPrimary,
+                      color: context.appTheme.bgPrimary,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -332,7 +332,7 @@ class _SplitModalState extends State<SplitModal> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary.withValues(alpha: 0.75),
+                          color: context.appTheme.textSecondary.withValues(alpha: 0.75),
                         ),
                       ),
                     ),
@@ -350,7 +350,7 @@ class _SplitModalState extends State<SplitModal> {
                     decoration: BoxDecoration(
                       color: _splitAmount > 0 && _splitAmount <= _maxSplitAmount && _targetCategory != null
                           ? AppColors.accentBlue.withValues(alpha: 0.9)
-                          : AppColors.textMuted.withValues(alpha: 0.25),
+                          : context.appTheme.textMuted.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -444,7 +444,7 @@ class _SplitModalState extends State<SplitModal> {
               ),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.15) : AppColors.bgPrimary,
+                color: isSelected ? color.withValues(alpha: 0.15) : context.appTheme.bgPrimary,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isSelected ? color : Colors.transparent,
@@ -457,7 +457,7 @@ class _SplitModalState extends State<SplitModal> {
                   Icon(
                     grade['icon'] as IconData,
                     size: 16,
-                    color: isSelected ? color : AppColors.textMuted,
+                    color: isSelected ? color : context.appTheme.textMuted,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -465,7 +465,7 @@ class _SplitModalState extends State<SplitModal> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? color : AppColors.textMuted,
+                      color: isSelected ? color : context.appTheme.textMuted,
                     ),
                   ),
                 ],

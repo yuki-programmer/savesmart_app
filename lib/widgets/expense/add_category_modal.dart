@@ -38,9 +38,9 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -53,7 +53,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: context.appTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 20),
@@ -63,10 +63,10 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
               decoration: InputDecoration(
                 hintText: 'カテゴリ名を入力',
                 hintStyle: GoogleFonts.inter(
-                  color: AppColors.textMuted,
+                  color: context.appTheme.textMuted,
                 ),
                 filled: true,
-                fillColor: AppColors.bgPrimary,
+                fillColor: context.appTheme.bgPrimary,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -84,7 +84,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
             const SizedBox(height: 12),
@@ -98,7 +98,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
-                        color: AppColors.bgPrimary,
+                        color: context.appTheme.bgPrimary,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
@@ -107,7 +107,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                            color: context.appTheme.textSecondary,
                           ),
                         ),
                       ),
@@ -179,7 +179,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.accentBlue.withValues(alpha: 0.1)
-                    : AppColors.bgPrimary,
+                    : context.appTheme.bgPrimary,
                 borderRadius: BorderRadius.circular(10),
                 border: isSelected
                     ? Border.all(color: AppColors.accentBlue, width: 2)
@@ -191,7 +191,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
                   size: 24,
                   color: isSelected
                       ? AppColors.accentBlue
-                      : AppColors.textSecondary,
+                      : context.appTheme.textSecondary,
                 ),
               ),
             ),

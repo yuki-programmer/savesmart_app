@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../config/home_constants.dart';
 import '../../config/theme.dart';
 import '../../utils/formatters.dart';
+import '../../services/app_state.dart';
 import '../night_reflection_dialog.dart';
+import 'daily_allowance_sparkline.dart';
 
 /// HeroCardの時間帯モード
 enum HeroCardTimeMode {
@@ -46,7 +49,7 @@ class _HeroCardState {
 }
 
 /// ホーム画面のヒーローカード（今日使えるお金）
-class HeroCard extends StatelessWidget {
+class HeroCard extends StatefulWidget {
   final int? fixedTodayAllowance;
   final int? dynamicTomorrowForecast;
   final int todayTotal;
@@ -67,22 +70,67 @@ class HeroCard extends StatelessWidget {
   });
 
   @override
+  State<HeroCard> createState() => _HeroCardWidgetState();
+}
+
+class _HeroCardWidgetState extends State<HeroCard> {
+  static const int _historyDaysForSparkline = 7;
+  List<Map<String, dynamic>> _historyData = [];
+  bool _isLoadingHistory = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _refreshHistoryIfNeeded();
+  }
+
+  void _refreshHistoryIfNeeded() {
+    if (_isLoadingHistory) return;
+    if (_historyData.length >= _historyDaysForSparkline) return;
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final appState = context.read<AppState>();
+    // Fetch 7 days: 6 for display + 1 for oldest point comparison
+    final history = await appState.getDailyAllowanceHistory(_historyDaysForSparkline);
+    if (mounted) {
+      setState(() {
+        _historyData = history;
+        _isLoadingHistory = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final state = _HeroCardState.fromDateTime(now, todayTotal > 0, hasOpenedReflection);
+    final state = _HeroCardState.fromDateTime(
+      now,
+      widget.todayTotal > 0,
+      widget.hasOpenedReflection,
+    );
 
     return GestureDetector(
-      onTap: state.canOpenReflection ? onTapReflection : null,
+      onTap: state.canOpenReflection ? widget.onTapReflection : null,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(HomeConstants.heroCardPadding),
-        decoration: _buildDecoration(state.timeMode),
+        decoration: _buildDecoration(context, state.timeMode),
         child: _buildContent(context, state),
       ),
     );
   }
 
-  BoxDecoration _buildDecoration(HeroCardTimeMode mode) {
+  BoxDecoration _buildDecoration(BuildContext context, HeroCardTimeMode mode) {
+    final showOutline = context.isWhiteBackground;
+
     switch (mode) {
       case HeroCardTimeMode.night:
         return BoxDecoration(
@@ -99,14 +147,16 @@ class HeroCard extends StatelessWidget {
             colors: HomeConstants.morningGradient,
           ),
           borderRadius: BorderRadius.circular(HomeConstants.heroCardRadius),
-          boxShadow: HomeConstants.cardShadow,
+          boxShadow: context.cardShadow(baseAlpha: 0.04, baseBlur: 10),
+          border: showOutline ? Border.all(color: context.cardOutlineSide.color) : null,
         );
 
       case HeroCardTimeMode.day:
         return BoxDecoration(
           color: HomeConstants.cardBackground,
           borderRadius: BorderRadius.circular(HomeConstants.heroCardRadius),
-          boxShadow: HomeConstants.cardShadow,
+          boxShadow: context.cardShadow(baseAlpha: 0.04, baseBlur: 10),
+          border: showOutline ? Border.all(color: context.cardOutlineSide.color) : null,
         );
     }
   }
@@ -115,22 +165,26 @@ class HeroCard extends StatelessWidget {
     switch (state.timeMode) {
       case HeroCardTimeMode.night:
         return _NightContent(
-          fixedTodayAllowance: fixedTodayAllowance,
-          dynamicTomorrowForecast: dynamicTomorrowForecast,
-          todayTotal: todayTotal,
-          remainingDays: remainingDays,
+          fixedTodayAllowance: widget.fixedTodayAllowance,
+          dynamicTomorrowForecast: widget.dynamicTomorrowForecast,
+          todayTotal: widget.todayTotal,
+          remainingDays: widget.remainingDays,
           canOpenReflection: state.canOpenReflection,
-          currencyFormat: currencyFormat,
+          currencyFormat: widget.currencyFormat,
+          historyData: _historyData,
+          isLoadingHistory: _isLoadingHistory,
         );
 
       case HeroCardTimeMode.morning:
       case HeroCardTimeMode.day:
         return _DayContent(
-          fixedTodayAllowance: fixedTodayAllowance,
-          dynamicTomorrowForecast: dynamicTomorrowForecast,
-          remainingDays: remainingDays,
+          fixedTodayAllowance: widget.fixedTodayAllowance,
+          dynamicTomorrowForecast: widget.dynamicTomorrowForecast,
+          remainingDays: widget.remainingDays,
           isMorningGlow: state.timeMode == HeroCardTimeMode.morning,
-          currencyFormat: currencyFormat,
+          currencyFormat: widget.currencyFormat,
+          historyData: _historyData,
+          isLoadingHistory: _isLoadingHistory,
         );
     }
   }
@@ -143,6 +197,8 @@ class _DayContent extends StatelessWidget {
   final int remainingDays;
   final bool isMorningGlow;
   final String currencyFormat;
+  final List<Map<String, dynamic>> historyData;
+  final bool isLoadingHistory;
 
   const _DayContent({
     required this.fixedTodayAllowance,
@@ -150,6 +206,8 @@ class _DayContent extends StatelessWidget {
     required this.remainingDays,
     required this.isMorningGlow,
     required this.currencyFormat,
+    required this.historyData,
+    required this.isLoadingHistory,
   });
 
   @override
@@ -211,6 +269,45 @@ class _DayContent extends StatelessWidget {
             color: HomeConstants.primaryText,
           ),
         ),
+        const SizedBox(height: 12),
+
+        // Sparkline（過去6日間のトレンド）
+        if (!isLoadingHistory && historyData.length >= 2) ...[
+          // タイトル + ヘルプ
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '過去６日間のリズム',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: () => _showRhythmHelpDialog(context),
+                child: Icon(
+                  Icons.help_outline,
+                  size: 14,
+                  color: Colors.grey[400],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: DailyAllowanceSparkline(
+              historyData: historyData,
+              lineColor: AppColors.accentBlue.withValues(alpha: 0.6),
+              height: 32,
+              currencyFormat: currencyFormat,
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
 
         // 明日の予測
@@ -267,6 +364,29 @@ class _DayContent extends StatelessWidget {
       ),
     );
   }
+
+  void _showRhythmHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '過去６日間のリズム',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        content: const Text(
+          '前日より「今日使えるお金」が増えた日を「控えめ」、減った日を「使った」と表示します。\n\n点をタップすると詳細が見られます。',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('わかった'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 夜Content（修正版：答えを残す）
@@ -277,6 +397,8 @@ class _NightContent extends StatelessWidget {
   final int remainingDays;
   final bool canOpenReflection;
   final String currencyFormat;
+  final List<Map<String, dynamic>> historyData;
+  final bool isLoadingHistory;
 
   const _NightContent({
     required this.fixedTodayAllowance,
@@ -285,6 +407,8 @@ class _NightContent extends StatelessWidget {
     required this.remainingDays,
     required this.canOpenReflection,
     required this.currencyFormat,
+    required this.historyData,
+    required this.isLoadingHistory,
   });
 
   @override
@@ -362,6 +486,44 @@ class _NightContent extends StatelessWidget {
                 height: 1.1,
               ),
             ),
+            // Sparkline（過去6日間のトレンド）
+            if (!isLoadingHistory && historyData.length >= 2) ...[
+              const SizedBox(height: 12),
+              // タイトル + ヘルプ
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '過去６日間のリズム',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: HomeConstants.nightPrimaryText.withValues(alpha: 0.6),
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => _showRhythmHelpDialog(context),
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 12,
+                      color: HomeConstants.nightPrimaryText.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: DailyAllowanceSparkline(
+                  historyData: historyData,
+                  lineColor: HomeConstants.nightPrimaryText.withValues(alpha: 0.4),
+                  height: 28,
+                  currencyFormat: currencyFormat,
+                ),
+              ),
+            ],
           ],
         ),
 
@@ -449,6 +611,29 @@ class _NightContent extends StatelessWidget {
         ),
         content: const Text(
           '残り使えるお金を残りの日数で割った金額です。\n\n毎朝計算され、1日の中では変わりません。',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('わかった'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRhythmHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '過去６日間のリズム',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        content: const Text(
+          '前日より「今日使えるお金」が増えた日を「控えめ」、減った日を「使った」と表示します。\n\n点をタップすると詳細が見られます。',
           style: TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [

@@ -83,7 +83,7 @@ class _ScheduledExpenseConfirmationDialogState
       case 'reward':
         return AppColors.accentOrange;
       default:
-        return AppColors.textSecondary;
+        return context.appTheme.textSecondary;
     }
   }
 
@@ -149,7 +149,7 @@ class _ScheduledExpenseConfirmationDialogState
     final remainingCount = _remainingExpenses.length;
 
     return Dialog(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -184,7 +184,7 @@ class _ScheduledExpenseConfirmationDialogState
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: context.appTheme.textPrimary,
                         ),
                       ),
                       if (remainingCount > 1)
@@ -192,7 +192,7 @@ class _ScheduledExpenseConfirmationDialogState
                           '残り$remainingCount件',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: context.appTheme.textSecondary,
                           ),
                         ),
                     ],
@@ -207,22 +207,22 @@ class _ScheduledExpenseConfirmationDialogState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.bgCard,
+                color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_today,
                     size: 16,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '予定日: ${_formatDate(expense.scheduledDate)}',
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: context.appTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -238,7 +238,7 @@ class _ScheduledExpenseConfirmationDialogState
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 36,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
             ),
@@ -254,7 +254,7 @@ class _ScheduledExpenseConfirmationDialogState
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.bgCard,
+                      color: context.appTheme.bgCard,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -262,7 +262,7 @@ class _ScheduledExpenseConfirmationDialogState
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                        color: context.appTheme.textPrimary,
                       ),
                     ),
                   ),
@@ -294,7 +294,7 @@ class _ScheduledExpenseConfirmationDialogState
                   expense.memo!,
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -311,7 +311,7 @@ class _ScheduledExpenseConfirmationDialogState
                     onPressed: _isProcessing ? null : _modifyAndConfirm,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: AppColors.borderSubtle),
+                      side: BorderSide(color: context.appTheme.borderSubtle),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -321,7 +321,7 @@ class _ScheduledExpenseConfirmationDialogState
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                        color: context.appTheme.textPrimary,
                       ),
                     ),
                   ),

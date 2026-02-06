@@ -44,7 +44,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
           style: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withValues(alpha: 0.9),
+            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
           ),
         ),
         const SizedBox(height: 4),
@@ -52,7 +52,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
           '支出タイプ別の推移が見えてきます',
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: AppColors.textMuted,
+            color: context.appTheme.textMuted,
           ),
         ),
         const SizedBox(height: 12),
@@ -63,8 +63,12 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
               return Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
+                  border: context.isWhiteBackground
+                      ? Border.fromBorderSide(context.cardOutlineSide)
+                      : null,
+                  boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
                 ),
                 child: const Center(
                   child: CircularProgressIndicator(strokeWidth: 2),
@@ -76,15 +80,19 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
               return Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
+                  border: context.isWhiteBackground
+                      ? Border.fromBorderSide(context.cardOutlineSide)
+                      : null,
+                  boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
                 ),
                 child: Center(
                   child: Text(
                     'データがありません',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.textMuted,
+                      color: context.appTheme.textMuted,
                     ),
                   ),
                 ),
@@ -97,15 +105,19 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
               return Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
+                  border: context.isWhiteBackground
+                      ? Border.fromBorderSide(context.cardOutlineSide)
+                      : null,
+                  boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
                 ),
                 child: Center(
                   child: Text(
                     'データがありません',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.textMuted,
+                      color: context.appTheme.textMuted,
                     ),
                   ),
                 ),
@@ -139,15 +151,12 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: context.cardShadow(baseAlpha: 0.02),
+        border: context.isWhiteBackground
+            ? Border.fromBorderSide(context.cardOutlineSide)
+            : null,
       ),
       child: Column(
         children: [
@@ -227,7 +236,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
                                         data[index]['monthLabel'] as String,
                                         style: GoogleFonts.inter(
                                           fontSize: 10,
-                                          color: AppColors.textMuted,
+                                          color: context.appTheme.textMuted,
                                         ),
                                       ),
                                     );
@@ -239,8 +248,8 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
                               show: true,
                               drawVerticalLine: false,
                               horizontalInterval: yAxisMax / 4,
-                              getDrawingHorizontalLine: (value) => const FlLine(
-                                color: AppColors.bgPrimary,
+                              getDrawingHorizontalLine: (value) => FlLine(
+                                color: context.appTheme.bgPrimary,
                                 strokeWidth: 1,
                               ),
                             ),
@@ -277,7 +286,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
                 _formatYAxisLabel(value.toInt()),
                 style: GoogleFonts.inter(
                   fontSize: 9,
-                  color: AppColors.textMuted,
+                  color: context.appTheme.textMuted,
                 ),
               ),
             );
@@ -354,7 +363,7 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
           label,
           style: GoogleFonts.inter(
             fontSize: 11,
-            color: AppColors.textMuted,
+            color: context.appTheme.textMuted,
           ),
         ),
       ],

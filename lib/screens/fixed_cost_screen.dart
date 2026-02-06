@@ -99,14 +99,14 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final categories = appState.fixedCostCategories;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.appTheme.bgCard,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
             Icons.close,
-            color: AppColors.textSecondary.withValues(alpha: 0.8),
+            color: context.appTheme.textSecondary.withValues(alpha: 0.8),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -115,7 +115,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary.withValues(alpha: 0.9),
+            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
           ),
         ),
         centerTitle: true,
@@ -129,7 +129,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 fontWeight: FontWeight.w600,
                 color: _canSave
                     ? AppColors.accentBlue
-                    : AppColors.textMuted.withValues(alpha: 0.4),
+                    : context.appTheme.textMuted.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -157,7 +157,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -184,7 +184,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       'タップして金額を入力',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: AppColors.textMuted,
+                        color: context.appTheme.textMuted,
                       ),
                     ),
                   ],
@@ -197,7 +197,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -213,13 +213,13 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     controller: _memoController,
                     style: GoogleFonts.inter(
                       fontSize: 16,
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: '任意',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 16,
-                        color: AppColors.textMuted.withValues(alpha: 0.5),
+                        color: context.appTheme.textMuted.withValues(alpha: 0.5),
                       ),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
@@ -241,7 +241,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -263,7 +263,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withValues(alpha: 0.8),
+                  color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                 ),
               ),
               GestureDetector(
@@ -309,7 +309,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.accentBlue.withValues(alpha: 0.1)
-              : AppColors.bgPrimary,
+              : context.appTheme.bgPrimary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
@@ -324,7 +324,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected
                 ? AppColors.accentBlue
-                : AppColors.textSecondary.withValues(alpha: 0.8),
+                : context.appTheme.textSecondary.withValues(alpha: 0.8),
           ),
         ),
       ),
@@ -343,12 +343,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.textMuted.withValues(alpha: 0.1)
-              : AppColors.bgPrimary,
+              ? context.appTheme.textMuted.withValues(alpha: 0.1)
+              : context.appTheme.bgPrimary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? AppColors.textMuted.withValues(alpha: 0.3)
+                ? context.appTheme.textMuted.withValues(alpha: 0.3)
                 : Colors.transparent,
           ),
         ),
@@ -358,8 +358,8 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected
-                ? AppColors.textSecondary
-                : AppColors.textMuted.withValues(alpha: 0.7),
+                ? context.appTheme.textSecondary
+                : context.appTheme.textMuted.withValues(alpha: 0.7),
           ),
         ),
       ),
@@ -378,7 +378,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                color: context.appTheme.textSecondary.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -406,7 +406,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.accentBlue.withValues(alpha: 0.1)
-                      : AppColors.bgPrimary,
+                      : context.appTheme.bgPrimary,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected
@@ -421,7 +421,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected
                         ? AppColors.accentBlue
-                        : AppColors.textSecondary.withValues(alpha: 0.8),
+                        : context.appTheme.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
               ),

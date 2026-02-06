@@ -32,7 +32,7 @@ class CategoryBudgetSection extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withValues(alpha: 0.85),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.85),
               ),
             ),
             GestureDetector(
@@ -65,19 +65,16 @@ class CategoryBudgetSection extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.appTheme.bgCard,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.015),
-                blurRadius: 6,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6, baseOffset: const Offset(0, 1)),
+            border: context.isWhiteBackground
+                ? Border.fromBorderSide(context.cardOutlineSide)
+                : null,
           ),
           child: budgetStatusList.isEmpty
               ? _buildEmptyState()
-              : _buildBudgetList(),
+              : _buildBudgetList(context),
         ),
       ],
     );
@@ -112,18 +109,18 @@ class CategoryBudgetSection extends StatelessWidget {
     );
   }
 
-  Widget _buildBudgetList() {
+  Widget _buildBudgetList(BuildContext context) {
     return Column(
       children: budgetStatusList.asMap().entries.map((entry) {
         final index = entry.key;
         final status = entry.value;
         final isLast = index == budgetStatusList.length - 1;
-        return _buildBudgetItem(status, isLast: isLast);
+        return _buildBudgetItem(context, status, isLast: isLast);
       }).toList(),
     );
   }
 
-  Widget _buildBudgetItem(Map<String, dynamic> status, {bool isLast = false}) {
+  Widget _buildBudgetItem(BuildContext context, Map<String, dynamic> status, {bool isLast = false}) {
     final budget = status['budget'] as CategoryBudget;
     final spent = status['spent'] as int;
     final rate = status['rate'] as double;
@@ -163,7 +160,7 @@ class CategoryBudgetSection extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
               Text(
@@ -172,7 +169,7 @@ class CategoryBudgetSection extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: barColor == AppColors.accentBlue
-                      ? AppColors.textSecondary
+                      ? context.appTheme.textSecondary
                       : barColor,
                 ),
               ),
@@ -200,7 +197,7 @@ class CategoryBudgetSection extends StatelessWidget {
                             height: 8,
                             width: maxWidth,
                             decoration: BoxDecoration(
-                              color: AppColors.borderSubtle,
+                              color: context.appTheme.borderSubtle,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -231,7 +228,7 @@ class CategoryBudgetSection extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: barColor == AppColors.accentBlue
-                        ? AppColors.textSecondary
+                        ? context.appTheme.textSecondary
                         : barColor,
                   ),
                 ),

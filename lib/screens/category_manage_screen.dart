@@ -11,18 +11,18 @@ class CategoryManageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.bgPrimary,
+        backgroundColor: context.appTheme.bgPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textSecondary.withValues(alpha: 0.8)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: context.appTheme.textSecondary.withValues(alpha: 0.8)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'カテゴリ管理',
           style: GoogleFonts.inter(
-            color: AppColors.textPrimary.withValues(alpha: 0.9),
+            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
             fontSize: 17,
           ),
@@ -54,7 +54,7 @@ class CategoryManageScreen extends StatelessWidget {
                   Icon(
                     Icons.category_outlined,
                     size: 56,
-                    color: AppColors.textMuted.withValues(alpha: 0.4),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 14),
                   Text(
@@ -62,7 +62,7 @@ class CategoryManageScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withValues(alpha: 0.7),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.7),
                       height: 1.4,
                     ),
                   ),
@@ -91,9 +91,9 @@ class CategoryManageScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderSubtle.withValues(alpha: 0.5)),
+        border: Border.all(color: context.appTheme.borderSubtle.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.015),
@@ -109,14 +109,14 @@ class CategoryManageScreen extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
+              color: context.appTheme.bgPrimary,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: Icon(
                 icon,
                 size: 20,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
           ),
@@ -127,7 +127,7 @@ class CategoryManageScreen extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary.withValues(alpha: 0.9),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                 height: 1.4,
               ),
             ),
@@ -198,7 +198,7 @@ class CategoryManageScreen extends StatelessWidget {
               : 'このカテゴリを削除しますか？',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
-            color: AppColors.textSecondary.withValues(alpha: 0.8),
+            color: context.appTheme.textSecondary.withValues(alpha: 0.8),
             fontSize: 14,
             height: 1.5,
           ),
@@ -209,7 +209,7 @@ class CategoryManageScreen extends StatelessWidget {
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary.withValues(alpha: 0.7),
+                color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -304,11 +304,11 @@ class _CategoryEditDialogState extends State<_CategoryEditDialog> {
               decoration: InputDecoration(
                 hintText: 'カテゴリ名を入力',
                 hintStyle: GoogleFonts.inter(
-                  color: AppColors.textMuted.withValues(alpha: 0.7),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.7),
                   fontSize: 14,
                 ),
                 filled: true,
-                fillColor: AppColors.bgPrimary,
+                fillColor: context.appTheme.bgPrimary,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -323,7 +323,7 @@ class _CategoryEditDialogState extends State<_CategoryEditDialog> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
             const SizedBox(height: 10),
@@ -338,7 +338,7 @@ class _CategoryEditDialogState extends State<_CategoryEditDialog> {
           child: Text(
             'キャンセル',
             style: GoogleFonts.inter(
-              color: AppColors.textSecondary.withValues(alpha: 0.7),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),
@@ -384,7 +384,7 @@ class _CategoryEditDialogState extends State<_CategoryEditDialog> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.accentBlue.withValues(alpha: 0.1)
-                    : AppColors.bgPrimary,
+                    : context.appTheme.bgPrimary,
                 borderRadius: BorderRadius.circular(8),
                 border: isSelected
                     ? Border.all(color: AppColors.accentBlue, width: 2)
@@ -396,7 +396,7 @@ class _CategoryEditDialogState extends State<_CategoryEditDialog> {
                   size: 20,
                   color: isSelected
                       ? AppColors.accentBlue
-                      : AppColors.textSecondary,
+                      : context.appTheme.textSecondary,
                 ),
               ),
             ),

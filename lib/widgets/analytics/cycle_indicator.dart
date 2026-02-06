@@ -54,7 +54,7 @@ class CycleIndicator extends StatelessWidget {
                   border: Border.all(
                     color: isSelected
                         ? accentColor
-                        : AppColors.textMuted.withValues(alpha: 0.3),
+                        : context.appTheme.textMuted.withValues(alpha: 0.3),
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
@@ -63,7 +63,7 @@ class CycleIndicator extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? accentColor : AppColors.textSecondary,
+                    color: isSelected ? accentColor : context.appTheme.textSecondary,
                   ),
                 ),
               ),

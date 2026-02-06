@@ -41,13 +41,13 @@ class _BurnRateDetailScreenState extends State<BurnRateDetailScreen> {
     final appState = context.watch<AppState>();
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.appTheme.bgCard,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, size: 20),
-          color: AppColors.textPrimary,
+          color: context.appTheme.textPrimary,
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -55,7 +55,7 @@ class _BurnRateDetailScreenState extends State<BurnRateDetailScreen> {
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -279,7 +279,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -300,7 +300,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
+                  color: context.appTheme.textSecondary,
                 ),
               ),
               const SizedBox(width: 16),
@@ -333,7 +333,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: isOverBudget ? AppColors.accentRed : AppColors.textPrimary,
+                    color: isOverBudget ? AppColors.accentRed : context.appTheme.textPrimary,
                   ),
                 ),
                 Text(
@@ -341,7 +341,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
                 Text(
@@ -349,7 +349,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
               ],
@@ -364,7 +364,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -384,7 +384,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: context.appTheme.textSecondary,
                 ),
               ),
               const Spacer(),
@@ -404,7 +404,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                     widget.cycleOffset == 0 ? '今サイクル' : 'このサイクル',
                     style: GoogleFonts.inter(
                       fontSize: 10,
-                      color: AppColors.textMuted,
+                      color: context.appTheme.textMuted,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -412,7 +412,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                     width: 12,
                     height: 2,
                     decoration: BoxDecoration(
-                      color: AppColors.textMuted.withValues(alpha: 0.5),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),
@@ -421,7 +421,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                     _prevRates != null ? '前サイクル' : '理想線',
                     style: GoogleFonts.inter(
                       fontSize: 10,
-                      color: AppColors.textMuted,
+                      color: context.appTheme.textMuted,
                     ),
                   ),
                 ],
@@ -448,7 +448,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -485,7 +485,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
-            color: highlight ? AppColors.textPrimary : AppColors.textSecondary,
+            color: highlight ? context.appTheme.textPrimary : context.appTheme.textSecondary,
           ),
         ),
         Text(
@@ -495,7 +495,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
             fontWeight: FontWeight.w600,
             color: isNegative
                 ? AppColors.accentRed
-                : (highlight ? AppColors.accentBlue : AppColors.textPrimary),
+                : (highlight ? AppColors.accentBlue : context.appTheme.textPrimary),
           ),
         ),
       ],
@@ -510,7 +510,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
           Icon(
             icon,
             size: 48,
-            color: AppColors.textMuted.withValues(alpha: 0.4),
+            color: context.appTheme.textMuted.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -519,7 +519,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         ],

@@ -146,7 +146,7 @@ class BurnRateChart extends StatelessWidget {
     return Column(
       children: [
         // 凡例
-        _buildLegend(comparisonType),
+        _buildLegend(context, comparisonType),
         const SizedBox(height: 8),
         // グラフ
         Container(
@@ -163,6 +163,7 @@ class BurnRateChart extends StatelessWidget {
               comparisonRates: comparisonRates,
               comparisonStartDay: comparisonStartDay,
               comparisonType: comparisonType,
+              textMutedColor: context.appTheme.textMuted,
             ),
           ),
         ),
@@ -170,12 +171,13 @@ class BurnRateChart extends StatelessWidget {
     );
   }
 
-  Widget _buildLegend(ComparisonLineType type) {
+  Widget _buildLegend(BuildContext context, ComparisonLineType type) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // 今サイクル
         _buildLegendItem(
+          context,
           color: AppColors.accentBlue,
           label: '今サイクル',
           isDashed: false,
@@ -183,7 +185,8 @@ class BurnRateChart extends StatelessWidget {
         const SizedBox(width: 16),
         // 比較線
         _buildLegendItem(
-          color: AppColors.textMuted.withValues(alpha: 0.5),
+          context,
+          color: context.appTheme.textMuted.withValues(alpha: 0.5),
           label: type == ComparisonLineType.previous ? '前サイクル' : '理想',
           isDashed: true,
         ),
@@ -191,7 +194,8 @@ class BurnRateChart extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem({
+  Widget _buildLegendItem(
+    BuildContext context, {
     required Color color,
     required String label,
     required bool isDashed,
@@ -216,7 +220,7 @@ class BurnRateChart extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w400,
-            color: AppColors.textMuted.withValues(alpha: 0.7),
+            color: context.appTheme.textMuted.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -296,6 +300,7 @@ class _BurnRateChartPainter extends CustomPainter {
   final List<double?> comparisonRates;
   final int comparisonStartDay;
   final ComparisonLineType comparisonType;
+  final Color textMutedColor;
 
   _BurnRateChartPainter({
     required this.dailyRates,
@@ -306,6 +311,7 @@ class _BurnRateChartPainter extends CustomPainter {
     required this.comparisonRates,
     required this.comparisonStartDay,
     required this.comparisonType,
+    required this.textMutedColor,
   });
 
   @override
@@ -350,7 +356,7 @@ class _BurnRateChartPainter extends CustomPainter {
   void _drawGrid(Canvas canvas, Size size, double chartLeft, double chartTop,
       double chartWidth, double chartHeight, double yMax) {
     final gridPaint = Paint()
-      ..color = AppColors.textMuted.withValues(alpha: 0.15)
+      ..color = textMutedColor.withValues(alpha: 0.15)
       ..strokeWidth = 1;
 
     // 横線（0%, 50%, 100%）
@@ -383,7 +389,7 @@ class _BurnRateChartPainter extends CustomPainter {
   void _drawAxisLabels(Canvas canvas, Size size, double chartLeft, double chartTop,
       double chartWidth, double chartHeight, double chartBottom, double yMax) {
     final textStyle = TextStyle(
-      color: AppColors.textMuted.withValues(alpha: 0.6),
+      color: textMutedColor.withValues(alpha: 0.6),
       fontSize: 10,
     );
 
@@ -441,7 +447,7 @@ class _BurnRateChartPainter extends CustomPainter {
     if (comparisonRates.isEmpty) return;
 
     final paint = Paint()
-      ..color = AppColors.textMuted.withValues(alpha: 0.5)
+      ..color = textMutedColor.withValues(alpha: 0.5)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -597,6 +603,7 @@ class _BurnRateChartPainter extends CustomPainter {
         oldDelegate.cycleStartDate != cycleStartDate ||
         oldDelegate.comparisonRates != comparisonRates ||
         oldDelegate.comparisonStartDay != comparisonStartDay ||
-        oldDelegate.comparisonType != comparisonType;
+        oldDelegate.comparisonType != comparisonType ||
+        oldDelegate.textMutedColor != textMutedColor;
   }
 }

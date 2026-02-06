@@ -23,9 +23,9 @@ void showAddBreakdownModal({
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.75,
         ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: context.appTheme.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: SafeArea(
           child: Padding(
@@ -47,7 +47,7 @@ void showAddBreakdownModal({
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            color: context.appTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -71,7 +71,7 @@ void showAddBreakdownModal({
                             'タップして金額を入力',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: AppColors.textMuted,
+                              color: context.appTheme.textMuted,
                             ),
                           ),
                         ),
@@ -83,14 +83,14 @@ void showAddBreakdownModal({
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: context.appTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: AppColors.bgPrimary,
+                            color: context.appTheme.bgPrimary,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: DropdownButton<Category>(
@@ -98,7 +98,7 @@ void showAddBreakdownModal({
                             hint: Text(
                               'カテゴリを選択',
                               style: GoogleFonts.inter(
-                                color: AppColors.textMuted,
+                                color: context.appTheme.textMuted,
                               ),
                             ),
                             isExpanded: true,
@@ -109,7 +109,7 @@ void showAddBreakdownModal({
                                 child: Text(
                                   category.name,
                                   style: GoogleFonts.inter(
-                                    color: AppColors.textPrimary,
+                                    color: context.appTheme.textPrimary,
                                   ),
                                 ),
                               );
@@ -129,7 +129,7 @@ void showAddBreakdownModal({
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: context.appTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -158,7 +158,7 @@ void showAddBreakdownModal({
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
-                              color: AppColors.bgPrimary,
+                              color: context.appTheme.bgPrimary,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
@@ -167,7 +167,7 @@ void showAddBreakdownModal({
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
+                                  color: context.appTheme.textSecondary,
                                 ),
                               ),
                             ),
@@ -263,7 +263,7 @@ class _BreakdownTypeSelector extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? type['color'] as Color : AppColors.bgPrimary,
+                color: isSelected ? type['color'] as Color : context.appTheme.bgPrimary,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color:
@@ -279,7 +279,7 @@ class _BreakdownTypeSelector extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: isSelected
                         ? type['textColor'] as Color
-                        : AppColors.textMuted,
+                        : context.appTheme.textMuted,
                   ),
                 ),
               ),

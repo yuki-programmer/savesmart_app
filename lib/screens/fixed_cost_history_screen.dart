@@ -21,7 +21,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
       builder: (context, data, child) {
         final (isLoading, fixedCosts) = data;
         return Scaffold(
-          backgroundColor: AppColors.bgPrimary,
+          backgroundColor: context.appTheme.bgPrimary,
           body: SafeArea(
             child: Column(
               children: [
@@ -50,7 +50,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
@@ -63,7 +63,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
               child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 18,
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                color: context.appTheme.textSecondary.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -74,7 +74,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary.withValues(alpha: 0.9),
+                color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                 height: 1.3,
               ),
             ),
@@ -93,7 +93,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
             Icon(
               Icons.receipt_long_outlined,
               size: 56,
-              color: AppColors.textMuted.withValues(alpha: 0.4),
+              color: context.appTheme.textMuted.withValues(alpha: 0.4),
             ),
             const SizedBox(height: 14),
             Text(
@@ -101,7 +101,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textMuted.withValues(alpha: 0.7),
+                color: context.appTheme.textMuted.withValues(alpha: 0.7),
                 height: 1.4,
               ),
             ),
@@ -121,7 +121,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
           margin: const EdgeInsets.only(bottom: 20),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.appTheme.bgCard,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -139,7 +139,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary.withValues(alpha: 0.8),
+                  color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                 ),
               ),
               Text(
@@ -147,7 +147,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary.withValues(alpha: 0.9),
+                  color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                 ),
               ),
             ],
@@ -163,9 +163,9 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle.withValues(alpha: 0.5)),
+        border: Border.all(color: context.appTheme.borderSubtle.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.015),
@@ -190,7 +190,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary.withValues(alpha: 0.9),
+                          color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                           height: 1.4,
                         ),
                       ),
@@ -201,7 +201,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textMuted.withValues(alpha: 0.75),
+                            color: context.appTheme.textMuted.withValues(alpha: 0.75),
                             height: 1.4,
                           ),
                         ),
@@ -214,7 +214,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withValues(alpha: 0.9),
+                    color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -224,7 +224,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
           Container(
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.5)),
+                top: BorderSide(color: context.appTheme.borderSubtle.withValues(alpha: 0.5)),
               ),
             ),
             child: Row(
@@ -266,7 +266,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
             border: isLast
                 ? null
                 : Border(
-                    right: BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.5)),
+                    right: BorderSide(color: context.appTheme.borderSubtle.withValues(alpha: 0.5)),
                   ),
           ),
           child: Row(
@@ -297,9 +297,9 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        decoration: BoxDecoration(
+          color: context.appTheme.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -317,7 +317,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.textMuted.withValues(alpha: 0.3),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -328,7 +328,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -336,7 +336,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                   fixedCost.name,
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -353,11 +353,11 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                     prefixStyle: GoogleFonts.ibmPlexSans(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.borderSubtle),
+                      borderSide: BorderSide(color: context.appTheme.borderSubtle),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -374,7 +374,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                         child: Text(
                           'キャンセル',
                           style: GoogleFonts.inter(
-                            color: AppColors.textSecondary,
+                            color: context.appTheme.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -456,7 +456,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
           ),
@@ -471,7 +471,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
                     success ? '削除しました' : '削除に失敗しました',
                     style: GoogleFonts.inter(),
                   ),
-                  backgroundColor: success ? AppColors.accentRed : AppColors.textSecondary,
+                  backgroundColor: success ? AppColors.accentRed : context.appTheme.textSecondary,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),

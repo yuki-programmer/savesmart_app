@@ -23,15 +23,12 @@ class CyclePeriodHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: context.cardShadow(baseAlpha: 0.02, baseBlur: 6),
+        border: context.isWhiteBackground
+            ? Border.fromBorderSide(context.cardOutlineSide)
+            : null,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -39,7 +36,7 @@ class CyclePeriodHeader extends StatelessWidget {
           Icon(
             Icons.calendar_today_outlined,
             size: 16,
-            color: AppColors.textSecondary.withValues(alpha: 0.7),
+            color: context.appTheme.textSecondary.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 8),
           Text(
@@ -47,7 +44,7 @@ class CyclePeriodHeader extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: context.appTheme.textSecondary,
             ),
           ),
           if (badgeText != null) ...[

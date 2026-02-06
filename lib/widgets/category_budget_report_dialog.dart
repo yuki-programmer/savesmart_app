@@ -76,7 +76,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(maxWidth: 400),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -92,14 +92,14 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 達成状況
-                        _buildResultsSection(),
+                        _buildResultsSection(context),
                         if (continuingBudgets.isNotEmpty) ...[
                           const SizedBox(height: 24),
-                          _buildContinuingSection(),
+                          _buildContinuingSection(context),
                         ],
                         if (endingBudgets.isNotEmpty) ...[
                           const SizedBox(height: 24),
-                          _buildEndingSection(),
+                          _buildEndingSection(context),
                         ],
                         const SizedBox(height: 24),
                         // アクションボタン
@@ -119,9 +119,9 @@ class CategoryBudgetReportDialog extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 12, 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.borderSubtle),
+          bottom: BorderSide(color: context.appTheme.borderSubtle),
         ),
       ),
       child: Row(
@@ -149,7 +149,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -157,7 +157,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                   '達成状況のまとめ',
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
               ],
@@ -168,9 +168,9 @@ class CategoryBudgetReportDialog extends StatelessWidget {
               Navigator.of(context).pop();
               onClose();
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.close,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
               size: 22,
             ),
           ),
@@ -179,17 +179,17 @@ class CategoryBudgetReportDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildResultsSection() {
+  Widget _buildResultsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
-        ...budgetResults.map((result) => _buildResultItem(result)),
+        ...budgetResults.map((result) => _buildResultItem(context, result)),
       ],
     );
   }
 
-  Widget _buildResultItem(Map<String, dynamic> result) {
+  Widget _buildResultItem(BuildContext context, Map<String, dynamic> result) {
     final budget = result['budget'] as CategoryBudget;
     final spent = result['spent'] as int;
     final rate = result['rate'] as double;
@@ -215,7 +215,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
               Text(
@@ -225,7 +225,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                   color: isOverBudget
                       ? AppColors.accentRed
-                      : AppColors.textSecondary,
+                      : context.appTheme.textSecondary,
                 ),
               ),
             ],
@@ -248,7 +248,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                             height: 6,
                             width: maxWidth,
                             decoration: BoxDecoration(
-                              color: AppColors.borderSubtle,
+                              color: context.appTheme.borderSubtle,
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
@@ -277,7 +277,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: isOverBudget
                         ? AppColors.accentRed
-                        : AppColors.textSecondary,
+                        : context.appTheme.textSecondary,
                   ),
                 ),
               ),
@@ -288,7 +288,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildContinuingSection() {
+  Widget _buildContinuingSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -317,7 +317,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                 '• ${budget.categoryName}（${formatCurrency(budget.budgetAmount, currencyFormat)}）',
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: context.appTheme.textSecondary,
                 ),
               ),
             )),
@@ -325,16 +325,16 @@ class CategoryBudgetReportDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildEndingSection() {
+  Widget _buildEndingSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle_outline,
               size: 16,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
             const SizedBox(width: 6),
             Text(
@@ -342,7 +342,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
+                color: context.appTheme.textMuted,
               ),
             ),
           ],
@@ -354,7 +354,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
                 '• ${budget.categoryName}',
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: AppColors.textMuted,
+                  color: context.appTheme.textMuted,
                 ),
               ),
             )),

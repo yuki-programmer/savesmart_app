@@ -34,9 +34,9 @@ class _EditAmountModalState extends State<EditAmountModal> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -46,7 +46,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textMuted.withValues(alpha: 0.25),
+              color: context.appTheme.textMuted.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -58,7 +58,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             style: GoogleFonts.inter(
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withValues(alpha: 0.9),
+              color: context.appTheme.textPrimary.withValues(alpha: 0.9),
               height: 1.3,
             ),
             textAlign: TextAlign.center,
@@ -69,7 +69,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary.withValues(alpha: 0.75),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -80,7 +80,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
+              color: context.appTheme.bgPrimary,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -91,7 +91,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withValues(alpha: 0.75),
+                    color: context.appTheme.textSecondary.withValues(alpha: 0.75),
                     height: 1.4,
                   ),
                 ),
@@ -100,7 +100,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textMuted.withValues(alpha: 0.8),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -114,7 +114,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary.withValues(alpha: 0.75),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
               height: 1.4,
             ),
           ),
@@ -147,7 +147,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
             'タップして金額を入力',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
           const SizedBox(height: 24),
@@ -199,7 +199,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: AppColors.bgPrimary,
+                      color: context.appTheme.bgPrimary,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -208,7 +208,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary.withValues(alpha: 0.75),
+                          color: context.appTheme.textSecondary.withValues(alpha: 0.75),
                         ),
                       ),
                     ),
@@ -226,7 +226,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
                     decoration: BoxDecoration(
                       color: _newAmount > 0 && _newAmount != widget.expense.amount
                           ? AppColors.accentOrange.withValues(alpha: 0.9)
-                          : AppColors.textMuted.withValues(alpha: 0.25),
+                          : context.appTheme.textMuted.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(

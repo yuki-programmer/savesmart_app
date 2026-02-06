@@ -50,9 +50,9 @@ class _CategoryPaceSheetContent extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: SafeArea(
         child: Column(
@@ -65,7 +65,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.25),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -80,7 +80,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary.withValues(alpha: 0.9),
+                      color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                       height: 1.3,
                     ),
                   ),
@@ -90,7 +90,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                      color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -104,6 +104,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                   children: [
                     ...items.map((item) {
                       return _buildPaceItem(
+                        context,
                         label: item['label'] as String,
                         dailyPace: item['dailyPace'] as int,
                         weeklyPace: item['weeklyPace'] as int,
@@ -112,6 +113,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     }),
                     // 全体
                     _buildPaceItem(
+                      context,
                       label: '全体',
                       dailyPace: totalDailyPace,
                       weeklyPace: totalWeeklyPace,
@@ -127,7 +129,8 @@ class _CategoryPaceSheetContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPaceItem({
+  Widget _buildPaceItem(
+    BuildContext context, {
     required String label,
     required int dailyPace,
     required int weeklyPace,
@@ -139,7 +142,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: isTotal
             ? AppColors.accentBlue.withValues(alpha: 0.06)
-            : AppColors.bgPrimary.withValues(alpha: 0.7),
+            : context.appTheme.bgPrimary.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -153,7 +156,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
               color: isTotal
                   ? AppColors.accentBlue
-                  : AppColors.textPrimary.withValues(alpha: 0.9),
+                  : context.appTheme.textPrimary.withValues(alpha: 0.9),
               height: 1.4,
             ),
           ),
@@ -170,7 +173,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary.withValues(alpha: 0.7),
+                        color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(width: 2),
@@ -181,7 +184,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: isTotal
                             ? AppColors.accentBlue
-                            : AppColors.textPrimary.withValues(alpha: 0.9),
+                            : context.appTheme.textPrimary.withValues(alpha: 0.9),
                       ),
                     ),
                     Text(
@@ -189,7 +192,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                        color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -203,7 +206,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withValues(alpha: 0.6),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(width: 2),
@@ -214,7 +217,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: isTotal
                           ? AppColors.accentBlue.withValues(alpha: 0.8)
-                          : AppColors.textSecondary.withValues(alpha: 0.8),
+                          : context.appTheme.textSecondary.withValues(alpha: 0.8),
                     ),
                   ),
                   Text(
@@ -222,7 +225,7 @@ class _CategoryPaceSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textMuted.withValues(alpha: 0.6),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

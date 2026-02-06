@@ -16,22 +16,24 @@ class BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 72,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
         border: Border(
-          top: BorderSide(color: AppColors.borderSubtle),
+          top: BorderSide(color: context.appTheme.borderSubtle),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(
+            context,
             icon: Icons.home_rounded,
             label: 'ホーム',
             index: 0,
           ),
-          _buildAddButton(),
+          _buildAddButton(context),
           _buildNavItem(
+            context,
             icon: Icons.bar_chart_rounded,
             label: '分析',
             index: 2,
@@ -41,13 +43,14 @@ class BottomNav extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem({
+  Widget _buildNavItem(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required int index,
   }) {
     final isActive = currentIndex == index;
-    final color = isActive ? AppColors.accentBlue : AppColors.textMuted;
+    final color = isActive ? AppColors.accentBlue : context.appTheme.textMuted;
 
     return GestureDetector(
       onTap: () => onTap(index),
@@ -73,9 +76,9 @@ class BottomNav extends StatelessWidget {
     );
   }
 
-  Widget _buildAddButton() {
+  Widget _buildAddButton(BuildContext context) {
     final isActive = currentIndex == 1;
-    final color = isActive ? AppColors.accentBlue : AppColors.textMuted;
+    final color = isActive ? AppColors.accentBlue : context.appTheme.textMuted;
 
     return GestureDetector(
       onTap: () => onTap(1),

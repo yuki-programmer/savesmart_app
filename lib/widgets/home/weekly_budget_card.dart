@@ -36,15 +36,15 @@ class WeeklyBudgetCard extends StatelessWidget {
 
     // 予算オーバー時
     if (isOverBudget) {
-      return _buildOverBudgetCard();
+      return _buildOverBudgetCard(context);
     }
 
     // 通常表示
-    return _buildNormalCard();
+    return _buildNormalCard(context);
   }
 
   /// 通常カード
-  Widget _buildNormalCard() {
+  Widget _buildNormalCard(BuildContext context) {
     final title = isWeekMode ? '今週あと使える' : '給料日まであと使える';
     final subText = isWeekMode
         ? 'あと$daysRemaining日（〜日曜）'
@@ -53,15 +53,12 @@ class WeeklyBudgetCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: context.cardShadow(),
+        border: context.isWhiteBackground
+            ? Border.fromBorderSide(context.cardOutlineSide)
+            : null,
       ),
       child: Row(
         children: [
@@ -91,7 +88,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -99,7 +96,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                   subText,
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: AppColors.textMuted.withValues(alpha: 0.7),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -114,7 +111,7 @@ class WeeklyBudgetCard extends StatelessWidget {
             style: GoogleFonts.ibmPlexSans(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary.withValues(alpha: 0.9),
+              color: context.appTheme.textPrimary.withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -123,7 +120,7 @@ class WeeklyBudgetCard extends StatelessWidget {
   }
 
   /// 予算オーバー時のカード
-  Widget _buildOverBudgetCard() {
+  Widget _buildOverBudgetCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -170,7 +167,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                   '支出を見直そう',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -188,15 +185,12 @@ class WeeklyBudgetCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: context.cardShadow(),
+          border: context.isWhiteBackground
+              ? Border.fromBorderSide(context.cardOutlineSide)
+              : null,
         ),
         child: Row(
           children: [
@@ -205,13 +199,13 @@ class WeeklyBudgetCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.textMuted.withValues(alpha: 0.1),
+                color: context.appTheme.textMuted.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.date_range_outlined,
                 size: 20,
-                color: AppColors.textMuted.withValues(alpha: 0.5),
+                color: context.appTheme.textMuted.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(width: 14),
@@ -226,7 +220,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textMuted.withValues(alpha: 0.7),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -235,7 +229,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted.withValues(alpha: 0.5),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -243,7 +237,7 @@ class WeeklyBudgetCard extends StatelessWidget {
             ),
 
             // Plus バッジ
-            _buildPlusBadge(),
+            _buildPlusBadge(context),
           ],
         ),
       ),
@@ -251,7 +245,7 @@ class WeeklyBudgetCard extends StatelessWidget {
   }
 
   /// Plus バッジ
-  Widget _buildPlusBadge() {
+  Widget _buildPlusBadge(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -264,7 +258,7 @@ class WeeklyBudgetCard extends StatelessWidget {
           Icon(
             Icons.lock_outline,
             size: 12,
-            color: AppColors.textMuted.withValues(alpha: 0.7),
+            color: context.appTheme.textMuted.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 4),
           Text(
@@ -272,7 +266,7 @@ class WeeklyBudgetCard extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted.withValues(alpha: 0.7),
+              color: context.appTheme.textMuted.withValues(alpha: 0.7),
             ),
           ),
         ],

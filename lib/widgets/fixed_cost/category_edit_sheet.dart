@@ -27,9 +27,9 @@ class _FixedCostCategoryEditSheetState
     final categories = appState.fixedCostCategories;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: SafeArea(
         child: Column(
@@ -41,7 +41,7 @@ class _FixedCostCategoryEditSheetState
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.textMuted.withValues(alpha: 0.3),
+                color: context.appTheme.textMuted.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -57,7 +57,7 @@ class _FixedCostCategoryEditSheetState
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                   ),
                   GestureDetector(
@@ -65,7 +65,7 @@ class _FixedCostCategoryEditSheetState
                     child: Icon(
                       Icons.close,
                       size: 22,
-                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                      color: context.appTheme.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -143,7 +143,7 @@ class _FixedCostCategoryEditSheetState
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+                color: context.appTheme.textPrimary,
               ),
             ),
           ),
@@ -153,7 +153,7 @@ class _FixedCostCategoryEditSheetState
             icon: Icon(
               Icons.edit_outlined,
               size: 20,
-              color: AppColors.textSecondary.withValues(alpha: 0.6),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.6),
             ),
             constraints: const BoxConstraints(),
             padding: const EdgeInsets.all(8),
@@ -165,7 +165,7 @@ class _FixedCostCategoryEditSheetState
             icon: Icon(
               Icons.delete_outline,
               size: 20,
-              color: AppColors.textSecondary.withValues(alpha: 0.6),
+              color: context.appTheme.textSecondary.withValues(alpha: 0.6),
             ),
             constraints: const BoxConstraints(),
             padding: const EdgeInsets.all(8),
@@ -193,7 +193,7 @@ class _FixedCostCategoryEditSheetState
           decoration: InputDecoration(
             hintText: 'カテゴリ名',
             hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withValues(alpha: 0.5),
+              color: context.appTheme.textMuted.withValues(alpha: 0.5),
             ),
           ),
           style: GoogleFonts.inter(fontSize: 16),
@@ -204,7 +204,7 @@ class _FixedCostCategoryEditSheetState
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
           ),
@@ -251,7 +251,7 @@ class _FixedCostCategoryEditSheetState
           decoration: InputDecoration(
             hintText: 'カテゴリ名',
             hintStyle: GoogleFonts.inter(
-              color: AppColors.textMuted.withValues(alpha: 0.5),
+              color: context.appTheme.textMuted.withValues(alpha: 0.5),
             ),
           ),
           style: GoogleFonts.inter(fontSize: 16),
@@ -262,7 +262,7 @@ class _FixedCostCategoryEditSheetState
             child: Text(
               'キャンセル',
               style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
           ),
@@ -301,7 +301,7 @@ class _FixedCostCategoryEditSheetState
             'この固定費カテゴリは使用中のため削除できません',
             style: GoogleFonts.inter(fontSize: 14),
           ),
-          backgroundColor: AppColors.textSecondary,
+          backgroundColor: context.appTheme.textSecondary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),

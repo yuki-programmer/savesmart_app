@@ -79,7 +79,7 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
     return GestureDetector(
       onTap: _handleTap,
       child: Container(
-        decoration: analyticsCardDecoration(),
+        decoration: analyticsCardDecoration(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -218,7 +218,7 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary.withValues(alpha: 0.85),
+                            color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                           ),
                         ),
                       ),
@@ -230,7 +230,7 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                            color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                           ),
                         ),
                       ),
@@ -311,7 +311,7 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
                             child: Container(
                               height: 12,
                               decoration: BoxDecoration(
-                                color: AppColors.textMuted.withValues(alpha: 0.15),
+                                color: context.appTheme.textMuted.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -325,7 +325,7 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted.withValues(alpha: 0.4),
+                                color: context.appTheme.textMuted.withValues(alpha: 0.4),
                               ),
                             ),
                           ),
@@ -351,7 +351,7 @@ class _CategoryBreakdownCardState extends State<CategoryBreakdownCard>
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w400,
-            color: AppColors.textMuted.withValues(alpha: 0.7),
+            color: context.appTheme.textMuted.withValues(alpha: 0.7),
           ),
         ),
       ),

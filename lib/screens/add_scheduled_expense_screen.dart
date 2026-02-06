@@ -111,11 +111,11 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
               primary: AppColors.accentBlue,
               onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
+              surface: context.appTheme.bgCard,
+              onSurface: context.appTheme.textPrimary,
             ),
           ),
           child: child!,
@@ -196,12 +196,12 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
     final currencyFormat = appState.currencyFormat;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.bgPrimary,
+        backgroundColor: context.appTheme.bgPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
+          icon: Icon(Icons.close, color: context.appTheme.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -211,7 +211,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -278,7 +278,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: AppColors.textSecondary,
+        color: context.appTheme.textSecondary,
       ),
     );
   }
@@ -293,12 +293,12 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isReadOnly
-              ? AppColors.textMuted.withValues(alpha: 0.08)
+              ? context.appTheme.textMuted.withValues(alpha: 0.08)
               : AppColors.accentBlue.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isReadOnly
-                ? AppColors.textMuted.withValues(alpha: 0.2)
+                ? context.appTheme.textMuted.withValues(alpha: 0.2)
                 : AppColors.accentBlue.withValues(alpha: 0.2),
           ),
         ),
@@ -309,14 +309,14 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
               height: 44,
               decoration: BoxDecoration(
                 color: isReadOnly
-                    ? AppColors.textMuted.withValues(alpha: 0.15)
+                    ? context.appTheme.textMuted.withValues(alpha: 0.15)
                     : AppColors.accentBlue.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.calendar_today,
                 size: 22,
-                color: isReadOnly ? AppColors.textMuted : AppColors.accentBlue,
+                color: isReadOnly ? context.appTheme.textMuted : AppColors.accentBlue,
               ),
             ),
             const SizedBox(width: 14),
@@ -328,7 +328,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
                     '予定日',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: context.appTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -338,17 +338,17 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: isReadOnly
-                          ? AppColors.textSecondary
-                          : AppColors.textPrimary,
+                          ? context.appTheme.textSecondary
+                          : context.appTheme.textPrimary,
                     ),
                   ),
                 ],
               ),
             ),
             if (!isReadOnly)
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
           ],
         ),
@@ -383,12 +383,12 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
             decoration: BoxDecoration(
               color: isSelected
                   ? (_selectedGradeData['lightColor'] as Color)
-                  : Colors.white,
+                  : context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
                     ? (_selectedGradeData['color'] as Color)
-                    : AppColors.borderSubtle,
+                    : context.appTheme.borderSubtle,
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -400,7 +400,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
                   size: 24,
                   color: isSelected
                       ? (_selectedGradeData['color'] as Color)
-                      : AppColors.textSecondary,
+                      : context.appTheme.textSecondary,
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -410,7 +410,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected
                         ? (_selectedGradeData['color'] as Color)
-                        : AppColors.textSecondary,
+                        : context.appTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -428,9 +428,9 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: context.appTheme.borderSubtle),
       ),
       child: Column(
         children: [
@@ -450,7 +450,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
             'タップして金額を入力',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         ],
@@ -477,12 +477,12 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   color:
-                      isSelected ? grade['lightColor'] as Color : Colors.white,
+                      isSelected ? grade['lightColor'] as Color : context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
                         ? grade['color'] as Color
-                        : AppColors.borderSubtle,
+                        : context.appTheme.borderSubtle,
                     width: isSelected ? 2 : 1,
                   ),
                 ),
@@ -493,7 +493,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
                       size: 24,
                       color: isSelected
                           ? grade['color'] as Color
-                          : AppColors.textSecondary,
+                          : context.appTheme.textSecondary,
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -504,7 +504,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
                             isSelected ? FontWeight.w600 : FontWeight.w500,
                         color: isSelected
                             ? grade['color'] as Color
-                            : AppColors.textSecondary,
+                            : context.appTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -520,9 +520,9 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
   Widget _buildMemoInput() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: context.appTheme.borderSubtle),
       ),
       child: TextField(
         controller: _memoController,
@@ -531,14 +531,14 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
           hintText: '例：飲み会、旅行代など',
           hintStyle: GoogleFonts.inter(
             fontSize: 14,
-            color: AppColors.textMuted,
+            color: context.appTheme.textMuted,
           ),
           contentPadding: const EdgeInsets.all(14),
           border: InputBorder.none,
         ),
         style: GoogleFonts.inter(
           fontSize: 14,
-          color: AppColors.textPrimary,
+          color: context.appTheme.textPrimary,
         ),
       ),
     );
@@ -548,7 +548,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -567,7 +567,7 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
             decoration: BoxDecoration(
               color: _canSubmit
                   ? (_selectedGradeData['color'] as Color)
-                  : AppColors.textMuted,
+                  : context.appTheme.textMuted,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(

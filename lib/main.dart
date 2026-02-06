@@ -5,11 +5,9 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'config/theme.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_screen.dart';
@@ -71,30 +69,27 @@ class SaveSmartApp extends StatelessWidget {
         ..loadMainSalaryDay() // 給料日設定を先にロード
         ..loadDefaultExpenseGrade() // デフォルト支出タイプを先にロード
         ..loadCurrencyFormat() // 通貨表示形式を先にロード
+        ..loadThemeSettings() // テーマ設定を先にロード
         ..loadData()
         ..loadEntitlement()
         ..loadMonthlyAvailableAmount(),
-      child: MaterialApp(
-        title: 'SaveSmart',
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('ja', 'JP'),
-          Locale('en', 'US'),
-        ],
-        locale: const Locale('ja', 'JP'),
-        theme: ThemeData(
-          scaffoldBackgroundColor: AppColors.bgPrimary,
-          textTheme: GoogleFonts.interTextTheme(),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColors.accentGreen,
-          ),
+      child: Consumer<AppState>(
+        builder: (context, appState, child) => MaterialApp(
+          title: 'SaveSmart',
+          debugShowCheckedModeBanner: false,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('ja', 'JP'),
+            Locale('en', 'US'),
+          ],
+          locale: const Locale('ja', 'JP'),
+          theme: appState.currentTheme,
+          home: const MainScreen(),
         ),
-        home: const MainScreen(),
       ),
     );
   }

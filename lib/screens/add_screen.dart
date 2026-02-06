@@ -129,11 +129,11 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
               primary: AppColors.accentBlue,
               onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
+              surface: context.appTheme.bgCard,
+              onSurface: context.appTheme.textPrimary,
             ),
           ),
           child: child!,
@@ -175,7 +175,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       body: SafeArea(
         child: Column(
           children: [
@@ -253,12 +253,12 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
         decoration: BoxDecoration(
           color: isPremium
               ? AppColors.accentBlue.withValues(alpha: 0.08)
-              : AppColors.bgCard,
+              : context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isPremium
                 ? AppColors.accentBlue.withValues(alpha: 0.2)
-                : AppColors.borderSubtle,
+                : context.appTheme.borderSubtle,
           ),
         ),
         child: Row(
@@ -266,7 +266,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             Icon(
               Icons.event_note_outlined,
               size: 20,
-              color: isPremium ? AppColors.accentBlue : AppColors.textSecondary,
+              color: isPremium ? AppColors.accentBlue : context.appTheme.textSecondary,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -275,7 +275,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: isPremium ? AppColors.accentBlue : AppColors.textSecondary,
+                  color: isPremium ? AppColors.accentBlue : context.appTheme.textSecondary,
                 ),
               ),
             ),
@@ -299,7 +299,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: isPremium ? AppColors.accentBlue : AppColors.textMuted,
+              color: isPremium ? AppColors.accentBlue : context.appTheme.textMuted,
             ),
           ],
         ),
@@ -317,7 +317,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
       ),
@@ -340,7 +340,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appTheme.textPrimary,
               ),
             ),
             GestureDetector(
@@ -388,7 +388,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? _selectedGradeData['lightColor'] as Color
-                      : Colors.white,
+                      : context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
@@ -415,7 +415,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       size: 16,
                       color: isSelected
                           ? _selectedGradeData['color'] as Color
-                          : AppColors.textMuted,
+                          : context.appTheme.textMuted,
                     ),
                     const SizedBox(width: 6),
                     Text(
@@ -425,7 +425,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                         color: isSelected
                             ? _selectedGradeData['color'] as Color
-                            : AppColors.textSecondary,
+                            : context.appTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -476,7 +476,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.appTheme.textSecondary,
               ),
             ),
           ],
@@ -514,7 +514,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: context.appTheme.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -565,7 +565,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
           'タップして金額を入力',
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: AppColors.textMuted,
+            color: context.appTheme.textMuted,
           ),
         ),
       ],
@@ -582,7 +582,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
           style: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -607,7 +607,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: isSelected ? lightColor : Colors.white,
+                    color: isSelected ? lightColor : context.appTheme.bgCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected ? color : Colors.black.withValues(alpha: 0.06),
@@ -628,7 +628,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       Icon(
                         grade['icon'] as IconData,
                         size: 22,
-                        color: isSelected ? color : AppColors.textMuted,
+                        color: isSelected ? color : context.appTheme.textMuted,
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -636,7 +636,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? color : AppColors.textSecondary,
+                          color: isSelected ? color : context.appTheme.textSecondary,
                         ),
                       ),
                     ],
@@ -654,7 +654,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         ),
@@ -672,7 +672,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
           style: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         const SizedBox(height: 10),
@@ -682,10 +682,10 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             hintText: '例: スタバ 新作フラペチーノ',
             hintStyle: GoogleFonts.inter(
               fontSize: 14,
-              color: AppColors.textMuted.withValues(alpha: 0.7),
+              color: context.appTheme.textMuted.withValues(alpha: 0.7),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: context.appTheme.bgCard,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
@@ -708,7 +708,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
           ),
           style: GoogleFonts.inter(
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
       ],
@@ -724,7 +724,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isToday
@@ -740,14 +740,14 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
               height: 44,
               decoration: BoxDecoration(
                 color: isToday
-                    ? AppColors.bgPrimary
+                    ? context.appTheme.bgPrimary
                     : AppColors.accentBlue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.calendar_today_outlined,
                 size: 20,
-                color: isToday ? AppColors.textSecondary : AppColors.accentBlue,
+                color: isToday ? context.appTheme.textSecondary : AppColors.accentBlue,
               ),
             ),
             const SizedBox(width: 14),
@@ -760,7 +760,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                     '支出日',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: context.appTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -769,16 +769,16 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: isToday ? AppColors.textPrimary : AppColors.accentBlue,
+                      color: isToday ? context.appTheme.textPrimary : AppColors.accentBlue,
                     ),
                   ),
                 ],
               ),
             ),
             // 矢印
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: AppColors.textSecondary,
+              color: context.appTheme.textSecondary,
               size: 20,
             ),
           ],
@@ -804,7 +804,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appTheme.textPrimary,
               ),
             ),
             // 追加ボタン（残り金額がある場合のみ有効）
@@ -815,7 +815,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                 decoration: BoxDecoration(
                   color: remainingAmount > 0
                       ? AppColors.accentBlueLight.withValues(alpha: 0.5)
-                      : AppColors.bgPrimary,
+                      : context.appTheme.bgPrimary,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -826,7 +826,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       size: 16,
                       color: remainingAmount > 0
                           ? AppColors.accentBlue
-                          : AppColors.textMuted,
+                          : context.appTheme.textMuted,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -836,7 +836,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                         fontWeight: FontWeight.w600,
                         color: remainingAmount > 0
                             ? AppColors.accentBlue
-                            : AppColors.textMuted,
+                            : context.appTheme.textMuted,
                       ),
                     ),
                   ],
@@ -852,7 +852,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             '先に金額を入力してください',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           )
         else if (_breakdowns.isEmpty)
@@ -860,7 +860,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             '¥${formatNumber(_expenseAmount)}の内訳を追加できます',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         // 内訳リスト
@@ -892,7 +892,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -908,7 +908,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                        color: context.appTheme.textSecondary,
                       ),
                     ),
                   ),
@@ -936,7 +936,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                     child: Icon(
                       Icons.close,
                       size: 18,
-                      color: AppColors.textMuted.withValues(alpha: 0.6),
+                      color: context.appTheme.textMuted.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -963,7 +963,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -978,7 +978,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                        color: context.appTheme.textSecondary,
                       ),
                     ),
                   ),
@@ -987,7 +987,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                     '(残り)',
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: AppColors.textMuted,
+                      color: context.appTheme.textMuted,
                     ),
                   ),
                 ],
@@ -1022,7 +1022,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: AppColors.borderSubtle.withValues(alpha: 0.5),
+                  color: context.appTheme.borderSubtle.withValues(alpha: 0.5),
                   width: 1,
                 ),
               ),
@@ -1035,7 +1035,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
                 Text(
@@ -1043,7 +1043,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
               ],
@@ -1093,18 +1093,18 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.bgCard,
+                color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.borderSubtle,
+                  color: context.appTheme.borderSubtle,
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.account_balance_wallet_outlined,
                     size: 18,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1116,7 +1116,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
+                            color: context.appTheme.textSecondary,
                           ),
                         ),
                         Text(
@@ -1128,7 +1128,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                             fontWeight: FontWeight.w600,
                             color: income != null
                                 ? AppColors.accentBlue
-                                : AppColors.textMuted,
+                                : context.appTheme.textMuted,
                           ),
                         ),
                       ],
@@ -1137,7 +1137,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                   Icon(
                     Icons.chevron_right,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.6),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.6),
                   ),
                 ],
               ),
@@ -1158,18 +1158,18 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.bgCard,
+                color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.borderSubtle,
+                  color: context.appTheme.borderSubtle,
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.receipt_long_outlined,
                     size: 18,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1178,14 +1178,14 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                        color: context.appTheme.textSecondary,
                       ),
                     ),
                   ),
                   Icon(
                     Icons.chevron_right,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.6),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.6),
                   ),
                 ],
               ),
@@ -1203,7 +1203,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
+        color: context.appTheme.bgPrimary,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -1221,7 +1221,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: _canSubmit ? gradeColor : AppColors.textMuted.withValues(alpha: 0.3),
+              color: _canSubmit ? gradeColor : context.appTheme.textMuted.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(14),
               boxShadow: _canSubmit
                   ? [
@@ -1241,7 +1241,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: _canSubmit ? Colors.white : AppColors.textMuted,
+                  color: _canSubmit ? Colors.white : context.appTheme.textMuted,
                 ),
               ),
             ),

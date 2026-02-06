@@ -45,13 +45,13 @@ class _CategoryBreakdownDetailScreenState
     final appState = context.watch<AppState>();
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.appTheme.bgCard,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, size: 20),
-          color: AppColors.textPrimary,
+          color: context.appTheme.textPrimary,
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -59,7 +59,7 @@ class _CategoryBreakdownDetailScreenState
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -218,7 +218,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -288,7 +288,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.bgPrimary,
+              color: context.appTheme.bgPrimary,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -299,7 +299,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -308,7 +308,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
               ],
@@ -323,7 +323,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -341,7 +341,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: context.appTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -413,7 +413,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: context.appTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -422,7 +422,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textMuted,
+                    color: context.appTheme.textMuted,
                   ),
                 ),
               ],
@@ -436,7 +436,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -462,7 +462,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
             Icon(
               Icons.chevron_right,
               size: 18,
-              color: AppColors.textMuted.withValues(alpha: 0.5),
+              color: context.appTheme.textMuted.withValues(alpha: 0.5),
             ),
           ],
         ],
@@ -507,7 +507,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
           Icon(
             Icons.pie_chart_outline,
             size: 48,
-            color: AppColors.textMuted.withValues(alpha: 0.4),
+            color: context.appTheme.textMuted.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -516,7 +516,7 @@ class _CyclePageContentState extends State<_CyclePageContent>
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         ],

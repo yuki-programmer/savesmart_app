@@ -447,6 +447,33 @@ class DatabaseService {
     );
   }
 
+  /// 過去N日分の固定予算を取得（今日を含む、日付降順）
+  /// 返り値: List<Map<String, dynamic>> [{ 'date': DateTime, 'amount': int }, ...]
+  Future<List<Map<String, dynamic>>> getDailyBudgetsForPastDays(int days) async {
+    final db = await database;
+    final now = DateTime.now();
+    final result = <Map<String, dynamic>>[];
+
+    for (int i = 0; i < days; i++) {
+      final targetDate = now.subtract(Duration(days: days - 1 - i));
+      final dateStr = _formatDateOnly(targetDate);
+      final maps = await db.query(
+        'daily_budgets',
+        where: 'date = ?',
+        whereArgs: [dateStr],
+      );
+
+      if (maps.isNotEmpty) {
+        result.add({
+          'date': DateTime(targetDate.year, targetDate.month, targetDate.day),
+          'amount': maps.first['fixed_amount'] as int,
+        });
+      }
+    }
+
+    return result;
+  }
+
   /// 日付を YYYY-MM-DD 形式の文字列に変換
   String _formatDateOnly(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -1398,6 +1425,27 @@ class DatabaseService {
       FROM expenses
       WHERE date(created_at) >= ? AND date(created_at) < ?
     ''', [startStr, today]);
+
+    return result.first['total'] as int;
+  }
+
+  /// 指定日までの支出合計を取得（SQL集計）
+  ///
+  /// [cycleStartDate] サイクル開始日
+  /// [endDateExclusive] この日付の前日までを集計対象にする
+  Future<int> getExpenseTotalUntilDate({
+    required DateTime cycleStartDate,
+    required DateTime endDateExclusive,
+  }) async {
+    final db = await database;
+    final startStr = _formatDateOnly(cycleStartDate);
+    final endStr = _formatDateOnly(endDateExclusive);
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM expenses
+      WHERE date(created_at) >= ? AND date(created_at) < ?
+    ''', [startStr, endStr]);
 
     return result.first['total'] as int;
   }

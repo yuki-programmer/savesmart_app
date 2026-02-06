@@ -89,9 +89,9 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
     }
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: SafeArea(
         child: Padding(
@@ -104,7 +104,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.25),
+                  color: context.appTheme.textMuted.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -116,7 +116,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary.withValues(alpha: 0.9),
+                  color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                   height: 1.3,
                 ),
               ),
@@ -139,7 +139,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: hasData
                         ? color.withValues(alpha: 0.08)
-                        : AppColors.bgPrimary.withValues(alpha: 0.5),
+                        : context.appTheme.bgPrimary.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -151,13 +151,13 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: hasData
                               ? color.withValues(alpha: 0.15)
-                              : AppColors.textMuted.withValues(alpha: 0.1),
+                              : context.appTheme.textMuted.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           icon,
                           size: 16,
-                          color: hasData ? color : AppColors.textMuted.withValues(alpha: 0.5),
+                          color: hasData ? color : context.appTheme.textMuted.withValues(alpha: 0.5),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -169,8 +169,8 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: hasData
-                                ? AppColors.textPrimary.withValues(alpha: 0.9)
-                                : AppColors.textMuted.withValues(alpha: 0.6),
+                                ? context.appTheme.textPrimary.withValues(alpha: 0.9)
+                                : context.appTheme.textMuted.withValues(alpha: 0.6),
                             height: 1.4,
                           ),
                         ),
@@ -182,8 +182,8 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: hasData
-                              ? AppColors.textPrimary.withValues(alpha: 0.9)
-                              : AppColors.textMuted.withValues(alpha: 0.5),
+                              ? context.appTheme.textPrimary.withValues(alpha: 0.9)
+                              : context.appTheme.textMuted.withValues(alpha: 0.5),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -194,8 +194,8 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
                           color: hasData
-                              ? AppColors.textSecondary.withValues(alpha: 0.7)
-                              : AppColors.textMuted.withValues(alpha: 0.4),
+                              ? context.appTheme.textSecondary.withValues(alpha: 0.7)
+                              : context.appTheme.textMuted.withValues(alpha: 0.4),
                           height: 1.4,
                         ),
                       ),
@@ -211,7 +211,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.bgPrimary,
+                    color: context.appTheme.bgPrimary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -219,7 +219,7 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                      color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,

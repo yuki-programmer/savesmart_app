@@ -25,13 +25,13 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
     final currencyFormat = appState.currencyFormat;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.bgPrimary,
+        backgroundColor: context.appTheme.bgPrimary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, size: 20),
-          color: AppColors.textPrimary,
+          color: context.appTheme.textPrimary,
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -39,7 +39,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -77,14 +77,14 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
           Icon(
             Icons.pie_chart_outline,
             size: 64,
-            color: AppColors.textMuted.withValues(alpha: 0.3),
+            color: context.appTheme.textMuted.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
             'カテゴリ予算が設定されていません',
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: AppColors.textSecondary,
+              color: context.appTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -92,7 +92,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
             '下のボタンから追加できます',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         ],
@@ -117,7 +117,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -143,14 +143,14 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
           style: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         subtitle: Text(
           periodLabel,
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: AppColors.textMuted,
+            color: context.appTheme.textMuted,
           ),
         ),
         trailing: Row(
@@ -161,7 +161,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appTheme.textPrimary,
               ),
             ),
             if (!_isEditMode) ...[
@@ -169,7 +169,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
               Icon(
                 Icons.chevron_right,
                 size: 20,
-                color: AppColors.textMuted.withValues(alpha: 0.5),
+                color: context.appTheme.textMuted.withValues(alpha: 0.5),
               ),
             ],
           ],
@@ -198,7 +198,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'キャンセル',
-              style: GoogleFonts.inter(color: AppColors.textSecondary),
+              style: GoogleFonts.inter(color: context.appTheme.textSecondary),
             ),
           ),
           TextButton(
@@ -334,13 +334,13 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: context.appTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.bgPrimary,
+        backgroundColor: context.appTheme.bgPrimary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, size: 22),
-          color: AppColors.textPrimary,
+          color: context.appTheme.textPrimary,
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -348,7 +348,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.appTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -387,7 +387,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: AppColors.textSecondary,
+        color: context.appTheme.textSecondary,
       ),
     );
   }
@@ -403,9 +403,9 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: context.appTheme.borderSubtle),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -414,11 +414,11 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
             'カテゴリを選択',
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
           isExpanded: true,
-          icon: const Icon(Icons.expand_more, color: AppColors.textMuted),
+          icon: Icon(Icons.expand_more, color: context.appTheme.textMuted),
           items: categories.map((category) {
             return DropdownMenuItem(
               value: category,
@@ -426,7 +426,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
                 category,
                 style: GoogleFonts.inter(
                   fontSize: 15,
-                  color: AppColors.textPrimary,
+                  color: context.appTheme.textPrimary,
                 ),
               ),
             );
@@ -451,9 +451,9 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: context.appTheme.borderSubtle),
       ),
       child: Column(
         children: [
@@ -473,7 +473,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
             'タップして金額を入力',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: context.appTheme.textMuted,
             ),
           ),
         ],
@@ -484,9 +484,9 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
   Widget _buildPeriodSelector() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: context.appTheme.borderSubtle),
       ),
       child: Column(
         children: [
@@ -496,7 +496,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
             subtitle: '次の月も継続して設定されます',
             isFirst: true,
           ),
-          const Divider(height: 1, color: AppColors.borderSubtle),
+          Divider(height: 1, color: context.appTheme.borderSubtle),
           _buildPeriodOption(
             value: 'one_time',
             title: '今月のみ',
@@ -543,7 +543,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
+                      color: context.appTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -551,7 +551,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: AppColors.textMuted,
+                      color: context.appTheme.textMuted,
                     ),
                   ),
                 ],
@@ -561,7 +561,7 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
               isSelected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: isSelected ? AppColors.accentBlue : AppColors.textMuted,
+              color: isSelected ? AppColors.accentBlue : context.appTheme.textMuted,
               size: 22,
             ),
           ],
@@ -582,8 +582,8 @@ class _CategoryBudgetEditScreenState extends State<CategoryBudgetEditScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accentBlue,
               foregroundColor: Colors.white,
-              disabledBackgroundColor: AppColors.borderSubtle,
-              disabledForegroundColor: AppColors.textMuted,
+              disabledBackgroundColor: context.appTheme.borderSubtle,
+              disabledForegroundColor: context.appTheme.textMuted,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
