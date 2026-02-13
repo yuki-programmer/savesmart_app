@@ -51,7 +51,7 @@ class WeeklyBudgetCard extends StatelessWidget {
         : 'あと$daysRemaining日（〜${endDate.month}/${endDate.day}）';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(14),
@@ -88,7 +88,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                     color: context.appTheme.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   subText,
                   style: GoogleFonts.inter(
@@ -119,7 +119,7 @@ class WeeklyBudgetCard extends StatelessWidget {
   /// 予算オーバー時のカード
   Widget _buildOverBudgetCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.accentOrange.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
@@ -159,7 +159,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                     color: AppColors.accentOrange,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   '支出を見直そう',
                   style: GoogleFonts.inter(
@@ -180,7 +180,7 @@ class WeeklyBudgetCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTapLocked,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(14),
@@ -217,7 +217,7 @@ class WeeklyBudgetCard extends StatelessWidget {
                       color: context.appTheme.textMuted.withValues(alpha: 0.7),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     '¥---',
                     style: GoogleFonts.ibmPlexSans(

@@ -1,6 +1,6 @@
 # プライバシーポリシー
 
-最終更新日: 2026年1月28日
+最終更新日: 2026年2月11日
 
 ## はじめに
 
@@ -86,7 +86,7 @@
 
 ## Privacy Policy (English)
 
-Last updated: January 28, 2026
+Last updated: February 11, 2026
 
 ### Introduction
 
@@ -131,4 +131,4 @@ You can:
 ### Contact
 
 For questions about this Privacy Policy, please contact:
-Email: [Contact Email Address]
+Email: yuki.mizuo12@gmail.com

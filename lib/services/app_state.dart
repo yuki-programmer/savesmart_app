@@ -49,6 +49,12 @@ class AppState extends ChangeNotifier {
 
   static const String _keyDevPremiumOverride = 'dev_premium_override';
   static const String _keyDevModeUnlocked = 'dev_mode_unlocked';
+  static const String _keyPlusAutoRecordPrefix = 'plus_auto_record_';
+
+  static const int _plusMonthlyAmount = 300;
+  static const int _plusYearlyAmount = 3000;
+  static const String _plusMonthlyLabel = 'Plus月額';
+  static const String _plusYearlyLabel = 'Plus年額';
 
   // === 月別使える金額 ===
   final Map<String, int?> _monthlyAvailableAmounts = {};
@@ -93,6 +99,10 @@ class AppState extends ChangeNotifier {
   Map<String, CategoryStats>? _cachedCategoryStats;
   String? _cachedCategoryStatsCycleKey;
 
+  AppState() {
+    PurchaseService.instance.onPurchaseConfirmed = _handlePlusPurchaseConfirmed;
+  }
+
   // Getters
   List<Expense> get expenses => _expenses;
   List<Category> get categories => _categories;
@@ -107,10 +117,8 @@ class AppState extends ChangeNotifier {
   // === テーマ ===
   bool get isDark => _isDark;
   ColorPattern get colorPattern => _colorPattern;
-  ColorPattern get _effectiveColorPattern =>
-      isPremium ? _colorPattern : ColorPattern.white;
   ThemeData get currentTheme =>
-      AppTheme.build(isDark: _isDark, pattern: _effectiveColorPattern);
+      AppTheme.build(isDark: _isDark, pattern: _colorPattern);
 
   /// プレミアム判定（全画面でこれを参照する）
   /// PREMIUM_TEST=true の場合は常に true を返す
@@ -710,6 +718,67 @@ class AppState extends ChangeNotifier {
       debugPrint('Error adding expense: $e');
       return false;
     }
+  }
+
+  Future<void> _handlePlusPurchaseConfirmed(
+    PurchaseConfirmation confirmation,
+  ) async {
+    final signature = confirmation.signature.isNotEmpty
+        ? confirmation.signature
+        : 'unknown';
+    final recordKey = '$_keyPlusAutoRecordPrefix${confirmation.productId}';
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString(recordKey) == signature) {
+        return;
+      }
+
+      if (_categories.isEmpty) {
+        await _reloadCategories(notify: false);
+      }
+
+      final createdAt = confirmation.purchasedAt ?? DateTime.now();
+
+      if (confirmation.subscriptionType == 'monthly') {
+        final fixedCost = FixedCost(
+          categoryId: null,
+          categoryNameSnapshot: _plusMonthlyLabel,
+          amount: _plusMonthlyAmount,
+          memo: _plusMonthlyLabel,
+          createdAt: createdAt,
+        );
+        await addFixedCost(fixedCost);
+      } else if (confirmation.subscriptionType == 'yearly') {
+        final category = _resolvePlusExpenseCategory();
+        if (category == null || category.id == null) {
+          debugPrint('Plus auto record: category not found');
+          return;
+        }
+
+        final expense = Expense(
+          amount: _plusYearlyAmount,
+          categoryId: category.id!,
+          category: category.name,
+          grade: 'standard',
+          memo: _plusYearlyLabel,
+          createdAt: createdAt,
+        );
+        await addExpense(expense);
+      }
+
+      await prefs.setString(recordKey, signature);
+    } catch (e) {
+      debugPrint('Plus auto record error: $e');
+    }
+  }
+
+  Category? _resolvePlusExpenseCategory() {
+    if (_categories.isEmpty) return null;
+    return _categories.firstWhere(
+      (category) => category.name == 'その他',
+      orElse: () => _categories.first,
+    );
   }
 
   Future<void> addExpenseWithBreakdowns(

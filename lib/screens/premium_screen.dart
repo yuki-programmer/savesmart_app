@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/theme.dart';
 import '../services/app_state.dart';
 import '../services/purchase_service.dart';
@@ -42,6 +45,20 @@ class _PremiumScreenState extends State<PremiumScreen> {
   @override
   Widget build(BuildContext context) {
     final isPremium = context.watch<AppState>().isPremium;
+    final purchaseService = PurchaseService.instance;
+    final monthlyProduct = purchaseService.monthlyProduct;
+    final yearlyProduct = purchaseService.yearlyProduct;
+    final savingsMonths = _calculateSavingsMonths(
+      monthlyProduct: monthlyProduct,
+      yearlyProduct: yearlyProduct,
+    );
+    final hasStorePrices = monthlyProduct != null && yearlyProduct != null;
+    final savingsText = hasStorePrices
+        ? _formatSavingsText(savingsMonths)
+        : '2ヶ月分おトク';
+    final upgradeSavingsText = hasStorePrices
+        ? _formatSavingsText(savingsMonths)
+        : '2ヶ月分おトク（¥3,000/年）';
 
     return Scaffold(
       backgroundColor: context.appTheme.bgPrimary,
@@ -53,12 +70,21 @@ class _PremiumScreenState extends State<PremiumScreen> {
               _buildHeroSection(),
               _buildFeaturesSection(),
               if (!isPremium) ...[
-                _buildPlanSection(),
+                _buildPlanSection(
+                  monthlyProduct: monthlyProduct,
+                  yearlyProduct: yearlyProduct,
+                  savingsText: savingsText,
+                  showBadge: hasStorePrices ? savingsMonths > 0 : true,
+                ),
                 _buildTrialInfo(),
                 _buildCtaButton(),
                 _buildFooter(),
               ] else ...[
-                _buildSubscribedSection(),
+                _buildSubscribedSection(
+                  monthlyProduct: monthlyProduct,
+                  yearlyProduct: yearlyProduct,
+                  upgradeSavingsText: upgradeSavingsText,
+                ),
               ],
             ],
           ),
@@ -68,7 +94,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
   }
 
   /// 加入中セクション
-  Widget _buildSubscribedSection() {
+  Widget _buildSubscribedSection({
+    required ProductDetails? monthlyProduct,
+    required ProductDetails? yearlyProduct,
+    required String? upgradeSavingsText,
+  }) {
     // TODO: 実際のサブスク情報はRevenueCat等から取得
     // 仮データ（開発者モード用）
     // ignore: dead_code を避けるためDateTime.now()を使用
@@ -78,6 +108,16 @@ class _PremiumScreenState extends State<PremiumScreen> {
     final renewalDate = DateTime.now().add(const Duration(days: 30));
     final renewalDateStr =
         '${renewalDate.year}/${renewalDate.month.toString().padLeft(2, '0')}/${renewalDate.day.toString().padLeft(2, '0')}';
+    final monthlyPrice = _planPriceText(
+      type: PlanType.monthly,
+      product: monthlyProduct,
+      compact: true,
+    );
+    final yearlyPrice = _planPriceText(
+      type: PlanType.yearly,
+      product: yearlyProduct,
+      compact: true,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -88,7 +128,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _accentGreen.withValues(alpha: 0.08),
+              color: _iconBgGreen,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: _accentGreen.withValues(alpha: 0.25),
@@ -136,7 +176,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     children: [
                       _buildInfoRow(
                         label: '現在のプラン',
-                        value: isYearlyPlan ? '年額プラン（¥3,600/年）' : '月額プラン（¥400/月）',
+                        value: isYearlyPlan
+                            ? '年額プラン（$yearlyPrice）'
+                            : '月額プラン（$monthlyPrice）',
                       ),
                       const SizedBox(height: 10),
                       _buildInfoRow(
@@ -153,7 +195,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           // 月額→年額へのアップグレードカード（月額プランの場合のみ）
           if (!isYearlyPlan) ...[
             const SizedBox(height: 16),
-            _buildUpgradeCard(),
+            _buildUpgradeCard(upgradeSavingsText: upgradeSavingsText),
           ],
 
           // サブスクリプション管理リンク
@@ -229,7 +271,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
   }
 
   /// 年額プランへのアップグレードカード
-  Widget _buildUpgradeCard() {
+  Widget _buildUpgradeCard({required String? upgradeSavingsText}) {
     return GestureDetector(
       onTap: _handleUpgradeToYearly,
       child: Container(
@@ -301,15 +343,17 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '3ヶ月分おトク（¥3,600/年）',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: _accentGreen,
-                      fontWeight: FontWeight.w500,
+                  if (upgradeSavingsText != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      upgradeSavingsText,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: _accentGreen,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -339,15 +383,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   /// サブスクリプション管理画面を開く
   void _openSubscriptionManagement() {
-    // TODO: App Store / Google Play のサブスクリプション管理画面を開く
-    // iOS: App Store → アカウント → サブスクリプション
-    // Android: Google Play → 支払いと定期購入 → 定期購入
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('サブスクリプション管理画面を開きます'),
-        backgroundColor: _accentBlue,
-      ),
-    );
+    final url = Platform.isIOS
+        ? 'https://apps.apple.com/account/subscriptions'
+        : 'https://play.google.com/store/account/subscriptions';
+    _openUrl(url);
   }
 
   /// ヘッダー（戻るボタン）
@@ -447,13 +486,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
     final features = [
       _FeatureItem(
-        icon: Icons.event_note_outlined,
-        iconBgColor: iconBgCyan,
-        iconColor: accentCyan,
-        title: '将来の支出を\n先取り登録',
-        desc: '支出計画をよりスマートに',
-      ),
-      _FeatureItem(
         icon: Icons.date_range_outlined,
         iconBgColor: _iconBgBlue,
         iconColor: _accentBlue,
@@ -461,11 +493,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
         desc: '週単位で予算を把握',
       ),
       _FeatureItem(
-        icon: Icons.pie_chart_outline,
-        iconBgColor: _iconBgGreen,
-        iconColor: _accentGreen,
-        title: 'カテゴリ別\n支出割合',
-        desc: 'どこにお金を使ってる？',
+        icon: Icons.event_note_outlined,
+        iconBgColor: iconBgCyan,
+        iconColor: accentCyan,
+        title: '将来の支出を\n先取り登録',
+        desc: '支出計画をよりスマートに',
       ),
       _FeatureItem(
         icon: Icons.show_chart,
@@ -475,11 +507,25 @@ class _PremiumScreenState extends State<PremiumScreen> {
         desc: '予算のペースを可視化',
       ),
       _FeatureItem(
-        icon: Icons.tune_outlined,
+        icon: Icons.speed,
+        iconBgColor: _iconBgGreen,
+        iconColor: _accentGreen,
+        title: '1日あたりの\n支出ペース',
+        desc: '日々の消費を可視化',
+      ),
+      _FeatureItem(
+        icon: Icons.pie_chart_outline,
+        iconBgColor: _iconBgGreen,
+        iconColor: _accentGreen,
+        title: 'カテゴリ別\n支出割合',
+        desc: 'どこにお金を使ってる？',
+      ),
+      _FeatureItem(
+        icon: Icons.flash_on_outlined,
         iconBgColor: _iconBgPink,
         iconColor: _accentPink,
-        title: 'カテゴリに\n予算を設定',
-        desc: '使いすぎを事前に防ぐ',
+        title: 'クイック登録\n無制限',
+        desc: 'よく使う支出を\nすぐ記録',
       ),
     ];
 
@@ -556,7 +602,22 @@ class _PremiumScreenState extends State<PremiumScreen> {
   }
 
   /// プラン選択セクション
-  Widget _buildPlanSection() {
+  Widget _buildPlanSection({
+    required ProductDetails? monthlyProduct,
+    required ProductDetails? yearlyProduct,
+    required String? savingsText,
+    required bool showBadge,
+  }) {
+    final yearlyPrice = _planPriceText(
+      type: PlanType.yearly,
+      product: yearlyProduct,
+    );
+    final monthlyPrice = _planPriceText(
+      type: PlanType.monthly,
+      product: monthlyProduct,
+    );
+    final showOriginalPrice = monthlyProduct == null || yearlyProduct == null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -577,10 +638,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
           _buildPlanCard(
             type: PlanType.yearly,
             name: '年額プラン',
-            price: '¥3,600 / 年',
-            originalPrice: '¥4,800',
-            savings: '3ヶ月分おトク',
-            showBadge: true,
+            price: yearlyPrice,
+            originalPrice: showOriginalPrice ? '¥3,600' : null,
+            savings: savingsText,
+            showBadge: showBadge,
           ),
           const SizedBox(height: 10),
 
@@ -588,7 +649,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           _buildPlanCard(
             type: PlanType.monthly,
             name: '月額プラン',
-            price: '¥400 / 月',
+            price: monthlyPrice,
           ),
           const SizedBox(height: 24),
         ],
@@ -943,7 +1004,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: () => _openUrl('https://example.com/terms'),
+                onTap: () => _openUrl(
+                  'https://yuki-programmer.github.io/savesmart_app/terms.html',
+                ),
                 child: Text(
                   '利用規約',
                   style: GoogleFonts.inter(
@@ -954,7 +1017,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
               ),
               const SizedBox(width: 16),
               GestureDetector(
-                onTap: () => _openUrl('https://example.com/privacy'),
+                onTap: () => _openUrl(
+                  'https://yuki-programmer.github.io/savesmart_app/privacy.html',
+                ),
                 child: Text(
                   'プライバシーポリシー',
                   style: GoogleFonts.inter(
@@ -971,9 +1036,63 @@ class _PremiumScreenState extends State<PremiumScreen> {
     );
   }
 
-  void _openUrl(String url) {
-    // TODO: url_launcher パッケージ追加後に実装
-    debugPrint('Opening URL: $url');
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('リンクを開けませんでした'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  String _planPriceText({
+    required PlanType type,
+    required ProductDetails? product,
+    bool compact = false,
+  }) {
+    final separator = compact ? '/' : ' / ';
+    final suffix = type == PlanType.yearly ? '年' : '月';
+    if (product != null) {
+      return '${product.price}$separator$suffix';
+    }
+    if (type == PlanType.yearly) {
+      return compact ? '¥3,000/年' : '¥3,000 / 年';
+    }
+    return compact ? '¥300/月' : '¥300 / 月';
+  }
+
+  int _calculateSavingsMonths({
+    required ProductDetails? monthlyProduct,
+    required ProductDetails? yearlyProduct,
+  }) {
+    if (monthlyProduct == null || yearlyProduct == null) {
+      return 0;
+    }
+    final monthlyPrice = monthlyProduct.rawPrice;
+    final yearlyPrice = yearlyProduct.rawPrice;
+    if (monthlyPrice <= 0) {
+      return 0;
+    }
+    final savings = (monthlyPrice * 12) - yearlyPrice;
+    if (savings <= 0) {
+      return 0;
+    }
+    final months = (savings / monthlyPrice).round();
+    return months < 1 ? 0 : months;
+  }
+
+  String? _formatSavingsText(int savingsMonths) {
+    if (savingsMonths <= 0) {
+      return null;
+    }
+    return '約$savingsMonthsヶ月分おトク';
   }
 }
 

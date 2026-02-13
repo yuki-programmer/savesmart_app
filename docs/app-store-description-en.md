@@ -4,10 +4,10 @@
 SaveSmart
 
 ## Subtitle (30 characters max)
-Know Your Daily Spending Limit
+Know Today’s Spending Limit
 
 ## Keywords (100 characters max)
-budget,expense,tracker,money,spending,paycheck,savings,simple,daily,allowance,finance,free
+budget,expense,tracker,spending,allowance,day,limit,paycheck,savings,simple,finance
 
 ---
 
@@ -15,21 +15,8 @@ budget,expense,tracker,money,spending,paycheck,savings,simple,daily,allowance,fi
 
 **Budgeting apps never worked for you?**
 
-Scanning receipts? Too tedious.
-Bank sync? Too complicated to set up.
-Daily logging? Gave up after 3 days.
-
-We built this for you.
-
----
-
-**"How much can I spend today?"**
-
-SaveSmart answers just this one question.
-
-Open the app in the morning.
-See your daily spending limit.
-That's it.
+SaveSmart shows your “today’s spending limit” at a glance.
+Open it in the morning, check the number, and go.
 
 ---
 
@@ -84,11 +71,11 @@ Turn "mindless spending" into "mindful spending."
 ✓ Fixed cost management
 ✓ Monthly spending chart
 
-### Premium Features ($2.99/month or $24.99/year)
+### Premium Features (Price varies by region)
 
-✓ Schedule future expenses
-✓ Set budgets per category
-✓ Weekly budget view
+✓ Schedule future expenses  
+✓ Category budget management  
+✓ Weekly budget view  
 ✓ Detailed analytics
 
 ---
@@ -101,15 +88,13 @@ Start free today.
 
 ## Promotional Text (170 characters max)
 
-For people who gave up on budgeting apps. Shows just "today's spending limit." Record in 3 seconds, manage by payday cycle. Try it free.
+“How much can I spend today?” answered. Open it, check your limit, log in seconds. A daily trend chart makes it easy to keep coming back.
 
 ---
 
 ## What's New (for updates)
 
-- Record expenses from past dates
-- Color-coded progress bars for category budgets
-- Performance improvements
+- SaveSmart is now available
 
 ---
 

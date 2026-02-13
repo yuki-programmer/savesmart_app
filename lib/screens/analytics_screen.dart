@@ -55,7 +55,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   // カテゴリ別の支出割合カード（常時表示）
                   CategoryBreakdownCard(
                     appState: appState,
-                    isPremium: isPremium,
                   ),
                   const SizedBox(height: 12),
 

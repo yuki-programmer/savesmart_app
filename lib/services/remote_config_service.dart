@@ -25,8 +25,8 @@ class RemoteConfigService {
     keyMaintenanceMode: false,
     keyMaintenanceMessage: 'メンテナンス中です。しばらくお待ちください。',
     keyMinAppVersion: '1.0.0',
-    keyPremiumMonthlyPrice: 400,
-    keyPremiumYearlyPrice: 3600,
+    keyPremiumMonthlyPrice: 300,
+    keyPremiumYearlyPrice: 3000,
     keyShowNewFeatureBanner: false,
     keyNewFeatureMessage: '',
   };

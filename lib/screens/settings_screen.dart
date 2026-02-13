@@ -874,8 +874,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          // 背景色パターン（ライトモード時のみ・Premium限定）
-          if (!appState.isDark && appState.isPremium)
+          // 背景色パターン（ライトモード時のみ）
+          if (!appState.isDark)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(

@@ -69,7 +69,7 @@ extension ColorPatternInfo on ColorPattern {
       case ColorPattern.navy:
         return 'ネイビー';
       case ColorPattern.darkGreen:
-        return '濃い緑';
+        return 'ミント';
     }
   }
 

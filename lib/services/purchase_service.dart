@@ -4,6 +4,52 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class PurchaseConfirmation {
+  final String productId;
+  final String subscriptionType;
+  final String signature;
+  final DateTime? purchasedAt;
+
+  const PurchaseConfirmation({
+    required this.productId,
+    required this.subscriptionType,
+    required this.signature,
+    required this.purchasedAt,
+  });
+
+  factory PurchaseConfirmation.fromPurchaseDetails(
+    PurchaseDetails details, {
+    required String subscriptionType,
+  }) {
+    String signature = details.purchaseID ?? '';
+    if (signature.isEmpty) {
+      signature = details.transactionDate ?? '';
+    }
+    if (signature.isEmpty) {
+      signature = details.verificationData.serverVerificationData;
+    }
+    if (signature.isEmpty) {
+      signature = details.verificationData.localVerificationData;
+    }
+
+    DateTime? purchasedAt;
+    final transactionDate = details.transactionDate;
+    if (transactionDate != null) {
+      final millis = int.tryParse(transactionDate);
+      if (millis != null) {
+        purchasedAt = DateTime.fromMillisecondsSinceEpoch(millis);
+      }
+    }
+
+    return PurchaseConfirmation(
+      productId: details.productID,
+      subscriptionType: subscriptionType,
+      signature: signature,
+      purchasedAt: purchasedAt,
+    );
+  }
+}
+
 /// アプリ内購入を管理するサービス
 class PurchaseService {
   static final PurchaseService _instance = PurchaseService._internal();
@@ -42,6 +88,7 @@ class PurchaseService {
 
   // 状態変更通知用コールバック
   VoidCallback? onPurchaseUpdated;
+  void Function(PurchaseConfirmation confirmation)? onPurchaseConfirmed;
 
   /// 初期化
   Future<void> initialize() async {
@@ -193,8 +240,35 @@ class PurchaseService {
         break;
 
       case PurchaseStatus.purchased:
-      case PurchaseStatus.restored:
         // 購入成功または復元成功
+        final subscriptionType = purchaseDetails.productID == monthlyProductId
+            ? 'monthly'
+            : 'yearly';
+
+        await _savePurchaseStatus(
+          isPremium: true,
+          subscriptionType: subscriptionType,
+        );
+
+        onPurchaseConfirmed?.call(
+          PurchaseConfirmation.fromPurchaseDetails(
+            purchaseDetails,
+            subscriptionType: subscriptionType,
+          ),
+        );
+
+        _isPurchasing = false;
+
+        // トランザクションを完了
+        if (purchaseDetails.pendingCompletePurchase) {
+          await _inAppPurchase.completePurchase(purchaseDetails);
+        }
+
+        onPurchaseUpdated?.call();
+        break;
+
+      case PurchaseStatus.restored:
+        // 復元成功（状態のみ復元）
         final subscriptionType = purchaseDetails.productID == monthlyProductId
             ? 'monthly'
             : 'yearly';
@@ -206,7 +280,6 @@ class PurchaseService {
 
         _isPurchasing = false;
 
-        // トランザクションを完了
         if (purchaseDetails.pendingCompletePurchase) {
           await _inAppPurchase.completePurchase(purchaseDetails);
         }
