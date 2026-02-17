@@ -10,13 +10,13 @@ class AppColors {
   static const accentGreen = Color(0xFF10B981);
   static const accentGreenLight = Color(0xFFD1FAE5);
   static const accentGreenDark = Color(0xFF059669);
-  static const accentBlue = Color(0xFF3B82F6);
+  static const accentBlue = Color(0xFF5B7BEA);
   static const accentBlueLight = Color(0xFFDBEAFE);
   static const accentPurple = Color(0xFF8B5CF6);
   static const accentPurpleLight = Color(0xFFEDE9FE);
   static const accentOrange = Color(0xFFF59E0B);
   static const accentOrangeLight = Color(0xFFFEF3C7);
-  static const accentRed = Color(0xFFEF4444);
+  static const accentRed = Color(0xFFE05555);
   static const accentRedLight = Color(0xFFFEE2E2);
   static const textPrimary = Color(0xFF1A1A2E); // ライトデフォルト（後方互換用）
   static const textSecondary = Color(0xFF64748B); // ライトデフォルト（後方互換用）
@@ -163,8 +163,8 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       bgPrimary: pattern.bgColor,
       bgCard: const Color(0xFFFFFFFF),
       textPrimary: const Color(0xFF1A1A2E),
-      textSecondary: const Color(0xFF64748B),
-      textMuted: const Color(0xFF94A3B8),
+      textSecondary: const Color(0xFF4B5563),
+      textMuted: const Color(0xFF6B7280),
       borderSubtle: const Color(0x0F000000),
     );
   }
@@ -174,8 +174,8 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     bgPrimary: Color(0xFF1A1A2E),
     bgCard: Color(0xFF24243A),
     textPrimary: Color(0xFFFFFFFF),
-    textSecondary: Color(0xFFCBD5E1),
-    textMuted: Color(0xFF64748B),
+    textSecondary: Color(0xFFE2E8F0),
+    textMuted: Color(0xFFCBD5E1),
     borderSubtle: Color(0x14FFFFFF),
   );
 }

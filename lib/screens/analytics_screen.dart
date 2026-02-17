@@ -106,7 +106,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   /// 今サイクルのまとめセクション（Free でも表示）
   Widget _buildMonthlySummary(AppState appState) {
     final fixedCostsTotal = appState.fixedCostsTotal;
-    final totalExpense = appState.thisMonthTotal + fixedCostsTotal;
+    final variableSpending = appState.thisMonthTotal;
+    final totalExpense = variableSpending + fixedCostsTotal;
     final availableAmount = appState.thisMonthAvailableAmount;
     final remainingDays = appState.remainingDaysInMonth;
     final cyclePeriod = _getCyclePeriodLabel(appState);
@@ -245,11 +246,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   ],
                 ),
                 const SizedBox(height: 10),
-                // 支出行
+                // 変動費
                 Row(
                   children: [
                     Text(
-                      '支出',
+                      '変動費',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
@@ -258,11 +259,62 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     ),
                     const Spacer(),
                     Text(
-                      '¥${formatNumber(totalExpense)}',
+                      '¥${formatNumber(variableSpending)}',
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: context.appTheme.textPrimary.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // 固定費
+                Row(
+                  children: [
+                    Text(
+                      '固定費',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: context.appTheme.textSecondary.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '¥${formatNumber(fixedCostsTotal)}',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.appTheme.textPrimary.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  height: 1,
+                  color: context.appTheme.borderSubtle.withValues(alpha: 0.8),
+                ),
+                const SizedBox(height: 10),
+                // 支出合計
+                Row(
+                  children: [
+                    Text(
+                      '支出合計',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: context.appTheme.textMuted.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '¥${formatNumber(totalExpense)}',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentBlue,
                       ),
                     ),
                   ],
@@ -345,20 +397,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
-                          Text(
-                            '編集',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.accentBlue.withValues(alpha: 0.8),
-                            ),
+                        Text(
+                          '編集',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: context.appTheme.textSecondary.withValues(alpha: 0.9),
                           ),
-                          const SizedBox(width: 2),
-                          Icon(
-                            Icons.chevron_right,
-                            size: 16,
-                            color: AppColors.accentBlue.withValues(alpha: 0.6),
-                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: context.appTheme.textMuted.withValues(alpha: 0.8),
+                        ),
                         ],
                       ),
                     ),

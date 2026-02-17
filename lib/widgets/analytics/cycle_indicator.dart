@@ -24,7 +24,7 @@ class CycleIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: context.appTheme.bgCard,
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,

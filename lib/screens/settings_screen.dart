@@ -951,6 +951,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPremiumPlanCard(AppState appState) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = isDark ? const Color(0xFF2C2F4A) : const Color(0xFFF3EEFF);
+    final cardBorderColor = isDark ? const Color(0xFF5B4B9B) : const Color(0xFFC4B5FD);
+    final iconBgColor = isDark ? const Color(0xFF3A2F63) : const Color(0xFFE4D8FF);
+    final accentColor = isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED);
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -961,10 +967,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF3EEFF),
+          color: cardBgColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFC4B5FD),
+            color: cardBorderColor,
             width: 1,
           ),
         ),
@@ -973,13 +979,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFE4D8FF),
+                color: iconBgColor,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.workspace_premium_outlined,
                 size: 24,
-                color: Color(0xFF7C3AED),
+                color: accentColor,
               ),
             ),
             const SizedBox(width: 14),
@@ -1000,7 +1006,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Plusプランで全ての機能をアンロック',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: context.appTheme.textSecondary.withValues(alpha: 0.8),
+                      color: context.appTheme.textSecondary.withValues(alpha: isDark ? 0.9 : 0.8),
                     ),
                   ),
                 ],
@@ -1009,7 +1015,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: Color(0xFF7C3AED),
+              color: accentColor,
             ),
           ],
         ),

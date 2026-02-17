@@ -375,7 +375,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
               onEdit();
             },
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.accentBlue),
+              side: BorderSide(color: context.appTheme.textSecondary.withValues(alpha: 0.6)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -385,7 +385,7 @@ class CategoryBudgetReportDialog extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.accentBlue,
+                color: context.appTheme.textSecondary.withValues(alpha: 0.9),
               ),
             ),
           ),

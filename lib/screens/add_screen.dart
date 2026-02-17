@@ -190,28 +190,28 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                   children: [
                     // 予定支出登録ボタン（Premium機能）
                     _buildScheduledExpenseButton(),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     // 収入・固定費ボタン（横並び）
                     _buildIncomeAndFixedCostRow(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     // ① カテゴリ選択
                     _buildCategorySection(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     // スマート・コンボ予測（カテゴリ選択後に表示）
                     if (_selectedCategory != null) _buildSmartComboSection(),
-                    if (_selectedCategory != null) const SizedBox(height: 20),
+                    if (_selectedCategory != null) const SizedBox(height: 28),
                     // ② 金額入力
                     _buildAmountSection(),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 32),
                     // ③ 支出タイプ選択
                     _buildGradeSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     // ④ メモ（任意）
                     _buildMemoSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     // ⑤ 支出日（デフォルト今日）
                     _buildDateSelector(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     // ⑥ 内訳（任意）
                     _buildBreakdownSection(),
                   ],

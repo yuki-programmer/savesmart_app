@@ -345,6 +345,7 @@ class _BurnRateCardState extends State<BurnRateCard>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(
             icon,
@@ -352,21 +353,29 @@ class _BurnRateCardState extends State<BurnRateCard>
             color: context.appTheme.textMuted.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 8),
-          Text(
-            message,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: context.appTheme.textSecondary.withValues(alpha: 0.8),
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: context.appTheme.textSecondary.withValues(alpha: 0.8),
+              ),
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            subMessage,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w400,
-              color: context.appTheme.textMuted,
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              subMessage,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: context.appTheme.textMuted,
+              ),
             ),
           ),
         ],

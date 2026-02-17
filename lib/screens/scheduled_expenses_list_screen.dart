@@ -114,12 +114,13 @@ class ScheduledExpensesListScreen extends StatelessWidget {
 
               // 編集
               ListTile(
-                leading: const Icon(Icons.edit_outlined, color: AppColors.accentBlue),
+                leading: Icon(Icons.edit_outlined, color: context.appTheme.textSecondary),
                 title: Text(
                   '編集',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: context.appTheme.textSecondary,
                   ),
                 ),
                 onTap: () {

@@ -255,7 +255,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.accentBlue.withValues(alpha: 0.8),
+                    color: context.appTheme.textSecondary.withValues(alpha: 0.9),
                   ),
                 ),
               ),
@@ -415,4 +415,3 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
   }
 
 }
-

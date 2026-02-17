@@ -23,15 +23,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
   PlanType _selectedPlan = PlanType.yearly;
 
   // カラー定義
-  static const Color _textPrimary = Color(0xFF1A1A1A);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _textMuted = Color(0xFF9CA3AF);
   static const Color _accentBlue = Color(0xFF3B82F6);
   static const Color _accentBlueDark = Color(0xFF2563EB);
   static const Color _accentGold = Color(0xFFF59E0B);
   static const Color _accentGoldDark = Color(0xFFD97706);
   static const Color _accentGreen = Color(0xFF22C55E);
-  static const Color _borderLight = Color(0xFFE5E7EB);
   static const Color _iconBgBlue = Color(0xFFEFF6FF);
   static const Color _iconBgGreen = Color(0xFFF0FDF4);
   static const Color _iconBgOrange = Color(0xFFFFF7ED);
@@ -41,6 +37,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
   static const Color _trialBgEnd = Color(0xFFDBEAFE);
   static const Color _heroIconBgStart = Color(0xFFFEF3C7);
   static const Color _heroIconBgEnd = Color(0xFFFDE68A);
+
+  Color get _textPrimaryColor => context.appTheme.textPrimary.withValues(alpha: 0.95);
+  Color get _textSecondaryColor => context.appTheme.textSecondary.withValues(alpha: 0.9);
+  Color get _textMutedColor => context.appTheme.textMuted.withValues(alpha: 0.85);
+  Color get _borderColor => context.appTheme.borderSubtle.withValues(alpha: 0.9);
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +100,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
     required ProductDetails? yearlyProduct,
     required String? upgradeSavingsText,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final statusBg = isDark ? const Color(0xFF1E2F25) : _iconBgGreen;
+    final statusBorder =
+        isDark ? const Color(0xFF2E5A40) : _accentGreen.withValues(alpha: 0.25);
+    final statusIconBg =
+        isDark ? const Color(0xFF234131) : _accentGreen.withValues(alpha: 0.15);
+    final statusAccent = isDark ? const Color(0xFF7FD09B) : _accentGreen;
     // TODO: 実際のサブスク情報はRevenueCat等から取得
     // 仮データ（開発者モード用）
     // ignore: dead_code を避けるためDateTime.now()を使用
@@ -128,10 +136,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _iconBgGreen,
+              color: statusBg,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _accentGreen.withValues(alpha: 0.25),
+                color: statusBorder,
                 width: 1,
               ),
             ),
@@ -142,13 +150,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _accentGreen.withValues(alpha: 0.15),
+                    color: statusIconBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.check_circle,
                     size: 28,
-                    color: _accentGreen,
+                    color: statusAccent,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -159,7 +167,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: _accentGreen,
+                    color: statusAccent,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -208,17 +216,17 @@ class _PremiumScreenState extends State<PremiumScreen> {
               decoration: BoxDecoration(
                 color: context.appTheme.bgCard,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _borderLight),
+                border: Border.all(color: _borderColor),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.settings_outlined,
                         size: 20,
-                        color: _textSecondary,
+                        color: _textSecondaryColor,
                       ),
                       const SizedBox(width: 10),
                       Text(
@@ -226,15 +234,15 @@ class _PremiumScreenState extends State<PremiumScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: _textPrimary,
+                          color: _textPrimaryColor,
                         ),
                       ),
                     ],
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
                     size: 20,
-                    color: _textMuted,
+                    color: _textMutedColor,
                   ),
                 ],
               ),
@@ -255,7 +263,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           label,
           style: GoogleFonts.inter(
             fontSize: 13,
-            color: _textSecondary,
+            color: _textSecondaryColor,
           ),
         ),
         Text(
@@ -263,7 +271,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: _textPrimary,
+            color: _textPrimaryColor,
           ),
         ),
       ],
@@ -317,7 +325,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: _textPrimary,
+                          color: _textPrimaryColor,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -359,10 +367,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
             ),
 
             // 矢印
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 22,
-              color: _textMuted,
+              color: _textMutedColor,
             ),
           ],
         ),
@@ -408,12 +416,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
             decoration: BoxDecoration(
               color: context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _borderLight),
+              border: Border.all(color: _borderColor),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.chevron_left,
               size: 24,
-              color: _textPrimary,
+              color: _textPrimaryColor,
             ),
           ),
         ),
@@ -458,7 +466,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             style: GoogleFonts.inter(
               fontSize: 26,
               fontWeight: FontWeight.w700,
-              color: _textPrimary,
+              color: _textPrimaryColor,
               letterSpacing: -0.5,
             ),
           ),
@@ -470,7 +478,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: _textSecondary,
+            color: _textSecondaryColor,
               height: 1.6,
             ),
           ),
@@ -481,13 +489,18 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   /// 機能カードセクション（横スクロール）
   Widget _buildFeaturesSection() {
-    const iconBgCyan = Color(0xFFECFEFF);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconBgCyan = isDark ? const Color(0xFF1E3B3F) : const Color(0xFFECFEFF);
     const accentCyan = Color(0xFF06B6D4);
+    final iconBgBlue = isDark ? const Color(0xFF22324C) : _iconBgBlue;
+    final iconBgOrange = isDark ? const Color(0xFF3B2A1D) : _iconBgOrange;
+    final iconBgGreen = isDark ? const Color(0xFF203529) : _iconBgGreen;
+    final iconBgPink = isDark ? const Color(0xFF3B2330) : _iconBgPink;
 
     final features = [
       _FeatureItem(
         icon: Icons.date_range_outlined,
-        iconBgColor: _iconBgBlue,
+        iconBgColor: iconBgBlue,
         iconColor: _accentBlue,
         title: '今週どれくらい\n使える？',
         desc: '週単位で予算を把握',
@@ -501,28 +514,21 @@ class _PremiumScreenState extends State<PremiumScreen> {
       ),
       _FeatureItem(
         icon: Icons.show_chart,
-        iconBgColor: _iconBgOrange,
+        iconBgColor: iconBgOrange,
         iconColor: _accentGold,
         title: '支出ペース\nグラフ',
         desc: '予算のペースを可視化',
       ),
       _FeatureItem(
         icon: Icons.speed,
-        iconBgColor: _iconBgGreen,
+        iconBgColor: iconBgGreen,
         iconColor: _accentGreen,
         title: '1日あたりの\n支出ペース',
         desc: '日々の消費を可視化',
       ),
       _FeatureItem(
-        icon: Icons.pie_chart_outline,
-        iconBgColor: _iconBgGreen,
-        iconColor: _accentGreen,
-        title: 'カテゴリ別\n支出割合',
-        desc: 'どこにお金を使ってる？',
-      ),
-      _FeatureItem(
         icon: Icons.flash_on_outlined,
-        iconBgColor: _iconBgPink,
+        iconBgColor: iconBgPink,
         iconColor: _accentPink,
         title: 'クイック登録\n無制限',
         desc: 'よく使う支出を\nすぐ記録',
@@ -553,7 +559,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _borderLight),
+        border: Border.all(color: _borderColor),
         boxShadow: context.cardElevationShadow,
       ),
       child: Column(
@@ -581,7 +587,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: _textPrimary,
+              color: _textPrimaryColor,
               height: 1.4,
             ),
           ),
@@ -592,7 +598,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             item.desc,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: _textMuted,
+              color: _textMutedColor,
               height: 1.4,
             ),
           ),
@@ -629,7 +635,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: _textSecondary,
+              color: _textSecondaryColor,
             ),
           ),
           const SizedBox(height: 12),
@@ -678,7 +684,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               color: isSelected ? const Color(0xFFF8FAFF) : context.appTheme.bgCard,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isSelected ? _accentBlue : _borderLight,
+                color: isSelected ? _accentBlue : _borderColor,
                 width: 2,
               ),
             ),
@@ -692,7 +698,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     shape: BoxShape.circle,
                     color: isSelected ? _accentBlue : Colors.transparent,
                     border: Border.all(
-                      color: isSelected ? _accentBlue : _borderLight,
+                      color: isSelected ? _accentBlue : _borderColor,
                       width: 2,
                     ),
                   ),
@@ -721,7 +727,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: _textPrimary,
+                          color: _textPrimaryColor,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -745,7 +751,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: _textPrimary,
+                                color: _textPrimaryColor,
                               ),
                             ),
                           ],
@@ -755,7 +761,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                           price,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: _textSecondary,
+                            color: _textSecondaryColor,
                           ),
                         ),
                       ],
@@ -807,15 +813,18 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   /// トライアル情報カード
   Widget _buildTrialInfo() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final trialBgStart = isDark ? const Color(0xFF1E2C3D) : _trialBgStart;
+    final trialBgEnd = isDark ? const Color(0xFF223552) : _trialBgEnd;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [_trialBgStart, _trialBgEnd],
+            colors: [trialBgStart, trialBgEnd],
           ),
           borderRadius: BorderRadius.circular(14),
         ),
@@ -848,7 +857,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _textPrimary,
+                      color: _textPrimaryColor,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -856,7 +865,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     '無料期間中はいつでもキャンセル可能',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: _textSecondary,
+                      color: _textSecondaryColor,
                     ),
                   ),
                 ],
@@ -975,7 +984,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: _textMuted,
+              color: _textMutedColor,
               height: 1.6,
             ),
           ),
@@ -986,7 +995,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               decoration: BoxDecoration(
-                border: Border.all(color: _borderLight),
+                border: Border.all(color: _borderColor),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -994,7 +1003,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: _textSecondary,
+                  color: _textSecondaryColor,
                 ),
               ),
             ),
@@ -1011,7 +1020,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   '利用規約',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: _textSecondary,
+                    color: _textSecondaryColor,
                   ),
                 ),
               ),
@@ -1024,7 +1033,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   'プライバシーポリシー',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: _textSecondary,
+                    color: _textSecondaryColor,
                   ),
                 ),
               ),

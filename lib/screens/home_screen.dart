@@ -645,8 +645,8 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                 '+ 追加・管理',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.accentBlue.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w500,
+                  color: context.appTheme.textSecondary.withValues(alpha: 0.9),
                 ),
               ),
             ),
@@ -783,10 +783,17 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           color: context.appTheme.bgCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: gradeColor.withValues(alpha: 0.2),
-            width: 1,
+            color: gradeColor.withValues(alpha: 0.35),
+            width: 1.2,
           ),
-          boxShadow: context.cardElevationShadow,
+          boxShadow: [
+            ...context.cardElevationShadow,
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -918,7 +925,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.accentBlue.withValues(alpha: 0.8),
+                  color: context.appTheme.textSecondary.withValues(alpha: 0.9),
                 ),
               ),
             ),

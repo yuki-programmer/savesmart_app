@@ -47,7 +47,7 @@ class AnalyticsCardHeader extends StatelessWidget {
                 Text(
                   title,
                   style: GoogleFonts.inter(
-                    fontSize: 14,
+                    fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: context.appTheme.textPrimary.withValues(alpha: 0.9),
                   ),

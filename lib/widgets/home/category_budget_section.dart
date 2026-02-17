@@ -44,14 +44,14 @@ class CategoryBudgetSection extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.accentBlue.withValues(alpha: 0.8),
+                      color: context.appTheme.textSecondary.withValues(alpha: 0.9),
                     ),
                   ),
                   const SizedBox(width: 2),
                   Icon(
                     Icons.chevron_right,
                     size: 16,
-                    color: AppColors.accentBlue.withValues(alpha: 0.6),
+                    color: context.appTheme.textMuted.withValues(alpha: 0.8),
                   ),
                 ],
               ),
