@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../config/category_icons.dart';
 import '../../services/app_state.dart';
 
@@ -50,10 +51,9 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
           children: [
             Text(
               'カテゴリを追加',
-              style: GoogleFonts.inter(
+              style: AppTextStyles.sectionTitle(context).copyWith(
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: context.appTheme.textPrimary,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 20),
@@ -62,7 +62,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'カテゴリ名を入力',
-                hintStyle: GoogleFonts.inter(
+                hintStyle: AppTextStyles.sub(context).copyWith(
                   color: context.appTheme.textMuted,
                 ),
                 filled: true,
@@ -81,11 +81,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
             // アイコン選択
             Text(
               'アイコン（任意）',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: context.appTheme.textSecondary,
-              ),
+              style: AppTextStyles.label(context, weight: FontWeight.w500),
             ),
             const SizedBox(height: 12),
             _buildIconGrid(),
@@ -104,9 +100,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
                       child: Center(
                         child: Text(
                           'キャンセル',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                          style: AppTextStyles.body(context, weight: FontWeight.w600).copyWith(
                             color: context.appTheme.textSecondary,
                           ),
                         ),
@@ -135,9 +129,7 @@ class _AddCategoryModalContentState extends State<_AddCategoryModalContent> {
                       child: Center(
                         child: Text(
                           '追加',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                          style: AppTextStyles.body(context, weight: FontWeight.w700).copyWith(
                             color: Colors.white,
                           ),
                         ),

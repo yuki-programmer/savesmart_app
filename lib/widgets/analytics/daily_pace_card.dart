@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../services/app_state.dart';
 import '../../utils/formatters.dart';
 import '../../screens/daily_pace_detail_screen.dart';
@@ -294,11 +295,7 @@ class _DailyPaceCardState extends State<DailyPaceCard>
       child: Center(
         child: Text(
           '記録するとここに表示されます',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: context.appTheme.textMuted.withValues(alpha: 0.7),
-          ),
+          style: AppTextStyles.sub(context),
         ),
       ),
     );

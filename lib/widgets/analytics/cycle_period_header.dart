@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 
 /// 詳細画面用のサイクル期間ヘッダー（共通ウィジェット）
 /// 日付範囲とオプションのバッジを表示
@@ -38,11 +39,7 @@ class CyclePeriodHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '${cycleStart.year}/${cycleStart.month}/${cycleStart.day} 〜 ${cycleEnd.year}/${cycleEnd.month}/${cycleEnd.day}',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: context.appTheme.textSecondary,
-            ),
+            style: AppTextStyles.label(context),
           ),
           if (badgeText != null) ...[
             const SizedBox(width: 12),

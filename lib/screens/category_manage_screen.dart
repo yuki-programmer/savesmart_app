@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../config/category_icons.dart';
 import '../services/app_state.dart';
 
@@ -21,11 +22,7 @@ class CategoryManageScreen extends StatelessWidget {
         ),
         title: Text(
           'カテゴリ管理',
-          style: GoogleFonts.inter(
-            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-            fontWeight: FontWeight.w600,
-            fontSize: 17,
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         centerTitle: true,
         actions: [
@@ -59,12 +56,7 @@ class CategoryManageScreen extends StatelessWidget {
                   const SizedBox(height: 14),
                   Text(
                     'カテゴリがありません',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: context.appTheme.textMuted.withValues(alpha: 0.7),
-                      height: 1.4,
-                    ),
+                    style: AppTextStyles.sub(context),
                   ),
                 ],
               ),

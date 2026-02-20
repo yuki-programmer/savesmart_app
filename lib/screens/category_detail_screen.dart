@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../config/category_icons.dart';
 import '../services/app_state.dart';
 import '../services/performance_service.dart';
@@ -238,11 +239,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
                   const SizedBox(width: 12),
                   Text(
                     widget.categoryName,
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: context.appTheme.textPrimary,
-                    ),
+                    style: AppTextStyles.pageTitle(context),
                   ),
                 ],
               );

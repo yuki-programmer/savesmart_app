@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../core/dev_config.dart';
 import '../services/app_state.dart';
 import '../services/database_service.dart';
@@ -87,11 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         title: Text(
           '設定',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         centerTitle: true,
       ),
@@ -144,12 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: context.appTheme.textSecondary.withValues(alpha: 0.7),
-        height: 1.4,
-      ),
+      style: AppTextStyles.label(context, weight: FontWeight.w500),
     );
   }
 

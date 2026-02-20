@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
 import '../widgets/analytics/cycle_indicator.dart';
@@ -52,11 +53,7 @@ class _BurnRateDetailScreenState extends State<BurnRateDetailScreen> {
         ),
         title: Text(
           '支出ペース',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary,
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         centerTitle: true,
       ),

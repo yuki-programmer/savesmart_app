@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../models/quick_entry.dart';
 import '../../services/app_state.dart';
 import '../../screens/premium_screen.dart';
@@ -126,11 +127,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
               Center(
                 child: Text(
                   _isEditing ? 'クイック登録を編集' : 'クイック登録を追加',
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: context.appTheme.textPrimary,
-                  ),
+                  style: AppTextStyles.screenTitle(context),
                 ),
               ),
               const SizedBox(height: 24),
@@ -138,18 +135,14 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
               // タイトル入力（任意）
               Text(
                 'タイトル（任意）',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: context.appTheme.textPrimary,
-                ),
+                style: AppTextStyles.sectionTitleSm(context),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _titleController,
                 decoration: InputDecoration(
                   hintText: '空欄ならカテゴリ名を使用',
-                  hintStyle: GoogleFonts.inter(
+                  hintStyle: AppTextStyles.sub(context).copyWith(
                     fontSize: 14,
                     color: context.appTheme.textMuted.withValues(alpha: 0.7),
                   ),
@@ -175,10 +168,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                     vertical: 12,
                   ),
                 ),
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: context.appTheme.textPrimary,
-                ),
+                style: AppTextStyles.body(context),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 20),
@@ -186,11 +176,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
               // カテゴリ選択
               Text(
                 'カテゴリ',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: context.appTheme.textPrimary,
-                ),
+                style: AppTextStyles.sectionTitleSm(context),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -229,9 +215,10 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                       ),
                       child: Text(
                         category,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        style: AppTextStyles.label(
+                          context,
+                          weight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        ).copyWith(
                           color: isSelected
                               ? _selectedGradeData['color'] as Color
                               : context.appTheme.textSecondary,
@@ -246,11 +233,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
               // 金額入力
               Text(
                 '金額',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: context.appTheme.textPrimary,
-                ),
+                style: AppTextStyles.sectionTitleSm(context),
               ),
               const SizedBox(height: 8),
               Center(
@@ -268,21 +251,14 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
               const SizedBox(height: 8),
               Text(
                 'タップして金額を入力',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: context.appTheme.textMuted,
-                ),
+                style: AppTextStyles.sub(context),
               ),
               const SizedBox(height: 16),
 
               // 支出タイプ
               Text(
                 '支出タイプ',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: context.appTheme.textPrimary,
-                ),
+                style: AppTextStyles.sectionTitleSm(context),
               ),
               const SizedBox(height: 8),
               Row(
@@ -316,10 +292,10 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                         child: Center(
                           child: Text(
                             grade['label'] as String,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight:
-                                  isSelected ? FontWeight.w600 : FontWeight.w500,
+                            style: AppTextStyles.label(
+                              context,
+                              weight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            ).copyWith(
                               color: isSelected ? color : context.appTheme.textSecondary,
                             ),
                           ),
@@ -346,9 +322,8 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   child: Center(
                     child: Text(
                       _isEditing ? '保存する' : '追加する',
-                      style: GoogleFonts.inter(
+                      style: AppTextStyles.body(context, weight: FontWeight.w600).copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w600,
                         color: _canSave ? Colors.white : context.appTheme.textMuted,
                       ),
                     ),
@@ -364,9 +339,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
                   child: Center(
                     child: Text(
                       '削除する',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                      style: AppTextStyles.body(context, weight: FontWeight.w500).copyWith(
                         color: AppColors.accentRed.withValues(alpha: 0.8),
                       ),
                     ),
@@ -417,7 +390,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
         SnackBar(
           content: Text(
             '保存に失敗しました',
-            style: GoogleFonts.inter(),
+            style: AppTextStyles.body(context, weight: FontWeight.w400),
           ),
           backgroundColor: AppColors.accentRed,
         ),
@@ -432,25 +405,27 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
       builder: (dialogContext) => AlertDialog(
         title: Text(
           'クイック登録の上限',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          style: AppTextStyles.sectionTitleSm(context),
         ),
         content: Text(
           _limitMessage,
-          style: GoogleFonts.inter(),
+          style: AppTextStyles.body(context, weight: FontWeight.w400),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(
               '今はしない',
-              style: GoogleFonts.inter(),
+              style: AppTextStyles.body(context, weight: FontWeight.w400),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
               'Plusを見る',
-              style: GoogleFonts.inter(color: AppColors.accentBlue),
+              style: AppTextStyles.body(context, weight: FontWeight.w500).copyWith(
+                color: AppColors.accentBlue,
+              ),
             ),
           ),
         ],
@@ -472,25 +447,29 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
       builder: (context) => AlertDialog(
         title: Text(
           '削除の確認',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          style: AppTextStyles.sectionTitleSm(context),
         ),
         content: Text(
           'このクイック登録を削除しますか？',
-          style: GoogleFonts.inter(),
+          style: AppTextStyles.body(context, weight: FontWeight.w400),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'キャンセル',
-              style: GoogleFonts.inter(color: context.appTheme.textSecondary),
+              style: AppTextStyles.body(context, weight: FontWeight.w400).copyWith(
+                color: context.appTheme.textSecondary,
+              ),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               '削除',
-              style: GoogleFonts.inter(color: AppColors.accentRed),
+              style: AppTextStyles.body(context, weight: FontWeight.w500).copyWith(
+                color: AppColors.accentRed,
+              ),
             ),
           ),
         ],
@@ -510,7 +489,7 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
           SnackBar(
             content: Text(
               '削除に失敗しました',
-              style: GoogleFonts.inter(),
+              style: AppTextStyles.body(context, weight: FontWeight.w400),
             ),
             backgroundColor: AppColors.accentRed,
           ),

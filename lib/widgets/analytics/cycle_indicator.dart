@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../services/app_state.dart';
 
 /// 詳細画面用のサイクルインジケーター（共通ウィジェット）
@@ -60,8 +61,7 @@ class CycleIndicator extends StatelessWidget {
                 ),
                 child: Text(
                   cycleInfo,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
+                  style: AppTextStyles.caption(context).copyWith(
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     color: isSelected ? accentColor : context.appTheme.textSecondary,
                   ),

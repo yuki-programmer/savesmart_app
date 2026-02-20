@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../services/app_state.dart';
 import '../services/performance_service.dart';
 import '../utils/formatters.dart';
@@ -87,12 +88,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   Widget _buildHeader() {
     return Text(
       '分析',
-      style: GoogleFonts.inter(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-        height: 1.3,
-      ),
+      style: AppTextStyles.pageTitle(context),
     );
   }
 
@@ -128,12 +124,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             children: [
               Text(
                 '今サイクルのまとめ',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: context.appTheme.textSecondary.withValues(alpha: 0.8),
-                  height: 1.4,
-                ),
+                style: AppTextStyles.label(context, weight: FontWeight.w500),
               ),
               const Spacer(),
               Container(
@@ -182,15 +173,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '残り',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: context.appTheme.textMuted.withValues(alpha: 0.8),
-                      height: 1.4,
-                    ),
-                  ),
+                Text(
+                  '残り',
+                  style: AppTextStyles.sub(context),
+                ),
                   const SizedBox(height: 4),
                   Text(
                     '¥${formatNumber(remaining)}',
@@ -365,11 +351,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       children: [
                         Text(
                           '固定費',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-                          ),
+                          style: AppTextStyles.sectionTitleSm(context),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -377,7 +359,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: context.appTheme.textSecondary.withValues(alpha: 0.8),
+                            color: context.appTheme.textSecondary.withValues(alpha: 0.9),
                           ),
                         ),
                       ],

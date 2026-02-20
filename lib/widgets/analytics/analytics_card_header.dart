@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 
 /// アナリティクスカード用の共通ヘッダーウィジェット
 class AnalyticsCardHeader extends StatelessWidget {
@@ -46,20 +47,12 @@ class AnalyticsCardHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-                  ),
+                  style: AppTextStyles.sectionTitleSm(context),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: context.appTheme.textMuted.withValues(alpha: 0.7),
-                  ),
+                  style: AppTextStyles.caption(context),
                 ),
               ],
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
 
@@ -163,21 +164,14 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     // タイトル
                     Text(
                       '今サイクルの収入',
-                      style: GoogleFonts.inter(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-                        height: 1.3,
-                      ),
+                      style: AppTextStyles.screenTitle(context),
                     ),
                     const SizedBox(height: 4),
 
                     // サイクル期間表示
                     Text(
                       '${appState.cycleStartDate.month}/${appState.cycleStartDate.day} 〜 ${appState.cycleEndDate.month}/${appState.cycleEndDate.day}',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      style: AppTextStyles.label(context, weight: FontWeight.w500).copyWith(
                         color: AppColors.accentBlue,
                       ),
                     ),
@@ -203,11 +197,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                         children: [
                           Text(
                             '収入合計',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: context.appTheme.textPrimary.withValues(alpha: 0.8),
-                            ),
+                            style: AppTextStyles.body(context, weight: FontWeight.w500),
                           ),
                           Text(
                             '¥${formatNumber(totalIncome)}',
@@ -235,9 +225,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                         child: Center(
                           child: Text(
                             '閉じる',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                            style: AppTextStyles.body(context, weight: FontWeight.w600).copyWith(
                               color: context.appTheme.textSecondary,
                             ),
                           ),
@@ -259,9 +247,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
       children: [
         Text(
           'メイン収入（給料）',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+          style: AppTextStyles.label(context, weight: FontWeight.w600).copyWith(
             color: context.appTheme.textPrimary.withValues(alpha: 0.8),
           ),
         ),
@@ -303,11 +289,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
             const SizedBox(width: 8),
             Text(
               '円',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: context.appTheme.textSecondary,
-              ),
+              style: AppTextStyles.label(context, weight: FontWeight.w500),
             ),
             const SizedBox(width: 12),
             GestureDetector(
@@ -323,9 +305,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 ),
                 child: Text(
                   hasMainIncome ? '更新' : '保存',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  style: AppTextStyles.label(context, weight: FontWeight.w600).copyWith(
                     color: _isMainValid
                         ? Colors.white
                         : context.appTheme.textMuted.withValues(alpha: 0.6),
@@ -348,9 +328,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
           children: [
             Text(
               'サブ収入（補填・ボーナス等）',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.label(context, weight: FontWeight.w600).copyWith(
                 color: context.appTheme.textPrimary.withValues(alpha: 0.8),
               ),
             ),
@@ -375,9 +353,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                       const SizedBox(width: 4),
                       Text(
                         '追加',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                        style: AppTextStyles.caption(context, weight: FontWeight.w600).copyWith(
                           color: AppColors.accentGreen,
                         ),
                       ),
@@ -405,8 +381,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
             child: Center(
               child: Text(
                 'ボーナスや臨時収入があれば追加できます',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTextStyles.sub(context).copyWith(
                   color: context.appTheme.textMuted.withValues(alpha: 0.6),
                 ),
               ),
@@ -432,9 +407,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
               children: [
                 Text(
                   sub['name'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.label(context, weight: FontWeight.w500).copyWith(
                     color: context.appTheme.textPrimary.withValues(alpha: 0.85),
                   ),
                 ),
@@ -490,9 +463,9 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
             onChanged: (_) => _validateSubInput(_subIncomeController.text),
             decoration: InputDecoration(
               hintText: '名目（例：ボーナス）',
-              hintStyle: GoogleFonts.inter(
-                color: context.appTheme.textMuted.withValues(alpha: 0.5),
+              hintStyle: AppTextStyles.sub(context).copyWith(
                 fontSize: 14,
+                color: context.appTheme.textMuted.withValues(alpha: 0.5),
               ),
               filled: true,
               fillColor: context.appTheme.bgCard,
@@ -505,11 +478,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                 vertical: 12,
               ),
             ),
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: context.appTheme.textPrimary,
-            ),
+            style: AppTextStyles.body(context, weight: FontWeight.w500),
           ),
           const SizedBox(height: 10),
 
@@ -526,9 +495,9 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                   onChanged: _validateSubInput,
                   decoration: InputDecoration(
                     hintText: '金額',
-                    hintStyle: GoogleFonts.inter(
-                      color: context.appTheme.textMuted.withValues(alpha: 0.5),
+                    hintStyle: AppTextStyles.sub(context).copyWith(
                       fontSize: 14,
+                      color: context.appTheme.textMuted.withValues(alpha: 0.5),
                     ),
                     filled: true,
                     fillColor: context.appTheme.bgCard,
@@ -551,11 +520,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
               const SizedBox(width: 8),
               Text(
                 '円',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: context.appTheme.textSecondary,
-                ),
+                style: AppTextStyles.label(context, weight: FontWeight.w500),
               ),
             ],
           ),
@@ -583,11 +548,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     child: Center(
                       child: Text(
                         'キャンセル',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: context.appTheme.textSecondary,
-                        ),
+                        style: AppTextStyles.label(context, weight: FontWeight.w500),
                       ),
                     ),
                   ),
@@ -608,9 +569,7 @@ class _IncomeSheetContentState extends State<_IncomeSheetContent> {
                     child: Center(
                       child: Text(
                         '追加',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        style: AppTextStyles.label(context, weight: FontWeight.w600).copyWith(
                           color: _isSubValid
                               ? Colors.white
                               : context.appTheme.textMuted.withValues(alpha: 0.6),

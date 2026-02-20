@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../config/constants.dart';
 import '../models/expense.dart';
 import '../services/app_state.dart';
@@ -89,23 +90,13 @@ class _SplitModalState extends State<SplitModal> {
           // タイトル
           Text(
             '支出を切り出す',
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-              height: 1.3,
-            ),
+            style: AppTextStyles.screenTitle(context),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             '一部を別のカテゴリに移動します',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
-              height: 1.4,
-            ),
+            style: AppTextStyles.sub(context),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 22),
@@ -122,12 +113,7 @@ class _SplitModalState extends State<SplitModal> {
               children: [
                 Text(
                   widget.expense.category,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-                    height: 1.4,
-                  ),
+                  style: AppTextStyles.body(context, weight: FontWeight.w500),
                 ),
                 Text(
                   '¥${formatNumber(widget.expense.amount)}',

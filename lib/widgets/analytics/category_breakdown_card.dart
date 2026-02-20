@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../config/category_icons.dart';
 import '../../services/app_state.dart';
 import '../../screens/category_breakdown_detail_screen.dart';
@@ -195,11 +196,7 @@ class CategoryBreakdownCard extends StatelessWidget {
       child: Center(
         child: Text(
           '記録するとここに表示されます',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: context.appTheme.textMuted.withValues(alpha: 0.7),
-          ),
+          style: AppTextStyles.sub(context),
         ),
       ),
     );

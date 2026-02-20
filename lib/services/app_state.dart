@@ -46,6 +46,7 @@ class AppState extends ChangeNotifier {
   // === Premium / Entitlement ===
   bool? _devPremiumOverride; // null=override無し, true/false=強制
   bool _devModeUnlocked = false; // バージョン10回タップで解放
+  bool _lastPremiumStatus = false;
 
   static const String _keyDevPremiumOverride = 'dev_premium_override';
   static const String _keyDevModeUnlocked = 'dev_mode_unlocked';
@@ -100,7 +101,9 @@ class AppState extends ChangeNotifier {
   String? _cachedCategoryStatsCycleKey;
 
   AppState() {
+    _lastPremiumStatus = isPremium;
     PurchaseService.instance.onPurchaseConfirmed = _handlePlusPurchaseConfirmed;
+    PurchaseService.instance.onPurchaseUpdated = _handlePurchaseUpdated;
   }
 
   // Getters
@@ -642,6 +645,9 @@ class AppState extends ChangeNotifier {
 
       // カテゴリ統計をプリロード（SQLベース、非同期）
       await _refreshCategoryStats();
+
+      // Premiumが無効の場合はクイック登録の上限を適用
+      await _enforceQuickEntryLimitIfNeeded(notify: false);
     } catch (e) {
       debugPrint('Error loading data: $e');
     }
@@ -779,6 +785,33 @@ class AppState extends ChangeNotifier {
       (category) => category.name == 'その他',
       orElse: () => _categories.first,
     );
+  }
+
+  void _handlePurchaseUpdated() async {
+    final isNowPremium = isPremium;
+    if (_lastPremiumStatus && !isNowPremium) {
+      await _enforceQuickEntryLimitIfNeeded();
+    }
+    _lastPremiumStatus = isNowPremium;
+    notifyListeners();
+  }
+
+  Future<void> _enforceQuickEntryLimitIfNeeded({bool notify = true}) async {
+    if (isPremium) return;
+    const freeLimit = 2;
+    if (_quickEntries.length <= freeLimit) return;
+
+    final toDelete = _quickEntries.skip(freeLimit).where((e) => e.id != null).toList();
+    if (toDelete.isEmpty) return;
+
+    for (final entry in toDelete) {
+      await _db.deleteQuickEntry(entry.id!);
+    }
+    await _reloadQuickEntries(notify: false);
+
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   Future<void> addExpenseWithBreakdowns(
@@ -1229,6 +1262,7 @@ class AppState extends ChangeNotifier {
 
     try {
       final prefs = await SharedPreferences.getInstance();
+      final wasPremium = isPremium;
 
       if (value == null) {
         await prefs.remove(_keyDevPremiumOverride);
@@ -1237,6 +1271,11 @@ class AppState extends ChangeNotifier {
       }
 
       _devPremiumOverride = value;
+      final isNowPremium = isPremium;
+      if (wasPremium && !isNowPremium) {
+        await _enforceQuickEntryLimitIfNeeded();
+      }
+      _lastPremiumStatus = isNowPremium;
       notifyListeners();
     } catch (e) {
       debugPrint('Error setting dev premium override: $e');

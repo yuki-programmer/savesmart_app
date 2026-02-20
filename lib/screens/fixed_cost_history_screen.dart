@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../services/app_state.dart';
 import '../models/fixed_cost.dart';
 import '../utils/formatters.dart';
@@ -65,12 +66,7 @@ class _FixedCostHistoryScreenState extends State<FixedCostHistoryScreen> {
           Expanded(
             child: Text(
               '固定費',
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-                height: 1.3,
-              ),
+              style: AppTextStyles.pageTitle(context),
             ),
           ),
         ],

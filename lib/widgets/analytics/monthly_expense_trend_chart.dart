@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../services/app_state.dart';
 import '../../utils/formatters.dart';
 
@@ -41,19 +42,12 @@ class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
       children: [
         Text(
           '月間の支出推移',
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-          ),
+          style: AppTextStyles.sectionTitle(context),
         ),
         const SizedBox(height: 4),
         Text(
           '支出タイプ別の推移が見えてきます',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: context.appTheme.textMuted,
-          ),
+          style: AppTextStyles.sub(context),
         ),
         const SizedBox(height: 12),
         FutureBuilder<List<Map<String, dynamic>>>(

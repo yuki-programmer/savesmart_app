@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../models/expense.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
@@ -55,23 +56,13 @@ class _EditAmountModalState extends State<EditAmountModal> {
           // タイトル
           Text(
             '金額を修正',
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-              height: 1.3,
-            ),
+            style: AppTextStyles.screenTitle(context),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             '${widget.expense.category}の金額を変更します',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
-              height: 1.4,
-            ),
+            style: AppTextStyles.sub(context),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 22),
@@ -88,12 +79,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
               children: [
                 Text(
                   '現在の金額',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: context.appTheme.textSecondary.withValues(alpha: 0.75),
-                    height: 1.4,
-                  ),
+                  style: AppTextStyles.label(context, weight: FontWeight.w400),
                 ),
                 Text(
                   '¥${formatNumber(widget.expense.amount)}',
@@ -111,12 +97,7 @@ class _EditAmountModalState extends State<EditAmountModal> {
           // 新しい金額
           Text(
             '新しい金額',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: context.appTheme.textSecondary.withValues(alpha: 0.75),
-              height: 1.4,
-            ),
+            style: AppTextStyles.label(context, weight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           Text(

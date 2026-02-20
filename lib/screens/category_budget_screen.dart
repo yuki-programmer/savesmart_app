@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../models/category_budget.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
@@ -36,11 +37,7 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
         ),
         title: Text(
           'カテゴリ予算',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary,
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         centerTitle: true,
         actions: [
@@ -82,18 +79,12 @@ class _CategoryBudgetScreenState extends State<CategoryBudgetScreen> {
           const SizedBox(height: 16),
           Text(
             'カテゴリ予算が設定されていません',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: context.appTheme.textSecondary,
-            ),
+            style: AppTextStyles.sectionTitle(context),
           ),
           const SizedBox(height: 8),
           Text(
             '下のボタンから追加できます',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: context.appTheme.textMuted,
-            ),
+            style: AppTextStyles.sub(context),
           ),
         ],
       ),

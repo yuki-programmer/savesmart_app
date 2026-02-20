@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../models/scheduled_expense.dart';
 import '../services/app_state.dart';
 import '../utils/formatters.dart';
@@ -31,11 +32,7 @@ class ScheduledExpensesListScreen extends StatelessWidget {
         ),
         title: Text(
           '予定している支出',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary,
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         centerTitle: true,
       ),

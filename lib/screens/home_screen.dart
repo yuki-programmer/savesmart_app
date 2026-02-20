@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../services/app_state.dart';
 import '../services/performance_service.dart';
 import '../models/expense.dart';
@@ -228,31 +229,20 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               children: [
                 Text(
                   '予定している支出',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: context.appTheme.textPrimary,
-                  ),
+                  style: AppTextStyles.sectionTitle(context),
                 ),
                 if (hasMore)
                   GestureDetector(
                     onTap: () => _showAllScheduledExpenses(allExpenses, data.currencyFormat),
                     child: Text(
                       'すべて見る',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.accentBlue,
-                      ),
+                      style: AppTextStyles.link(context, size: 13),
                     ),
                   )
                 else
                   Text(
                     '${allExpenses.length}件',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: context.appTheme.textSecondary,
-                    ),
+                    style: AppTextStyles.label(context),
                   ),
               ],
             ),
@@ -627,12 +617,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           children: [
             Text(
               'クイック登録',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: context.appTheme.textPrimary.withValues(alpha: 0.85),
-                height: 1.4,
-              ),
+              style: AppTextStyles.sectionTitleSm(context),
             ),
             GestureDetector(
               onTap: () => Navigator.push(
@@ -643,11 +628,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               ),
               child: Text(
                 '+ 追加・管理',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: context.appTheme.textSecondary.withValues(alpha: 0.9),
-                ),
+                style: AppTextStyles.link(context, size: 12),
               ),
             ),
           ],
@@ -906,12 +887,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           children: [
             Text(
               '日々の支出',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: context.appTheme.textPrimary.withValues(alpha: 0.85),
-                height: 1.4,
-              ),
+              style: AppTextStyles.sectionTitleSm(context),
             ),
             GestureDetector(
               onTap: () {
@@ -922,11 +898,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
               },
               child: Text(
                 'すべて見る',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: context.appTheme.textSecondary.withValues(alpha: 0.9),
-                ),
+                style: AppTextStyles.link(context, size: 12),
               ),
             ),
           ],

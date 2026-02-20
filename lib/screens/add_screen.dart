@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../config/category_icons.dart';
 import '../utils/formatters.dart';
 import '../widgets/amount_text_field.dart';
@@ -314,11 +315,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       child: Center(
         child: Text(
           '支出を記録',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary,
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
       ),
     );
@@ -337,11 +334,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
           children: [
             Text(
               'カテゴリ',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: context.appTheme.textPrimary,
-              ),
+              style: AppTextStyles.sectionTitle(context),
             ),
             GestureDetector(
               onTap: () {
@@ -354,11 +347,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
               },
               child: Text(
                 '編集',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.accentBlue,
-                ),
+                style: AppTextStyles.link(context, size: 13, weight: FontWeight.w600),
               ),
             ),
           ],
@@ -563,10 +552,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
         // 入力ヒント
         Text(
           'タップして金額を入力',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: context.appTheme.textMuted,
-          ),
+          style: AppTextStyles.sub(context),
         ),
       ],
     );
@@ -579,11 +565,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       children: [
         Text(
           '支出タイプ',
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary,
-          ),
+          style: AppTextStyles.sectionTitle(context),
         ),
         const SizedBox(height: 12),
         // グレードチップ（横並び）
@@ -651,11 +633,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
         Center(
           child: Text(
             '迷ったら直感でOK。あとから変更できます',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: context.appTheme.textMuted,
-            ),
+            style: AppTextStyles.sub(context),
           ),
         ),
       ],
@@ -669,11 +647,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       children: [
         Text(
           'メモ（任意）',
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary,
-          ),
+          style: AppTextStyles.sectionTitle(context),
         ),
         const SizedBox(height: 10),
         TextField(

@@ -79,7 +79,7 @@ lib/
 ├── widgets/
 │   ├── expense/     # add_breakdown_modal.dart, split_modal.dart
 │   ├── analytics/   # burn_rate_chart.dart, income_sheet.dart
-│   ├── home/        # hero_card.dart (時間別テーマ対応), quick_entry widgets
+│   ├── home/        # hero_card.dart (時間別テーマ対応), daily_allowance_sparkline.dart, quick_entry widgets
 │   └── night_reflection_dialog.dart
 └── utils/           # formatters.dart (formatNumber utility)
 ```
@@ -167,6 +167,26 @@ Currency format is stored in `AppState.currencyFormat` ('prefix' or 'suffix').
 - Current cycle (blue solid) vs previous cycle (gray dashed)
 - Falls back to ideal line if no previous cycle data (< 3 days of records)
 - Comparison badge shows savings/overspending vs previous cycle
+
+### Daily Allowance Sparkline (過去６日間のリズム)
+- Free feature displayed in HeroCard (both day and night modes)
+- Shows past 6 days of "今日使えるお金" as a sparkline chart
+- Fetches 7 days from `daily_budgets` table (6 for display + 1 for oldest point comparison)
+- Color-coded line segments based on day-over-day change:
+  - Green (`AppColors.accentGreen`): Allowance increased (控えめ/modest)
+  - Red (`AppColors.accentRed`): Allowance decreased (使った/spent)
+  - Gray: No change
+- Today's point emphasized with 1.2x size and white border
+- Interactive: Tap points to show tooltip with day-over-day difference
+  - All points show comparison (including oldest visible point)
+  - Tooltips auto-dismiss after 3 seconds
+  - Neutral language: "控えめ" / "使った" (no negative judgment)
+- Title: "過去６日間のリズム" with help icon dialog
+- Minimum 3 data points required to display (2 visible + 1 for comparison)
+- Key files:
+  - Widget: `lib/widgets/home/daily_allowance_sparkline.dart`
+  - DB method: `DatabaseService.getDailyBudgetsForPastDays(int days)`
+  - AppState method: `getDailyAllowanceHistory(int days)`
 
 ### Monthly Expense Trend (月間の支出推移)
 - 12-month grade-based stacked bar chart (`MonthlyExpenseTrendChart`)
@@ -286,6 +306,12 @@ Future<void> setMainIncome(int amount)
 Future<void> addSubIncome(String name, int amount)
 ```
 
+### Daily Allowance History
+```dart
+Future<List<Map<String, dynamic>>> getDailyAllowanceHistory(int days)
+  // Returns list of { 'date': DateTime, 'amount': int }
+```
+
 ### Previous Cycle Comparison
 ```dart
 Future<Map<String, dynamic>?> getPreviousCycleBurnRateData()
@@ -353,6 +379,7 @@ Key SQL methods:
 - `getCycleTotalExpenses(cycleStartDate:, cycleEndDate:)`
 - `getCategoryStats(cycleStartDate:, cycleEndDate:)`
 - `getMonthlyGradeBreakdownAll(months:)`
+- `getDailyBudgetsForPastDays(days:)`
 
 ### Caching (AppState)
 AppState caches frequently accessed data with date-based invalidation:

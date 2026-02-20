@@ -37,7 +37,42 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 - 今日の予算より減少 → 赤（使いすぎ）
 - サイクル最終日は「今月もあと1日！」と表示
 
-### 2.3 クイック登録
+### 2.3 過去６日間のリズム（Sparkline）
+- **Free版で利用可能**
+- ホーム画面のメイン金額の下に表示される、小さな折れ線グラフ
+- 過去6日間の「今日使えるお金」がどう変化したかを一目で把握できる
+
+#### 表示内容
+- 6つの点を線で結んだ折れ線グラフ（左が古い日、右が今日）
+- 今日の点は他より少し大きく、白い縁取りで「ここが今日」とわかるようにしている
+- タイトル「過去６日間のリズム」の横に「？」ヘルプアイコンがあり、タップで説明ダイアログを表示
+
+#### 線の色分け（前日比ベース）
+隣り合う2点間の線の色が、お金の使い方を直感的に伝える:
+- **緑**: 前日より「今日使えるお金」が増えた（＝前日に控えめに過ごした）
+- **赤**: 前日より「今日使えるお金」が減った（＝前日に多めに使った）
+- **グレー**: 変化なし
+
+#### タップ操作（ツールチップ）
+- 各点をタップすると吹き出しで前日比の金額差を表示
+  - 例: 「昨日より ¥500」+「控えめ」（緑背景）
+  - 例: 「今日は ¥300 使った」+「使った」（赤背景）
+  - 例: 「昨日と同じ」（グレー背景）
+- 全ての点で前日比を表示（一番古い点も含む）
+- 3秒後に自動で非表示
+- **言葉遣い**: 「悪化」「失敗」などの否定的な表現は使わず、「控えめ」「使った」とニュートラルに表現
+
+#### データ取得の仕組み
+- DBから7日分のデータを取得し、6日分を表示（残り1日は最古の点の前日比計算に使用）
+- 最低3日分のデータがないと非表示（使い始めて間もない場合）
+- 昼モード/夜モードで配色を自動調整
+
+#### 実装
+- ウィジェット: `DailyAllowanceSparkline` (`lib/widgets/home/daily_allowance_sparkline.dart`)
+- DB: `DatabaseService.getDailyBudgetsForPastDays(int days)`
+- AppState: `getDailyAllowanceHistory(int days)`
+
+### 2.4 クイック登録
 - よく使う支出パターンを事前登録（`quick_entries`テーブル）
 - ワンタップで支出記録（タイトル/金額/カテゴリ/グレード）
 - 2行×横スクロール形式で表示
@@ -45,11 +80,11 @@ SaveSmartは「今日使えるお金」を軸にした家計管理アプリ。�
 - 並び替え・削除機能（QuickEntryManageScreen）
 - タイトルは任意（未入力時はカテゴリ名を表示）
 
-### 2.4 今日の支出リスト
+### 2.5 今日の支出リスト
 - 今日登録した支出を時系列表示
 - タップで編集/分割/削除のアクションシート
 
-### 2.5 今週あと使える（Premium）
+### 2.6 今週あと使える（Premium）
 - **Premiumのみ**（Free版は非表示）
 - 週単位で残りの使える金額を表示
 - 計算方式:
@@ -352,6 +387,7 @@ Future<bool> confirmScheduledExpenseWithModification(int id, int amount, String 
 
 ### 12.1 Free版で使える機能
 - 今日使えるお金の表示（残り日数バッジ付き）
+- 過去６日間のリズム（Sparkline、HeroCard内）
 - 支出登録（グレード/カテゴリ/メモ）
 - 履歴閲覧・検索
 - 固定費管理
@@ -657,7 +693,14 @@ bool get isLastDayOfMonth             // サイクル最終日判定
 int get remainingDaysInMonth          // 残り日数（今日含む）
 ```
 
-### 18.5 バーンレート・前サイクル比較
+### 18.5 日割りデータ履歴
+```dart
+Future<List<Map<String, dynamic>>> getDailyAllowanceHistory(int days)
+  // 返り値: [{ 'date': DateTime, 'amount': int }, ...]
+  // daily_budgetsテーブルから過去N日分を取得
+```
+
+### 18.6 バーンレート・前サイクル比較
 ```dart
 Future<Map<String, dynamic>?> getPreviousCycleBurnRateData()
   // 返り値: { 'rates': List<double>, 'startDay': int, 'totalDays': int, 'income': int, 'disposable': int, 'totalExpenses': int }
@@ -667,14 +710,14 @@ Future<int?> getCycleComparisonDiff()
   // 返り値: 前サイクル比較差額（正=節約中, 負=使いすぎ）
 ```
 
-### 18.6 スマートコンボ予測
+### 18.7 スマートコンボ予測
 ```dart
 Future<List<Map<String, dynamic>>> getSmartCombos(String category)
   // 返り値: [{ 'amount': int, 'grade': String, 'frequency': int }, ...]
   // SQL集計で頻度順に取得
 ```
 
-### 18.7 タブ・UI制御
+### 18.8 タブ・UI制御
 ```dart
 void requestTabChange(int tabIndex)           // タブ切り替えリクエスト
 void requestOpenIncomeSheet()                 // 分析タブ + IncomeSheet自動起動
@@ -683,7 +726,7 @@ int? consumeRequestedTabIndex()               // タブリクエスト消費
 bool consumeOpenIncomeSheetRequest()          // IncomeSheetリクエスト消費
 ```
 
-### 18.8 部分リロード（パフォーマンス最適化）
+### 18.9 部分リロード（パフォーマンス最適化）
 ```dart
 _reloadExpenses()               // 支出のみリロード
 _reloadCategories()             // カテゴリのみリロード
@@ -760,7 +803,7 @@ FutureBuilder<Map<String, dynamic>?>(
 - 開発者モード: バージョン10回タップで解放（DEV_TOOLS=true時のみ）
 
 ### 20.2 Free版で使える機能
-- ホーム画面の全表示（今日使えるお金、明日の予測、クイック登録、固定費）
+- ホーム画面の全表示（今日使えるお金、明日の予測、過去６日間のリズム、クイック登録、固定費）
 - 支出登録（グレード/カテゴリ/メモ）
 - 履歴閲覧・検索（全期間）
 - 支出編集・分割・削除

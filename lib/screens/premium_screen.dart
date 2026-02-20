@@ -5,6 +5,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../services/app_state.dart';
 import '../services/purchase_service.dart';
 
@@ -164,7 +165,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 // タイトル
                 Text(
                   'Plus に加入中',
-                  style: GoogleFonts.inter(
+                  style: AppTextStyles.sectionTitle(context).copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: statusAccent,
@@ -231,9 +232,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       const SizedBox(width: 10),
                       Text(
                         'サブスクリプションを管理',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                        style: AppTextStyles.body(context, weight: FontWeight.w500).copyWith(
                           color: _textPrimaryColor,
                         ),
                       ),
@@ -463,7 +462,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           // Title
           Text(
             'SaveSmart Plus',
-            style: GoogleFonts.inter(
+            style: AppTextStyles.pageTitle(context).copyWith(
               fontSize: 26,
               fontWeight: FontWeight.w700,
               color: _textPrimaryColor,
@@ -476,9 +475,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
           Text(
             'あなたの支出をもっと深く理解して\n賢いお金の使い方を見つけよう',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: AppTextStyles.sub(context).copyWith(
               fontSize: 15,
-            color: _textSecondaryColor,
+              color: _textSecondaryColor,
               height: 1.6,
             ),
           ),
@@ -584,9 +583,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           // Title
           Text(
             item.title,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+            style: AppTextStyles.label(context, weight: FontWeight.w600).copyWith(
               color: _textPrimaryColor,
               height: 1.4,
             ),
@@ -596,8 +593,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           // Description
           Text(
             item.desc,
-            style: GoogleFonts.inter(
-              fontSize: 11,
+            style: AppTextStyles.caption(context).copyWith(
               color: _textMutedColor,
               height: 1.4,
             ),

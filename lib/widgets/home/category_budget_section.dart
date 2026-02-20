@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../models/category_budget.dart';
 import '../../utils/formatters.dart';
 
@@ -29,11 +30,7 @@ class CategoryBudgetSection extends StatelessWidget {
           children: [
             Text(
               'カテゴリ予算',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: context.appTheme.textPrimary.withValues(alpha: 0.85),
-              ),
+              style: AppTextStyles.sectionTitleSm(context),
             ),
             GestureDetector(
               onTap: onEditTap,
@@ -41,11 +38,7 @@ class CategoryBudgetSection extends StatelessWidget {
                 children: [
                   Text(
                     '編集',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: context.appTheme.textSecondary.withValues(alpha: 0.9),
-                    ),
+                    style: AppTextStyles.link(context, size: 12),
                   ),
                   const SizedBox(width: 2),
                   Icon(
@@ -70,14 +63,14 @@ class CategoryBudgetSection extends StatelessWidget {
             boxShadow: context.cardElevationShadow,
           ),
           child: budgetStatusList.isEmpty
-              ? _buildEmptyState()
+              ? _buildEmptyState(context)
               : _buildBudgetList(context),
         ),
       ],
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return GestureDetector(
       onTap: onSetupTap,
       behavior: HitTestBehavior.opaque,
@@ -94,11 +87,7 @@ class CategoryBudgetSection extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               'カテゴリ予算を設定',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.accentBlue.withValues(alpha: 0.8),
-              ),
+              style: AppTextStyles.link(context, size: 13),
             ),
           ],
         ),

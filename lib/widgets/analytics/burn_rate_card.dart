@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../services/app_state.dart';
 import '../../utils/formatters.dart';
 import '../burn_rate_chart.dart';
@@ -358,11 +359,7 @@ class _BurnRateCardState extends State<BurnRateCard>
             child: Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: context.appTheme.textSecondary.withValues(alpha: 0.8),
-              ),
+              style: AppTextStyles.label(context, weight: FontWeight.w500),
             ),
           ),
           const SizedBox(height: 2),
@@ -371,11 +368,7 @@ class _BurnRateCardState extends State<BurnRateCard>
             child: Text(
               subMessage,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-                color: context.appTheme.textMuted,
-              ),
+              style: AppTextStyles.caption(context),
             ),
           ),
         ],

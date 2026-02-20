@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../models/scheduled_expense.dart';
 import '../services/app_state.dart';
 import '../screens/add_scheduled_expense_screen.dart';
@@ -181,19 +182,12 @@ class _ScheduledExpenseConfirmationDialogState
                     children: [
                       Text(
                         '予定支出の確認',
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: context.appTheme.textPrimary,
-                        ),
+                        style: AppTextStyles.sectionTitle(context).copyWith(fontSize: 18),
                       ),
                       if (remainingCount > 1)
                         Text(
                           '残り$remainingCount件',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: context.appTheme.textSecondary,
-                          ),
+                          style: AppTextStyles.sub(context),
                         ),
                     ],
                   ),

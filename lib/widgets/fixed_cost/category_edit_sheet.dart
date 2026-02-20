@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../models/fixed_cost_category.dart';
 import '../../services/app_state.dart';
 
@@ -54,11 +55,7 @@ class _FixedCostCategoryEditSheetState
                 children: [
                   Text(
                     '固定費カテゴリを編集',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: context.appTheme.textPrimary,
-                    ),
+                    style: AppTextStyles.screenTitle(context),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
@@ -120,9 +117,7 @@ class _FixedCostCategoryEditSheetState
             const SizedBox(width: 12),
             Text(
               '新規追加',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
+              style: AppTextStyles.body(context, weight: FontWeight.w500).copyWith(
                 color: AppColors.accentBlue,
               ),
             ),
@@ -140,11 +135,7 @@ class _FixedCostCategoryEditSheetState
           Expanded(
             child: Text(
               category.name,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: context.appTheme.textPrimary,
-              ),
+              style: AppTextStyles.body(context, weight: FontWeight.w500),
             ),
           ),
           // 名称変更
@@ -182,21 +173,18 @@ class _FixedCostCategoryEditSheetState
       builder: (context) => AlertDialog(
         title: Text(
           'カテゴリを追加',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
             hintText: 'カテゴリ名',
-            hintStyle: GoogleFonts.inter(
+            hintStyle: AppTextStyles.sub(context).copyWith(
               color: context.appTheme.textMuted.withValues(alpha: 0.5),
             ),
           ),
-          style: GoogleFonts.inter(fontSize: 16),
+          style: AppTextStyles.body(context).copyWith(fontSize: 16),
         ),
         actions: [
           TextButton(

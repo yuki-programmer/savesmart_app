@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../models/fixed_cost.dart';
 import '../models/fixed_cost_category.dart';
 import '../services/app_state.dart';
@@ -112,11 +113,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         ),
         title: Text(
           '固定費を登録',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary.withValues(alpha: 0.9),
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         centerTitle: true,
         actions: [
@@ -155,12 +152,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               // 金額入力
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: context.appTheme.bgCard,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: context.cardElevationShadow,
-                ),
                 child: Column(
                   children: [
                     AmountTextField(
@@ -176,10 +167,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'タップして金額を入力',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: context.appTheme.textMuted,
-                      ),
+                      style: AppTextStyles.sub(context),
                     ),
                   ],
                 ),
@@ -199,13 +187,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   label: 'メモ',
                   child: TextField(
                     controller: _memoController,
-                    style: GoogleFonts.inter(
+                    style: AppTextStyles.body(context).copyWith(
                       fontSize: 16,
-                      color: context.appTheme.textPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: '任意',
-                      hintStyle: GoogleFonts.inter(
+                      hintStyle: AppTextStyles.sub(context).copyWith(
                         fontSize: 16,
                         color: context.appTheme.textMuted.withValues(alpha: 0.5),
                       ),
@@ -242,21 +229,13 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
             children: [
               Text(
                 '固定費カテゴリ',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: context.appTheme.textSecondary.withValues(alpha: 0.8),
-                ),
+                style: AppTextStyles.sectionTitleSm(context),
               ),
               GestureDetector(
                 onTap: _showCategoryEditSheet,
                 child: Text(
                   '編集',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: context.appTheme.textSecondary.withValues(alpha: 0.9),
-                  ),
+                  style: AppTextStyles.link(context, size: 13),
                 ),
               ),
             ],
@@ -295,18 +274,19 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? AppColors.accentBlue.withValues(alpha: 0.3)
-                : Colors.transparent,
+                ? AppColors.accentBlue.withValues(alpha: 0.35)
+                : context.appTheme.borderSubtle.withValues(alpha: 0.8),
           ),
         ),
         child: Text(
           category.name,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          style: AppTextStyles.label(
+            context,
+            weight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ).copyWith(
             color: isSelected
                 ? AppColors.accentBlue
-                : context.appTheme.textSecondary.withValues(alpha: 0.8),
+                : context.appTheme.textSecondary.withValues(alpha: 0.85),
           ),
         ),
       ),
@@ -325,23 +305,24 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? context.appTheme.textMuted.withValues(alpha: 0.1)
+              ? context.appTheme.textSecondary.withValues(alpha: 0.12)
               : context.appTheme.bgPrimary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? context.appTheme.textMuted.withValues(alpha: 0.3)
-                : Colors.transparent,
+                ? context.appTheme.textSecondary.withValues(alpha: 0.35)
+                : context.appTheme.borderSubtle.withValues(alpha: 0.8),
           ),
         ),
         child: Text(
           'その他',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          style: AppTextStyles.label(
+            context,
+            weight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ).copyWith(
             color: isSelected
                 ? context.appTheme.textSecondary
-                : context.appTheme.textMuted.withValues(alpha: 0.7),
+                : context.appTheme.textSecondary.withValues(alpha: 0.8),
           ),
         ),
       ),
@@ -357,11 +338,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
             width: 72,
             child: Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: context.appTheme.textSecondary.withValues(alpha: 0.8),
-              ),
+              style: AppTextStyles.label(context, weight: FontWeight.w500),
             ),
           ),
           Expanded(child: child),
@@ -392,8 +369,8 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected
-                        ? AppColors.accentBlue.withValues(alpha: 0.3)
-                        : Colors.transparent,
+                        ? AppColors.accentBlue.withValues(alpha: 0.35)
+                        : context.appTheme.borderSubtle.withValues(alpha: 0.8),
                   ),
                 ),
                 child: Text(
@@ -403,7 +380,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected
                         ? AppColors.accentBlue
-                        : context.appTheme.textSecondary.withValues(alpha: 0.8),
+                        : context.appTheme.textSecondary.withValues(alpha: 0.85),
                   ),
                 ),
               ),

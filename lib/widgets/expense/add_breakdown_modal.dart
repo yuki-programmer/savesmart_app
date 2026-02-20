@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
+import '../../config/typography.dart';
 import '../../models/category.dart';
 import '../amount_text_field.dart';
 
@@ -44,10 +45,9 @@ void showAddBreakdownModal({
                       children: [
                         Text(
                           '内訳を追加',
-                          style: GoogleFonts.inter(
+                          style: AppTextStyles.sectionTitle(context).copyWith(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: context.appTheme.textPrimary,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -69,10 +69,7 @@ void showAddBreakdownModal({
                         Center(
                           child: Text(
                             'タップして金額を入力',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: context.appTheme.textMuted,
-                            ),
+                            style: AppTextStyles.sub(context),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -80,11 +77,7 @@ void showAddBreakdownModal({
                         // カテゴリ選択
                         Text(
                           'カテゴリ',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: context.appTheme.textPrimary,
-                          ),
+                          style: AppTextStyles.sectionTitle(context),
                         ),
                         const SizedBox(height: 8),
                         Container(
@@ -97,7 +90,7 @@ void showAddBreakdownModal({
                             value: selectedCategory,
                             hint: Text(
                               'カテゴリを選択',
-                              style: GoogleFonts.inter(
+                              style: AppTextStyles.sub(context).copyWith(
                                 color: context.appTheme.textMuted,
                               ),
                             ),
@@ -108,9 +101,7 @@ void showAddBreakdownModal({
                                 value: category,
                                 child: Text(
                                   category.name,
-                                  style: GoogleFonts.inter(
-                                    color: context.appTheme.textPrimary,
-                                  ),
+                                  style: AppTextStyles.body(context),
                                 ),
                               );
                             }).toList(),
@@ -164,9 +155,7 @@ void showAddBreakdownModal({
                             child: Center(
                               child: Text(
                                 'キャンセル',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                style: AppTextStyles.body(context, weight: FontWeight.w600).copyWith(
                                   color: context.appTheme.textSecondary,
                                 ),
                               ),
@@ -197,9 +186,7 @@ void showAddBreakdownModal({
                             child: Center(
                               child: Text(
                                 '追加',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                style: AppTextStyles.body(context, weight: FontWeight.w700).copyWith(
                                   color: Colors.white,
                                 ),
                               ),

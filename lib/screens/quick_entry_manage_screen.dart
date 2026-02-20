@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../config/typography.dart';
 import '../models/quick_entry.dart';
 import '../screens/premium_screen.dart';
 import '../services/app_state.dart';
@@ -32,11 +33,7 @@ class QuickEntryManageScreen extends StatelessWidget {
         ),
         title: Text(
           'クイック登録を管理',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: context.appTheme.textPrimary,
-          ),
+          style: AppTextStyles.screenTitle(context),
         ),
         centerTitle: true,
       ),
@@ -48,11 +45,7 @@ class QuickEntryManageScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
             child: Text(
               'よく使う支出のショートカットです。ここでは編集や削除が行えます。',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: context.appTheme.textSecondary,
-              ),
+              style: AppTextStyles.sub(context),
             ),
           ),
           // リスト
