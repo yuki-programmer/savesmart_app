@@ -207,17 +207,17 @@ class _ScheduledExpenseCard extends StatelessWidget {
     IconData gradeIcon;
     switch (scheduled.grade) {
       case 'saving':
-        gradeColor = AppColors.accentGreen;
+        gradeColor = AppColors.expenseSaving;
         gradeLabel = '節約';
         gradeIcon = Icons.savings_outlined;
         break;
       case 'reward':
-        gradeColor = AppColors.accentOrange;
+        gradeColor = AppColors.expenseReward;
         gradeLabel = 'ご褒美';
         gradeIcon = Icons.star_outline;
         break;
       default:
-        gradeColor = AppColors.accentBlue;
+        gradeColor = AppColors.expenseStandard;
         gradeLabel = '標準';
         gradeIcon = Icons.balance_outlined;
     }

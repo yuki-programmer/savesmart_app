@@ -78,11 +78,11 @@ class _ScheduledExpenseConfirmationDialogState
   Color _getGradeColor(String grade) {
     switch (grade) {
       case 'saving':
-        return AppColors.accentGreen;
+        return AppColors.expenseSaving;
       case 'standard':
-        return AppColors.accentBlue;
+        return AppColors.expenseStandard;
       case 'reward':
-        return AppColors.accentOrange;
+        return AppColors.expenseReward;
       default:
         return context.appTheme.textSecondary;
     }

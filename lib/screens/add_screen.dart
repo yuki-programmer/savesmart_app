@@ -7,6 +7,7 @@ import '../config/category_icons.dart';
 import '../utils/formatters.dart';
 import '../widgets/amount_text_field.dart';
 import '../widgets/expense/add_breakdown_modal.dart';
+import '../widgets/grade_label.dart';
 import '../widgets/income_sheet.dart';
 import '../services/app_state.dart';
 import '../services/performance_service.dart';
@@ -53,22 +54,22 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
       'value': 'saving',
       'label': '節約',
       'icon': Icons.savings_outlined,
-      'color': AppColors.accentGreen,
-      'lightColor': AppColors.accentGreenLight,
+      'color': AppColors.expenseSaving,
+      'lightColor': AppColors.expenseSavingLight,
     },
     {
       'value': 'standard',
       'label': '標準',
       'icon': Icons.balance_outlined,
-      'color': AppColors.accentBlue,
-      'lightColor': AppColors.accentBlueLight,
+      'color': AppColors.expenseStandard,
+      'lightColor': AppColors.expenseStandardLight,
     },
     {
       'value': 'reward',
       'label': 'ご褒美',
       'icon': Icons.star_outline,
-      'color': AppColors.accentOrange,
-      'lightColor': AppColors.accentOrangeLight,
+      'color': AppColors.expenseReward,
+      'lightColor': AppColors.expenseRewardLight,
     },
   ];
 
@@ -488,11 +489,11 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: lightColor.withValues(alpha: 0.6),
+                  color: context.appTheme.bgCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: color.withValues(alpha: 0.4),
-                    width: 1,
+                    color: color.withValues(alpha: 0.35),
+                    width: 1.2,
                   ),
                 ),
                 child: Row(
@@ -507,20 +508,10 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        label,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: color,
-                        ),
-                      ),
+                    GradeLabel(
+                      label: label,
+                      color: color,
+                      lightColor: lightColor,
                     ),
                   ],
                 ),
@@ -589,28 +580,19 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: isSelected ? lightColor : context.appTheme.bgCard,
+                    color: isSelected ? lightColor.withValues(alpha: 0.85) : context.appTheme.bgCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? color : Colors.black.withValues(alpha: 0.06),
-                      width: isSelected ? 2 : 1,
+                      color: isSelected ? color.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.05),
+                      width: isSelected ? 1.5 : 1,
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
                   ),
                   child: Column(
                     children: [
                       Icon(
                         grade['icon'] as IconData,
                         size: 22,
-                        color: isSelected ? color : context.appTheme.textMuted,
+                        color: isSelected ? context.appTheme.textPrimary : context.appTheme.textMuted,
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -618,7 +600,7 @@ class _AddScreenState extends State<AddScreen> with ScreenTraceMixin {
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? color : context.appTheme.textSecondary,
+                          color: isSelected ? context.appTheme.textPrimary : context.appTheme.textSecondary,
                         ),
                       ),
                     ],

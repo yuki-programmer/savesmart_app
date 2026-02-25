@@ -12,6 +12,7 @@ import '../models/scheduled_expense.dart';
 import 'add_scheduled_expense_screen.dart';
 import 'scheduled_expenses_list_screen.dart';
 import '../utils/formatters.dart';
+import '../widgets/grade_label.dart';
 import '../widgets/quick_entry/quick_entry_edit_modal.dart';
 import '../widgets/night_reflection_dialog.dart';
 import '../widgets/home/hero_card.dart';
@@ -142,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
         dynamicTomorrowForecast: appState.dynamicTomorrowForecast,
         todayTotal: appState.todayTotal,
         remainingDays: appState.remainingDaysInMonth,
+        isLastDayOfCycle: appState.isLastDayOfMonth,
         currencyFormat: appState.currencyFormat,
       ),
       builder: (context, data, child) {
@@ -151,6 +153,7 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           dynamicTomorrowForecast: data.dynamicTomorrowForecast,
           todayTotal: data.todayTotal,
           remainingDays: data.remainingDays,
+          isLastDayOfCycle: data.isLastDayOfCycle,
           hasOpenedReflection: _hasOpenedReflectionToday,
           onTapReflection: () => _showNightReflectionDialog(appState),
           currencyFormat: data.currencyFormat,
@@ -305,17 +308,17 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
     IconData gradeIcon;
     switch (scheduled.grade) {
       case 'saving':
-        gradeColor = AppColors.accentGreen;
+        gradeColor = AppColors.expenseSaving;
         gradeLabel = '節約';
         gradeIcon = Icons.savings_outlined;
         break;
       case 'reward':
-        gradeColor = AppColors.accentOrange;
+        gradeColor = AppColors.expenseReward;
         gradeLabel = 'ご褒美';
         gradeIcon = Icons.star_outline;
         break;
       default:
-        gradeColor = AppColors.accentBlue;
+        gradeColor = AppColors.expenseStandard;
         gradeLabel = '標準';
         gradeIcon = Icons.balance_outlined;
     }
@@ -739,18 +742,18 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
 
     switch (entry.grade) {
       case 'saving':
-        gradeColor = AppColors.accentGreen;
-        gradeLightColor = AppColors.accentGreenLight;
+        gradeColor = AppColors.expenseSaving;
+        gradeLightColor = AppColors.expenseSavingLight;
         gradeLabel = '節約';
         break;
       case 'reward':
-        gradeColor = AppColors.accentOrange;
-        gradeLightColor = AppColors.accentOrangeLight;
+        gradeColor = AppColors.expenseReward;
+        gradeLightColor = AppColors.expenseRewardLight;
         gradeLabel = 'ご褒美';
         break;
       default:
-        gradeColor = AppColors.accentBlue;
-        gradeLightColor = AppColors.accentBlueLight;
+        gradeColor = AppColors.expenseStandard;
+        gradeLightColor = AppColors.expenseStandardLight;
         gradeLabel = '標準';
     }
 
@@ -803,20 +806,10 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: gradeLightColor.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    gradeLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                      color: gradeColor,
-                    ),
-                  ),
+                GradeLabel(
+                  label: gradeLabel,
+                  color: gradeColor,
+                  lightColor: gradeLightColor,
                 ),
               ],
             ),
@@ -838,13 +831,13 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
       Color gradeColor;
       switch (entry.grade) {
         case 'saving':
-          gradeColor = AppColors.accentGreen;
+          gradeColor = AppColors.expenseSaving;
           break;
         case 'reward':
-          gradeColor = AppColors.accentOrange;
+          gradeColor = AppColors.expenseReward;
           break;
         default:
-          gradeColor = AppColors.accentBlue;
+          gradeColor = AppColors.expenseStandard;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -939,15 +932,15 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
     IconData gradeIcon;
     switch (expense.grade) {
       case 'saving':
-        gradeColor = AppColors.accentGreen;
+        gradeColor = AppColors.expenseSaving;
         gradeIcon = Icons.savings_outlined;
         break;
       case 'reward':
-        gradeColor = AppColors.accentOrange;
+        gradeColor = AppColors.expenseReward;
         gradeIcon = Icons.star_outline;
         break;
       default:
-        gradeColor = AppColors.accentBlue;
+        gradeColor = AppColors.expenseStandard;
         gradeIcon = Icons.balance_outlined;
     }
 
@@ -1045,6 +1038,7 @@ class _HeroCardData {
   final int? dynamicTomorrowForecast;
   final int todayTotal;
   final int remainingDays;
+  final bool isLastDayOfCycle;
   final String currencyFormat;
 
   const _HeroCardData({
@@ -1052,6 +1046,7 @@ class _HeroCardData {
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
     required this.remainingDays,
+    required this.isLastDayOfCycle,
     required this.currencyFormat,
   });
 
@@ -1064,6 +1059,7 @@ class _HeroCardData {
           dynamicTomorrowForecast == other.dynamicTomorrowForecast &&
           todayTotal == other.todayTotal &&
           remainingDays == other.remainingDays &&
+          isLastDayOfCycle == other.isLastDayOfCycle &&
           currencyFormat == other.currencyFormat;
 
   @override
@@ -1072,6 +1068,7 @@ class _HeroCardData {
       dynamicTomorrowForecast.hashCode ^
       todayTotal.hashCode ^
       remainingDays.hashCode ^
+      isLastDayOfCycle.hashCode ^
       currencyFormat.hashCode;
 }
 

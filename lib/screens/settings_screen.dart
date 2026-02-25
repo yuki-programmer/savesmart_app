@@ -5,10 +5,17 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../config/typography.dart';
 import '../core/dev_config.dart';
+import '../data/repositories/pair_repository.dart';
+import '../data/repositories/user_repository.dart';
+import '../models/user_profile.dart';
 import '../services/app_state.dart';
+import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/performance_monitor.dart';
 import 'category_manage_screen.dart';
+import 'pair_join_screen.dart';
+import 'pair_start_screen.dart';
+import 'pair_status_screen.dart';
 import 'premium_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -109,6 +116,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildDisplaySettingsCard(appState),
               const SizedBox(height: 24),
 
+              // ペアセクション
+              _buildSectionHeader('ペア'),
+              const SizedBox(height: 12),
+              _buildPairSettingsCard(),
+              const SizedBox(height: 24),
+
               // データ管理セクション
               _buildSectionHeader('データ管理'),
               const SizedBox(height: 12),
@@ -142,6 +155,258 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Text(
       title,
       style: AppTextStyles.label(context, weight: FontWeight.w500),
+    );
+  }
+
+  Widget _buildPairSettingsCard() {
+    if (!AuthService.instance.isSupported) {
+      return _buildPairUnsupportedCard();
+    }
+
+    final authUser = AuthService.instance.currentUser;
+
+    if (authUser == null) {
+      return _buildPairCardContent(pairId: null);
+    }
+
+    return StreamBuilder<UserProfile>(
+      stream: context.read<UserRepository>().watchMe(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildPairCardContent(pairId: null, showLoading: true);
+        }
+        if (snapshot.hasError) {
+          return _buildPairCardContent(pairId: null);
+        }
+        final profile = snapshot.data;
+        return _buildPairCardContent(pairId: profile?.pairId);
+      },
+    );
+  }
+
+  Widget _buildPairCardContent({required String? pairId, bool showLoading = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: context.cardElevationShadow,
+      ),
+      child: Column(
+        children: [
+          if (showLoading)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '読み込み中...',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: context.appTheme.textMuted.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            if (pairId == null) ...[
+              _buildPairRow(
+                title: 'ペアをはじめる',
+                subtitle: '2人で家計簿を共有できます',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PairStartScreen()),
+                  );
+                },
+              ),
+              _buildPairRow(
+                title: '招待コードを入力',
+                subtitle: 'コードを持っている場合はこちら',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PairJoinScreen()),
+                  );
+                },
+              ),
+            ] else ...[
+              _buildPairRow(
+                title: 'ペア状況',
+                subtitle: 'メンバーとPlus状態を確認',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PairStatusScreen()),
+                  );
+                },
+              ),
+              _buildPairRow(
+                title: 'ペアをやめる',
+                subtitle: '共有を解除します',
+                onTap: () => _showLeavePairDialog(),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPairUnsupportedCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.appTheme.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: context.cardElevationShadow,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 16,
+            color: context.appTheme.textMuted.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'ペア機能はモバイル版で利用できます',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: context.appTheme.textMuted.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPairRow({
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: context.appTheme.bgPrimary,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: context.appTheme.textPrimary.withValues(alpha: 0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: context.appTheme.textMuted.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: context.appTheme.textMuted.withValues(alpha: 0.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showLeavePairDialog() async {
+    bool copyToLocal = false;
+    final pairRepo = context.read<PairRepository>();
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: context.appTheme.bgCard,
+          title: Text(
+            'ペアをやめる',
+            style: GoogleFonts.inter(color: context.appTheme.textPrimary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '退出すると共有データは見られません。必要ならコピーを作成できます',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: context.appTheme.textMuted.withValues(alpha: 0.8),
+                ),
+              ),
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                value: copyToLocal,
+                onChanged: (value) => setState(() => copyToLocal = value ?? false),
+                title: Text(
+                  '自分用にコピーを作成する',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: context.appTheme.textPrimary,
+                  ),
+                ),
+                activeColor: AppColors.accentBlue,
+                checkColor: Colors.white,
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'キャンセル',
+                style: GoogleFonts.inter(color: AppColors.accentBlue),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await pairRepo.leavePair(copyToLocal: copyToLocal);
+              },
+              child: Text(
+                '退出する',
+                style: GoogleFonts.inter(color: AppColors.accentRed),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -553,21 +818,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Color _getGradeColor(String grade) {
     switch (grade) {
       case 'saving':
-        return AppColors.accentGreen;
+        return AppColors.expenseSaving;
       case 'standard':
-        return AppColors.accentBlue;
+        return AppColors.expenseStandard;
       case 'reward':
-        return AppColors.accentOrange;
+        return AppColors.expenseReward;
       default:
-        return AppColors.accentBlue;
+        return AppColors.expenseStandard;
     }
   }
 
   void _showDefaultGradePicker(AppState appState) {
     final grades = [
-      {'value': 'saving', 'label': '節約', 'color': AppColors.accentGreen, 'icon': Icons.savings_outlined},
-      {'value': 'standard', 'label': '標準', 'color': AppColors.accentBlue, 'icon': Icons.balance_outlined},
-      {'value': 'reward', 'label': 'ご褒美', 'color': AppColors.accentOrange, 'icon': Icons.star_outline},
+      {'value': 'saving', 'label': '節約', 'color': AppColors.expenseSaving, 'icon': Icons.savings_outlined},
+      {'value': 'standard', 'label': '標準', 'color': AppColors.expenseStandard, 'icon': Icons.balance_outlined},
+      {'value': 'reward', 'label': 'ご褒美', 'color': AppColors.expenseReward, 'icon': Icons.star_outline},
     ];
 
     showModalBottomSheet(

@@ -368,17 +368,17 @@ class _SplitModalState extends State<SplitModal> {
     switch (grade) {
       case 'saving':
         label = '節約';
-        color = AppColors.accentGreen;
+        color = AppColors.expenseSaving;
         icon = Icons.savings_outlined;
         break;
       case 'reward':
         label = 'ご褒美';
-        color = AppColors.accentOrange;
+        color = AppColors.expenseReward;
         icon = Icons.star_outline;
         break;
       default:
         label = '標準';
-        color = AppColors.accentBlue;
+        color = AppColors.expenseStandard;
         icon = Icons.balance_outlined;
     }
 
@@ -408,9 +408,9 @@ class _SplitModalState extends State<SplitModal> {
 
   Widget _buildGradeSelector() {
     final grades = [
-      {'key': 'saving', 'label': '節約', 'icon': Icons.savings_outlined, 'color': AppColors.accentGreen},
-      {'key': 'standard', 'label': '標準', 'icon': Icons.balance_outlined, 'color': AppColors.accentBlue},
-      {'key': 'reward', 'label': 'ご褒美', 'icon': Icons.star_outline, 'color': AppColors.accentOrange},
+      {'key': 'saving', 'label': '節約', 'icon': Icons.savings_outlined, 'color': AppColors.expenseSaving},
+      {'key': 'standard', 'label': '標準', 'icon': Icons.balance_outlined, 'color': AppColors.expenseStandard},
+      {'key': 'reward', 'label': 'ご褒美', 'icon': Icons.star_outline, 'color': AppColors.expenseReward},
     ];
 
     return Row(

@@ -59,19 +59,19 @@ class _CategoryBreakdownSheetContent extends StatelessWidget {
       {
         'key': 'saving',
         'label': '節約',
-        'color': AppColors.accentGreen,
+        'color': AppColors.expenseSaving,
         'icon': Icons.savings_outlined,
       },
       {
         'key': 'standard',
         'label': '標準',
-        'color': AppColors.accentBlue,
+        'color': AppColors.expenseStandard,
         'icon': Icons.balance_outlined,
       },
       {
         'key': 'reward',
         'label': 'ご褒美',
-        'color': AppColors.accentOrange,
+        'color': AppColors.expenseReward,
         'icon': Icons.star_outline,
       },
     ];

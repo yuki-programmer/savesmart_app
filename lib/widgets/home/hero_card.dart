@@ -69,6 +69,7 @@ class HeroCard extends StatefulWidget {
   final int? dynamicTomorrowForecast;
   final int todayTotal;
   final int remainingDays;
+  final bool isLastDayOfCycle;
   final bool hasOpenedReflection;
   final VoidCallback? onTapReflection;
   final String currencyFormat;
@@ -79,6 +80,7 @@ class HeroCard extends StatefulWidget {
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
     required this.remainingDays,
+    required this.isLastDayOfCycle,
     required this.hasOpenedReflection,
     this.onTapReflection,
     this.currencyFormat = 'prefix',
@@ -187,6 +189,7 @@ class _HeroCardWidgetState extends State<HeroCard> {
           dynamicTomorrowForecast: widget.dynamicTomorrowForecast,
           todayTotal: widget.todayTotal,
           remainingDays: widget.remainingDays,
+          isLastDayOfCycle: widget.isLastDayOfCycle,
           canOpenReflection: state.canOpenReflection,
           currencyFormat: widget.currencyFormat,
           historyData: _historyData,
@@ -200,6 +203,7 @@ class _HeroCardWidgetState extends State<HeroCard> {
           dynamicTomorrowForecast: widget.dynamicTomorrowForecast,
           todayTotal: widget.todayTotal,
           remainingDays: widget.remainingDays,
+          isLastDayOfCycle: widget.isLastDayOfCycle,
           isMorningGlow: state.displayMode == HeroCardTimeMode.morning,
           useNightStyle: state.useNightDecoration,
           currencyFormat: widget.currencyFormat,
@@ -216,6 +220,7 @@ class _DayContent extends StatelessWidget {
   final int? dynamicTomorrowForecast;
   final int todayTotal;
   final int remainingDays;
+  final bool isLastDayOfCycle;
   final bool isMorningGlow;
   final bool useNightStyle;
   final String currencyFormat;
@@ -227,6 +232,7 @@ class _DayContent extends StatelessWidget {
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
     required this.remainingDays,
+    required this.isLastDayOfCycle,
     required this.isMorningGlow,
     required this.useNightStyle,
     required this.currencyFormat,
@@ -431,33 +437,44 @@ class _DayContent extends StatelessWidget {
         const SizedBox(height: 16),
 
         // 明日の予測
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'このままなら明日は ',
-              style: TextStyle(
-                fontSize: HomeConstants.heroSubtextSize,
-                color: subTextColor,
-              ),
+        if (isLastDayOfCycle)
+          Text(
+            'サイクル最終日です。明日からまた整えていきましょう！',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: HomeConstants.heroSubtextSize,
+              color: subTextColor,
+              height: 1.3,
             ),
-            Text(
-              formatCurrency(dynamicTomorrowForecast ?? 0, currencyFormat),
-              style: TextStyle(
-                fontFamily: 'IBMPlexSans',
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+          )
+        else
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'このままなら明日は ',
+                style: TextStyle(
+                  fontSize: HomeConstants.heroSubtextSize,
+                  color: subTextColor,
+                ),
+              ),
+              Text(
+                formatCurrency(dynamicTomorrowForecast ?? 0, currencyFormat),
+                style: TextStyle(
+                  fontFamily: 'IBMPlexSans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: isIncreasing ? AppColors.accentGreen : AppColors.accentRed,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                isIncreasing ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 14,
                 color: isIncreasing ? AppColors.accentGreen : AppColors.accentRed,
               ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              isIncreasing ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 14,
-              color: isIncreasing ? AppColors.accentGreen : AppColors.accentRed,
-            ),
-          ],
-        ),
+            ],
+          ),
       ],
     );
   }
@@ -693,6 +710,7 @@ class _NightContent extends StatelessWidget {
   final int? dynamicTomorrowForecast;
   final int todayTotal;
   final int remainingDays;
+  final bool isLastDayOfCycle;
   final bool canOpenReflection;
   final String currencyFormat;
   final List<Map<String, dynamic>> historyData;
@@ -703,6 +721,7 @@ class _NightContent extends StatelessWidget {
     required this.dynamicTomorrowForecast,
     required this.todayTotal,
     required this.remainingDays,
+    required this.isLastDayOfCycle,
     required this.canOpenReflection,
     required this.currencyFormat,
     required this.historyData,
@@ -837,14 +856,31 @@ class _NightContent extends StatelessWidget {
         const SizedBox(height: 16),
 
         // 補足：今日/明日（振り返り導線）
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildMetric('今日', todayTotal, HomeConstants.nightPrimaryText.withValues(alpha: 0.75)),
-            const SizedBox(width: 32),
-            _buildMetric('明日', dynamicTomorrowForecast ?? 0, HomeConstants.nightPrimaryText),
-          ],
-        ),
+        if (isLastDayOfCycle)
+          Column(
+            children: [
+              _buildMetric('今日', todayTotal, HomeConstants.nightPrimaryText.withValues(alpha: 0.75)),
+              const SizedBox(height: 10),
+              Text(
+                'サイクル最終日です。明日からまた整えていきましょう！',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: HomeConstants.nightPrimaryText.withValues(alpha: 0.7),
+                  height: 1.3,
+                ),
+              ),
+            ],
+          )
+        else
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildMetric('今日', todayTotal, HomeConstants.nightPrimaryText.withValues(alpha: 0.75)),
+              const SizedBox(width: 32),
+              _buildMetric('明日', dynamicTomorrowForecast ?? 0, HomeConstants.nightPrimaryText),
+            ],
+          ),
 
         // CTA（振り返り可能時のみ）
         if (canOpenReflection) ...[

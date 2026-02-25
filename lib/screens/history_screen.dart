@@ -878,16 +878,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     switch (grade) {
       case 'saving':
-        bgColor = AppColors.accentGreenLight.withValues(alpha: 0.7);
-        textColor = AppColors.accentGreen;
+        bgColor = AppColors.expenseSavingLight.withValues(alpha: 0.7);
+        textColor = AppColors.expenseSaving;
         break;
       case 'standard':
-        bgColor = AppColors.accentBlueLight.withValues(alpha: 0.7);
-        textColor = AppColors.accentBlue;
+        bgColor = AppColors.expenseStandardLight.withValues(alpha: 0.7);
+        textColor = AppColors.expenseStandard;
         break;
       case 'reward':
-        bgColor = AppColors.accentOrangeLight.withValues(alpha: 0.7);
-        textColor = AppColors.accentOrange;
+        bgColor = AppColors.expenseRewardLight.withValues(alpha: 0.7);
+        textColor = AppColors.expenseReward;
         break;
       default:
         bgColor = context.appTheme.textMuted.withValues(alpha: 0.08);

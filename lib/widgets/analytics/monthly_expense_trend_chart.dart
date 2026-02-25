@@ -22,9 +22,9 @@ class MonthlyExpenseTrendChart extends StatefulWidget {
 
 class _MonthlyExpenseTrendChartState extends State<MonthlyExpenseTrendChart> {
   // グレードカラー定義
-  static const _savingColor = Color(0xFF6B8E6B); // セージグリーン
-  static const _standardColor = Color(0xFF6B7B8C); // ブルーグレー
-  static const _rewardColor = Color(0xFFD4A853); // ゴールド
+  static final Color _savingColor = AppColors.expenseSaving;
+  static final Color _standardColor = AppColors.expenseStandard;
+  static final Color _rewardColor = AppColors.expenseReward;
 
   // 月別グラフ用スクロールコントローラー
   final ScrollController _chartScrollController = ScrollController();

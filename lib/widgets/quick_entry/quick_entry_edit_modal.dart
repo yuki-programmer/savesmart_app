@@ -48,20 +48,20 @@ class _QuickEntryEditModalState extends State<QuickEntryEditModal> {
     {
       'value': 'saving',
       'label': '節約',
-      'color': AppColors.accentGreen,
-      'lightColor': AppColors.accentGreenLight,
+      'color': AppColors.expenseSaving,
+      'lightColor': AppColors.expenseSavingLight,
     },
     {
       'value': 'standard',
       'label': '標準',
-      'color': AppColors.accentBlue,
-      'lightColor': AppColors.accentBlueLight,
+      'color': AppColors.expenseStandard,
+      'lightColor': AppColors.expenseStandardLight,
     },
     {
       'value': 'reward',
       'label': 'ご褒美',
-      'color': AppColors.accentOrange,
-      'lightColor': AppColors.accentOrangeLight,
+      'color': AppColors.expenseReward,
+      'lightColor': AppColors.expenseRewardLight,
     },
   ];
 

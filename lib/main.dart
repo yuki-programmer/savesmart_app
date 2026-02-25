@@ -16,6 +16,13 @@ import 'screens/category_budget_screen.dart';
 import 'widgets/bottom_nav.dart';
 import 'widgets/scheduled_expense_confirmation_dialog.dart';
 import 'widgets/category_budget_report_dialog.dart';
+import 'data/pair_data_exporter.dart';
+import 'data/repositories/invite_repository.dart';
+import 'data/repositories/pair_repository.dart';
+import 'data/repositories/user_repository.dart';
+import 'data/repositories_impl/invite_repository_impl.dart';
+import 'data/repositories_impl/pair_repository_impl.dart';
+import 'data/repositories_impl/user_repository_impl.dart';
 import 'services/app_state.dart';
 import 'services/remote_config_service.dart';
 import 'services/performance_service.dart';
@@ -64,15 +71,32 @@ class SaveSmartApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppState()
-        ..loadMainSalaryDay() // 給料日設定を先にロード
-        ..loadDefaultExpenseGrade() // デフォルト支出タイプを先にロード
-        ..loadCurrencyFormat() // 通貨表示形式を先にロード
-        ..loadThemeSettings() // テーマ設定を先にロード
-        ..loadData()
-        ..loadEntitlement()
-        ..loadMonthlyAvailableAmount(),
+    return MultiProvider(
+      providers: [
+        Provider<PairDataExporter>(create: (_) => NoopPairDataExporter()),
+        Provider<UserRepository>(create: (_) => UserRepositoryImpl()),
+        Provider<PairRepository>(
+          create: (context) => PairRepositoryImpl(
+            userRepository: context.read<UserRepository>(),
+            pairDataExporter: context.read<PairDataExporter>(),
+          ),
+        ),
+        Provider<InviteRepository>(
+          create: (context) => InviteRepositoryImpl(
+            userRepository: context.read<UserRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AppState()
+            ..loadMainSalaryDay() // 給料日設定を先にロード
+            ..loadDefaultExpenseGrade() // デフォルト支出タイプを先にロード
+            ..loadCurrencyFormat() // 通貨表示形式を先にロード
+            ..loadThemeSettings() // テーマ設定を先にロード
+            ..loadData()
+            ..loadEntitlement()
+            ..loadMonthlyAvailableAmount(),
+        ),
+      ],
       child: Consumer<AppState>(
         builder: (context, appState, child) => MaterialApp(
           title: 'SaveSmart',

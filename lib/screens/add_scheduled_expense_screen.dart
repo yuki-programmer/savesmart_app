@@ -46,22 +46,22 @@ class _AddScheduledExpenseScreenState extends State<AddScheduledExpenseScreen> {
       'value': 'saving',
       'label': '節約',
       'icon': Icons.savings_outlined,
-      'color': AppColors.accentGreen,
-      'lightColor': AppColors.accentGreenLight,
+      'color': AppColors.expenseSaving,
+      'lightColor': AppColors.expenseSavingLight,
     },
     {
       'value': 'standard',
       'label': '標準',
       'icon': Icons.balance_outlined,
-      'color': AppColors.accentBlue,
-      'lightColor': AppColors.accentBlueLight,
+      'color': AppColors.expenseStandard,
+      'lightColor': AppColors.expenseStandardLight,
     },
     {
       'value': 'reward',
       'label': 'ご褒美',
       'icon': Icons.star_outline,
-      'color': AppColors.accentOrange,
-      'lightColor': AppColors.accentOrangeLight,
+      'color': AppColors.expenseReward,
+      'lightColor': AppColors.expenseRewardLight,
     },
   ];
 

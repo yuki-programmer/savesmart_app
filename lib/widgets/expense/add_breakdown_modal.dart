@@ -221,20 +221,20 @@ class _BreakdownTypeSelector extends StatelessWidget {
       {
         'key': 'saving',
         'label': '💰 節約',
-        'color': AppColors.accentGreenLight,
-        'textColor': AppColors.accentGreen
+        'color': AppColors.expenseSavingLight,
+        'textColor': AppColors.expenseSaving
       },
       {
         'key': 'standard',
         'label': '🎯 標準',
-        'color': AppColors.accentBlueLight,
-        'textColor': AppColors.accentBlue
+        'color': AppColors.expenseStandardLight,
+        'textColor': AppColors.expenseStandard
       },
       {
         'key': 'reward',
         'label': '⭐ ご褒美',
-        'color': AppColors.accentPurpleLight,
-        'textColor': AppColors.accentPurple
+        'color': AppColors.expenseRewardLight,
+        'textColor': AppColors.expenseReward
       },
     ];
 

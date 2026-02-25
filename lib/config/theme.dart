@@ -23,6 +23,14 @@ class AppColors {
   static const textMuted = Color(0xFF94A3B8); // ライトデフォルト（後方互換用）
   static const borderSubtle = Color(0x0F000000); // ライトデフォルト（後方互換用）
 
+  // 支出タイプ専用カラー（全画面共通）
+  static const expenseSaving = Color(0xFF0D9488);
+  static const expenseStandard = Color(0xFF6366F1);
+  static const expenseReward = Color(0xFFEAB308);
+  static const expenseSavingLight = Color(0xFFE2F2F1);
+  static const expenseStandardLight = Color(0xFFECEDFD);
+  static const expenseRewardLight = Color(0xFFFCF3D7);
+
   /// カテゴリ表示用カラーパレット（円グラフ・リスト等で使用）
   static const List<Color> categoryColors = [
     Color(0xFF2196F3), // blue
