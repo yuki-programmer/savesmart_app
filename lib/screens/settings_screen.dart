@@ -166,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final authUser = AuthService.instance.currentUser;
 
     if (authUser == null) {
-      return _buildPairCardContent(pairId: null);
+      return _buildPairCardContent(pairId: null, canStartPair: canStartPair);
     }
 
     return StreamBuilder<UserProfile>(
