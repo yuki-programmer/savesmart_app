@@ -119,7 +119,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // ペアセクション
               _buildSectionHeader('ペア'),
               const SizedBox(height: 12),
-              _buildPairSettingsCard(),
+              _buildPairSettingsCard(appState.isPremium),
               const SizedBox(height: 24),
 
               // データ管理セクション
@@ -158,7 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildPairSettingsCard() {
+  Widget _buildPairSettingsCard(bool canStartPair) {
     if (!AuthService.instance.isSupported) {
       return _buildPairUnsupportedCard();
     }
@@ -173,18 +173,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
       stream: context.read<UserRepository>().watchMe(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildPairCardContent(pairId: null, showLoading: true);
-        }
-        if (snapshot.hasError) {
-          return _buildPairCardContent(pairId: null);
-        }
-        final profile = snapshot.data;
-        return _buildPairCardContent(pairId: profile?.pairId);
-      },
-    );
-  }
+        return _buildPairCardContent(
+          pairId: null,
+          canStartPair: canStartPair,
+          showLoading: true,
+        );
+      }
+      if (snapshot.hasError) {
+        return _buildPairCardContent(
+          pairId: null,
+          canStartPair: canStartPair,
+        );
+      }
+      final profile = snapshot.data;
+      return _buildPairCardContent(
+        pairId: profile?.pairId,
+        canStartPair: canStartPair,
+      );
+    },
+  );
+}
 
-  Widget _buildPairCardContent({required String? pairId, bool showLoading = false}) {
+  Widget _buildPairCardContent({
+    required String? pairId,
+    required bool canStartPair,
+    bool showLoading = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: context.appTheme.bgCard,
@@ -216,16 +230,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             )
           else ...[
             if (pairId == null) ...[
-              _buildPairRow(
-                title: 'ペアをはじめる',
-                subtitle: '2人で家計簿を共有できます',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PairStartScreen()),
-                  );
-                },
-              ),
+              if (canStartPair)
+                _buildPairRow(
+                  title: 'ペアをはじめる',
+                  subtitle: '2人で家計簿を共有できます',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PairStartScreen()),
+                    );
+                  },
+                ),
               _buildPairRow(
                 title: '招待コードを入力',
                 subtitle: 'コードを持っている場合はこちら',

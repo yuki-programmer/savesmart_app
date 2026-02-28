@@ -1,4 +1,11 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  },
   "flutter": {
     "platforms": {
       "android": {

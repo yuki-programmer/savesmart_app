@@ -23,6 +23,9 @@ import 'history_screen.dart';
 import 'settings_screen.dart';
 import 'category_budget_screen.dart';
 import '../widgets/home/category_budget_section.dart';
+import '../data/repositories/user_repository.dart';
+import '../models/user_profile.dart';
+import '../services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,20 +107,22 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           body: SafeArea(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 20),
-                        // ヒーローカード（今日使えるお金）- Selector化
-                        _buildHeroCardSection(),
-                        const SizedBox(height: 12),
-                        // 週間バジェットカード（Premium機能）
-                        _buildWeeklyBudgetSection(),
-                        // カテゴリ予算セクション（Premium機能）
-                        _buildCategoryBudgetSection(),
+                : Stack(
+                    children: [
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(),
+                            const SizedBox(height: 20),
+                            // ヒーローカード（今日使えるお金）- Selector化
+                            _buildHeroCardSection(),
+                            const SizedBox(height: 12),
+                            // 週間バジェットカード（Premium機能）
+                            _buildWeeklyBudgetSection(),
+                            // カテゴリ予算セクション（Premium機能）
+                            _buildCategoryBudgetSection(),
                         // クイック登録セクション - Selector化
                         _buildQuickEntrySectionWithSelector(),
                         const SizedBox(height: 16),
@@ -126,8 +131,11 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
                         // 日々の出費 - Selector化
                         _buildRecentExpensesSection(),
                         const SizedBox(height: 100),
-                      ],
-                    ),
+                          ],
+                        ),
+                      ),
+                      _buildPairStatusBadge(),
+                    ],
                   ),
           ),
         );
@@ -606,6 +614,45 @@ class _HomeScreenState extends State<HomeScreen> with ScreenTraceMixin {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPairStatusBadge() {
+    if (!AuthService.instance.isSupported) {
+      return const SizedBox.shrink();
+    }
+    if (AuthService.instance.currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    return StreamBuilder<UserProfile>(
+      stream: context.read<UserRepository>().watchMe(),
+      builder: (context, snapshot) {
+        final pairId = snapshot.data?.pairId;
+        if (pairId == null || pairId.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Positioned(
+          top: 8,
+          left: 8,
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: context.appTheme.bgCard,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: context.appTheme.borderSubtle.withValues(alpha: 0.9)),
+              boxShadow: context.cardElevationShadow,
+            ),
+            child: Icon(
+              Icons.link_rounded,
+              size: 18,
+              color: context.appTheme.textPrimary.withValues(alpha: 0.9),
+            ),
+          ),
+        );
+      },
     );
   }
 

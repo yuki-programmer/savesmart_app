@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isPlus(uid) {
+      return isSignedIn() && userDoc(uid).data.isPlus == true;
+    }
+
+    function pairDoc(pairId) {
+      return get(/databases/$(database)/documents/pairs/$(pairId));
+    }
+
+    function isPairMember(pairId) {
+      return isSignedIn() &&
+        pairDoc(pairId).data.memberUids.hasAny([request.auth.uid]);
+    }
+
+    function pairPlusActive(pairId) {
+      return pairDoc(pairId).data.plusActive == true;
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() &&
+        request.auth.uid == uid &&
+        request.resource.data.isPlus == false;
+      allow update: if isSignedIn() &&
+        request.auth.uid == uid &&
+        request.resource.data.isPlus == resource.data.isPlus;
+      allow delete: if false;
+    }
+
+    match /pairs/{pairId} {
+      allow create: if isSignedIn() &&
+        isPlus(request.auth.uid) &&
+        request.resource.data.memberUids.size() == 1 &&
+        request.resource.data.memberUids.hasOnly([request.auth.uid]) &&
+        request.resource.data.plusActive == true &&
+        request.resource.data.plusOwnerUid == request.auth.uid;
+
+      allow read: if isSignedIn() &&
+        isPairMember(pairId) &&
+        pairPlusActive(pairId);
+
+      allow update: if isSignedIn() &&
+        pairPlusActive(pairId) &&
+        request.resource.data.plusActive == resource.data.plusActive &&
+        request.resource.data.plusOwnerUid == resource.data.plusOwnerUid &&
+        (
+          (isPairMember(pairId) && request.resource.data.memberUids.size() <= 2) ||
+          (!isPairMember(pairId) &&
+            request.resource.data.memberUids.size() ==
+              resource.data.memberUids.size() + 1 &&
+            request.resource.data.memberUids.hasAny([request.auth.uid]) &&
+            !resource.data.memberUids.hasAny([request.auth.uid]))
+        );
+
+      allow delete: if false;
+
+      match /{subCollection=**} {
+        allow read, write: if isSignedIn() &&
+          isPairMember(pairId) &&
+          pairPlusActive(pairId);
+      }
+    }
+
+    match /pairInvites/{code} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        isPairMember(request.resource.data.pairId) &&
+        pairPlusActive(request.resource.data.pairId);
+      allow update: if isSignedIn() &&
+        request.resource.data.usedBy == request.auth.uid &&
+        resource.data.usedBy == null;
+      allow delete: if isSignedIn();
+    }
+  }
+}

@@ -1,13 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/theme.dart';
 import '../config/typography.dart';
+import '../core/dev_config.dart';
 import '../services/app_state.dart';
 import '../services/purchase_service.dart';
+import '../services/remote_config_service.dart';
 
 /// プラン種別
 enum PlanType { monthly, yearly }
@@ -79,6 +82,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   showBadge: hasStorePrices ? savingsMonths > 0 : true,
                 ),
                 _buildTrialInfo(),
+                _buildVerificationStatus(),
                 _buildCtaButton(),
                 _buildFooter(),
               ] else ...[
@@ -87,9 +91,101 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   yearlyProduct: yearlyProduct,
                   upgradeSavingsText: upgradeSavingsText,
                 ),
+                _buildVerificationStatus(),
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerificationStatus() {
+    if (!DevConfig.canShowDevTools && !kDebugMode) {
+      return const SizedBox.shrink();
+    }
+
+    final purchaseService = PurchaseService.instance;
+    final verifyUrl = RemoteConfigService.instance.purchaseVerifyUrl.trim();
+    final isConfigured = verifyUrl.isNotEmpty;
+    final strict = RemoteConfigService.instance.purchaseVerifyStrict;
+    final statusText = isConfigured
+        ? '検証: 有効'
+        : '検証: スキップ（purchase_verify_url 未設定）';
+    final strictText = 'strict: ${strict ? 'ON' : 'OFF'}';
+
+    String? lastVerifiedText;
+    if (purchaseService.lastVerifiedAt != null) {
+      final dt = purchaseService.lastVerifiedAt!;
+      lastVerifiedText =
+          '最終検証: ${dt.year}/${dt.month.toString().padLeft(2, '0')}/${dt.day.toString().padLeft(2, '0')} '
+          '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    }
+
+    String? expiryText;
+    if (purchaseService.premiumExpiry != null) {
+      final dt = purchaseService.premiumExpiry!;
+      expiryText =
+          '期限: ${dt.year}/${dt.month.toString().padLeft(2, '0')}/${dt.day.toString().padLeft(2, '0')}';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.appTheme.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '購入検証（開発表示）',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              statusText,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: _textPrimaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              strictText,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: _textMutedColor,
+              ),
+            ),
+            if (lastVerifiedText != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                lastVerifiedText,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: _textMutedColor,
+                ),
+              ),
+            ],
+            if (expiryText != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                expiryText,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: _textMutedColor,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

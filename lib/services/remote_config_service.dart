@@ -19,6 +19,10 @@ class RemoteConfigService {
   static const String keyPremiumYearlyPrice = 'premium_yearly_price';
   static const String keyShowNewFeatureBanner = 'show_new_feature_banner';
   static const String keyNewFeatureMessage = 'new_feature_message';
+  static const String keyPurchaseVerifyUrl = 'purchase_verify_url';
+  static const String keyPurchaseVerifyStrict = 'purchase_verify_strict';
+  static const String keyPurchaseVerifyCacheHours =
+      'purchase_verify_cache_hours';
 
   // === Default Values ===
   static const Map<String, dynamic> _defaults = {
@@ -29,6 +33,9 @@ class RemoteConfigService {
     keyPremiumYearlyPrice: 3000,
     keyShowNewFeatureBanner: false,
     keyNewFeatureMessage: '',
+    keyPurchaseVerifyUrl: '',
+    keyPurchaseVerifyStrict: false,
+    keyPurchaseVerifyCacheHours: 24,
   };
 
   /// 初期化
@@ -91,4 +98,16 @@ class RemoteConfigService {
 
   /// 新機能メッセージ
   String get newFeatureMessage => _remoteConfig.getString(keyNewFeatureMessage);
+
+  /// 購入検証エンドポイントURL
+  String get purchaseVerifyUrl =>
+      _remoteConfig.getString(keyPurchaseVerifyUrl);
+
+  /// 購入検証を厳格に適用するか
+  bool get purchaseVerifyStrict =>
+      _remoteConfig.getBool(keyPurchaseVerifyStrict);
+
+  /// 購入検証の再確認間隔（時間）
+  int get purchaseVerifyCacheHours =>
+      _remoteConfig.getInt(keyPurchaseVerifyCacheHours);
 }

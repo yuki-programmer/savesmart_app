@@ -100,20 +100,9 @@ class PairRepositoryImpl implements PairRepository {
       final memberUids = List<String>.from(data['memberUids'] ?? const <String>[]);
       memberUids.remove(uid);
 
-      final currentPlusOwner = data['plusOwnerUid'] as String?;
-      final bool isPlusOwnerLeaving = currentPlusOwner == uid;
-
-      DateTime? graceUntil;
-      if (isPlusOwnerLeaving) {
-        graceUntil = DateTime.now().add(const Duration(hours: 24));
-      }
-
       tx.update(_pairDoc(pairId), {
         'memberUids': memberUids,
-        'plusOwnerUid': isPlusOwnerLeaving ? null : currentPlusOwner,
-        'plusGraceUntil':
-            graceUntil != null ? Timestamp.fromDate(graceUntil) : data['plusGraceUntil'],
-        'plusActive': isPlusOwnerLeaving ? true : data['plusActive'],
+        'updatedAt': FieldValue.serverTimestamp(),
       });
 
       tx.update(

@@ -10,6 +10,7 @@ import '../data/repositories/pair_repository.dart';
 import '../data/repositories/user_repository.dart';
 import '../models/pair_invite.dart';
 import '../services/auth_service.dart';
+import '../services/app_state.dart';
 import 'pair_invite_screen.dart';
 import 'pair_status_screen.dart';
 
@@ -25,6 +26,16 @@ class _PairStartScreenState extends State<PairStartScreen> {
 
   Future<void> _startPair() async {
     if (_isLoading) return;
+    final appState = context.read<AppState>();
+    if (!appState.isPremium) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('ペア機能の作成にはPlusが必要です', style: GoogleFonts.inter()),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
+      return;
+    }
     if (!AuthService.instance.isSupported) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
